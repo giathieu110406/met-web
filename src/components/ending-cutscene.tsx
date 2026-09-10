@@ -6,38 +6,38 @@ import Fireworks from './fireworks';
 import PetalRain from './petal-rain';
 
 export default function EndingCutscene() {
-  const [position, setPosition] = useState(0);
-
-  // Exact upward scroll mechanism from original repository (commit 4624329):
-  // Starts at position = 0 (translateY 220px), moves up 5px every 100ms until position = -200 (translateY 20px)
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setPosition((p) => {
-        if (p <= -200) {
-          clearInterval(intervalId);
-          return -200;
-        }
-        return p - 5;
-      });
-    }, 100);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   return (
     <>
       <Fireworks active={true} />
       <PetalRain active={true} />
 
-      {/* Message "I LIKE U" — identical rendering and movement to original repo */}
-      <Image
-        src="/assets/others/message.png"
-        height={400}
-        width={600}
-        alt="Message"
-        className="absolute z-50"
-        style={{ transform: `translateY(${position + 220}px)` }}
-      />
+      {/* Gentle radiant heart aura behind the letter */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-45">
+        <div
+          className="w-48 h-48 rounded-full bg-pink-500/20 blur-3xl animate-pulse select-none"
+          style={{ animationDuration: '3s' }}
+        />
+      </div>
+
+      {/* Message "I LIKE U" — silky smooth 60FPS gliding up into center */}
+      <div
+        className="absolute z-50 pointer-events-none"
+        style={{
+          width: '600px',
+          height: '400px',
+          animation: 'message-scroll-smooth 4.2s cubic-bezier(0.2, 0.85, 0.35, 1) forwards',
+          willChange: 'transform',
+        }}
+      >
+        <Image
+          src="/assets/others/message.png"
+          height={400}
+          width={600}
+          alt="Message"
+          priority
+          style={{ imageRendering: 'pixelated' }}
+        />
+      </div>
     </>
   );
 }

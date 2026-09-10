@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { LEVEL } from '@/lib/level-data';
 import { getHillGroundY } from '@/lib/physics';
 
@@ -14,21 +15,28 @@ const PUDDLES = [
   { x: 1080, width: 56 },
 ];
 
-export default function Ground({ cameraX, isHillMap = false }: GroundProps) {
+// Precompute static Hill SVG path data once at module evaluation to eliminate 60fps recalculation
+const HILL_SURFACE_PATH = (() => {
+  const hillPoints: [number, number][] = [];
+  for (let x = 0; x <= 1850; x += 20) {
+    hillPoints.push([x, getHillGroundY(x)]);
+  }
+  hillPoints.push([2200, 265]);
+  return `M 0,${getHillGroundY(0)} ` + hillPoints.slice(1).map(([x, y]) => `L ${x},${y}`).join(' ');
+})();
+
+const HILL_FILL_PATH = `${HILL_SURFACE_PATH} L 2200,400 L 0,400 Z`;
+
+const HILL_DECOR_POINTS = [
+  40, 110, 190, 280, 360, 450, 540, 630, 720, 810, 900, 990, 1080,
+  1170, 1260, 1350, 1440, 1530, 1620, 1710, 1800, 1880, 1960, 2040, 2120,
+].map((gx) => ({ gx, gy: getHillGroundY(gx) }));
+
+function GroundComponent({ cameraX, isHillMap = false }: GroundProps) {
   if (isHillMap) {
-    // Generate smooth undulating curve path coordinates across 2200px mountain trail
-    const hillPoints: [number, number][] = [];
-    for (let x = 0; x <= 1850; x += 20) {
-      hillPoints.push([x, getHillGroundY(x)]);
-    }
-    hillPoints.push([2200, 265]);
-
-    const surfaceD = `M 0,${getHillGroundY(0)} ` + hillPoints.slice(1).map(([x, y]) => `L ${x},${y}`).join(' ');
-    const fillD = `${surfaceD} L 2200,400 L 0,400 Z`;
-
     return (
       <svg
-        className="absolute top-0 left-0 pointer-events-none select-none z-10"
+        className="absolute top-0 left-0 pointer-events-none select-none z-10 will-change-transform"
         style={{
           transform: `translateX(${-cameraX}px)`,
           width: '2200px',
@@ -46,29 +54,23 @@ export default function Ground({ cameraX, isHillMap = false }: GroundProps) {
           </linearGradient>
         </defs>
         {/* Undulating Hill base soil */}
-        <path d={fillD} fill="url(#hillGrass)" />
+        <path d={HILL_FILL_PATH} fill="url(#hillGrass)" />
         {/* Grass edge highlights tracing the undulating curve */}
-        <path d={surfaceD} fill="none" stroke="#68d391" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={surfaceD} fill="none" stroke="#9ae6b4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={HILL_SURFACE_PATH} fill="none" stroke="#68d391" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={HILL_SURFACE_PATH} fill="none" stroke="#9ae6b4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         {/* Summit grass tufts and flowers placed precisely on the undulating surface across 2200px */}
-        {[
-          40, 110, 190, 280, 360, 450, 540, 630, 720, 810, 900, 990, 1080,
-          1170, 1260, 1350, 1440, 1530, 1620, 1710, 1800, 1880, 1960, 2040, 2120,
-        ].map((gx, i) => {
-          const gy = getHillGroundY(gx);
-          return (
-            <g key={i} transform={`translate(${gx}, ${gy})`}>
-              {/* Grass blades */}
-              <rect x="-4" y="-3" width="2" height="4" fill="#9ae6b4" />
-              <rect x="-1" y="-5" width="2" height="6" fill="#68d391" />
-              <rect x="2" y="-3" width="2" height="4" fill="#9ae6b4" />
-              {/* Fallen cherry blossom petals on garden grass */}
-              <circle cx="5" cy="2" r="2" fill="#fbcfe8" />
-              <circle cx="-6" cy="3" r="1.5" fill="#f472b6" />
-              <circle cx="2" cy="4" r="1.5" fill="#fda4af" />
-            </g>
-          );
-        })}
+        {HILL_DECOR_POINTS.map(({ gx, gy }, i) => (
+          <g key={i} transform={`translate(${gx}, ${gy})`}>
+            {/* Grass blades */}
+            <rect x="-4" y="-3" width="2" height="4" fill="#9ae6b4" />
+            <rect x="-1" y="-5" width="2" height="6" fill="#68d391" />
+            <rect x="2" y="-3" width="2" height="4" fill="#9ae6b4" />
+            {/* Fallen cherry blossom petals on garden grass */}
+            <circle cx="5" cy="2" r="2" fill="#fbcfe8" />
+            <circle cx="-6" cy="3" r="1.5" fill="#f472b6" />
+            <circle cx="2" cy="4" r="1.5" fill="#fda4af" />
+          </g>
+        ))}
       </svg>
     );
   }
@@ -166,3 +168,5 @@ export default function Ground({ cameraX, isHillMap = false }: GroundProps) {
     </>
   );
 }
+
+export default React.memo(GroundComponent);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import Image from 'next/image';
 import { DecorationData } from '@/lib/level-data';
 
@@ -151,7 +151,7 @@ function ButterflyDecor({ x, y, id }: { x: number; y: number; id: number }) {
   );
 }
 
-export default function Decorations({ decorations, cameraX }: DecorationsProps) {
+function DecorationsComponent({ decorations, cameraX }: DecorationsProps) {
   return (
     <>
       {decorations.map((dec) => {
@@ -174,3 +174,6 @@ export default function Decorations({ decorations, cameraX }: DecorationsProps) 
     </>
   );
 }
+
+export default React.memo(DecorationsComponent);
+

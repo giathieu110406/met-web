@@ -1,10 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import woodenSwingSprite from '../../public/assets/others/wooden-swing-v2-pixel.png';
 import { LEVEL, HILL_LEVEL } from '@/lib/level-data';
 import { getHillGroundY } from '@/lib/physics';
+
+// Static sakura tree arrays across 2200px mountain trail
+const BG_SAKURA_TREES = [
+  { x: 80, size: 96, flip: true, opacity: 0.78 },
+  { x: 240, size: 100, flip: false, opacity: 0.80 },
+  { x: 420, size: 104, flip: true, opacity: 0.82 },
+  { x: 600, size: 110, flip: false, opacity: 0.84 },
+  { x: 780, size: 115, flip: true, opacity: 0.85 },
+  { x: 960, size: 118, flip: false, opacity: 0.82 },
+  { x: 1140, size: 105, flip: true, opacity: 0.78 },
+  { x: 1320, size: 112, flip: false, opacity: 0.82 },
+  { x: 1500, size: 116, flip: true, opacity: 0.84 },
+  { x: 1680, size: 120, flip: false, opacity: 0.85 },
+  { x: 1840, size: 115, flip: true, opacity: 0.82 },
+  { x: 2020, size: 108, flip: false, opacity: 0.78 },
+  { x: 2160, size: 104, flip: true, opacity: 0.75 },
+];
+
+const FG_SAKURA_TREES = [
+  { x: 20, size: 120, flip: false },
+  { x: 180, size: 120, flip: true },
+  { x: 340, size: 125, flip: false },
+  { x: 520, size: 130, flip: true },
+  { x: 700, size: 135, flip: false },
+  { x: 860, size: 125, flip: true },
+  { x: 1040, size: 130, flip: false },
+  { x: 1220, size: 135, flip: true },
+  { x: 1400, size: 130, flip: false },
+  { x: 1580, size: 135, flip: true },
+  { x: 1760, size: 130, flip: false },
+  { x: 1900, size: 125, flip: true },
+  { x: 2100, size: 120, flip: false },
+];
 
 interface PropsLayerProps {
   cameraX: number;
@@ -26,7 +59,7 @@ interface PropsLayerProps {
   isHillMap?: boolean;
 }
 
-export default function PropsLayer({
+function PropsLayerComponent({
   cameraX,
   heroX,
   onPetCat,
@@ -48,44 +81,10 @@ export default function PropsLayer({
 
   // Map 2: Cherry Blossom Garden mode (arduous mountain trail with 28 layered blooming sakura trees across 2200px)
   if (isHillMap) {
-    // Array of background distant sakura trees (depth layer, softer opacity) across 2200px
-    const bgTrees = [
-      { x: 80, size: 96, flip: true, opacity: 0.78 },
-      { x: 240, size: 100, flip: false, opacity: 0.80 },
-      { x: 420, size: 104, flip: true, opacity: 0.82 },
-      { x: 600, size: 110, flip: false, opacity: 0.84 },
-      { x: 780, size: 115, flip: true, opacity: 0.85 },
-      { x: 960, size: 118, flip: false, opacity: 0.82 },
-      { x: 1140, size: 105, flip: true, opacity: 0.78 },
-      { x: 1320, size: 112, flip: false, opacity: 0.82 },
-      { x: 1500, size: 116, flip: true, opacity: 0.84 },
-      { x: 1680, size: 120, flip: false, opacity: 0.85 },
-      { x: 1840, size: 115, flip: true, opacity: 0.82 },
-      { x: 2020, size: 108, flip: false, opacity: 0.78 },
-      { x: 2160, size: 104, flip: true, opacity: 0.75 },
-    ];
-
-    // Array of main / foreground vibrant sakura trees along the 2200px walking trail
-    const fgTrees = [
-      { x: 20, size: 120, flip: false },
-      { x: 180, size: 120, flip: true },
-      { x: 340, size: 125, flip: false },
-      { x: 520, size: 130, flip: true },
-      { x: 700, size: 135, flip: false },
-      { x: 860, size: 125, flip: true },
-      { x: 1040, size: 130, flip: false },
-      { x: 1220, size: 135, flip: true },
-      { x: 1400, size: 130, flip: false },
-      { x: 1580, size: 135, flip: true },
-      { x: 1760, size: 130, flip: false },
-      { x: 1900, size: 125, flip: true },
-      { x: 2100, size: 120, flip: false },
-    ];
-
     return (
       <div className="absolute inset-0 z-10 pointer-events-none select-none">
         {/* Layer 1: Background Sakura Trees (Depth of garden, grounded to undulating hill) */}
-        {bgTrees.map((tree, i) => {
+        {BG_SAKURA_TREES.map((tree, i) => {
           const groundY = getHillGroundY(tree.x);
           return (
             <div
@@ -132,7 +131,7 @@ export default function PropsLayer({
         </div>
 
         {/* Layer 3: Main Foreground Sakura Trees along the walking trail */}
-        {fgTrees.map((tree, i) => {
+        {FG_SAKURA_TREES.map((tree, i) => {
           const groundY = getHillGroundY(tree.x);
           return (
             <div
@@ -509,4 +508,7 @@ export default function PropsLayer({
     </div>
   );
 }
+
+export default React.memo(PropsLayerComponent);
+
 

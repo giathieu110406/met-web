@@ -46,92 +46,98 @@ export default function WeatherEffects({ cameraX, isHillMap = false }: WeatherEf
 
   return (
     <div className="absolute inset-0 z-15 pointer-events-none select-none overflow-hidden">
-      {/* 1. Rain Zone */}
-      {isRaining && (
-        <div className="absolute inset-0">
-          {rainDrops.map((drop) => (
-            <div
-              key={drop.id}
-              className="absolute opacity-60"
-              style={{
-                left: drop.left,
-                top: '-15px',
-                width: '1.5px',
-                height: '14px',
-                backgroundColor: '#93c5fd',
-                transform: 'rotate(15deg)',
-                animation: `rain-fall ${drop.duration} linear ${drop.delay} infinite`,
-              }}
-            />
-          ))}
-
-          {/* Water puddles with ripple rings on ground (ground line is 320px) */}
+      {/* 1. Rain Zone — smooth cross-fade */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{ opacity: isRaining ? 1 : 0 }}
+      >
+        {rainDrops.map((drop) => (
           <div
-            className="absolute rounded-full opacity-45"
+            key={drop.id}
+            className="absolute opacity-60"
             style={{
-              left: `${880 - cameraX}px`,
-              top: '318px',
-              width: '40px',
-              height: '6px',
-              backgroundColor: '#60a5fa',
-              boxShadow: '0 0 8px #93c5fd',
+              left: drop.left,
+              top: '-15px',
+              width: '1.5px',
+              height: '14px',
+              backgroundColor: '#93c5fd',
+              transform: 'rotate(15deg)',
+              animation: `rain-fall ${drop.duration} linear ${drop.delay} infinite`,
+              willChange: 'transform',
             }}
           />
+        ))}
+
+        {/* Water puddles with ripple rings on ground (ground line is 320px) */}
+        <div
+          className="absolute rounded-full opacity-45"
+          style={{
+            left: `${880 - cameraX}px`,
+            top: '318px',
+            width: '40px',
+            height: '6px',
+            backgroundColor: '#60a5fa',
+            boxShadow: '0 0 8px #93c5fd',
+          }}
+        />
+        <div
+          className="absolute rounded-full opacity-45"
+          style={{
+            left: `${1120 - cameraX}px`,
+            top: '318px',
+            width: '50px',
+            height: '7px',
+            backgroundColor: '#60a5fa',
+            boxShadow: '0 0 8px #93c5fd',
+          }}
+        />
+      </div>
+
+      {/* 2. Fireflies in Starry Night Zone — smooth cross-fade */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{ opacity: isFireflies ? 1 : 0 }}
+      >
+        {fireflies.map((ff) => (
           <div
-            className="absolute rounded-full opacity-45"
+            key={ff.id}
+            className="absolute rounded-full"
             style={{
-              left: `${1120 - cameraX}px`,
-              top: '318px',
-              width: '50px',
-              height: '7px',
-              backgroundColor: '#60a5fa',
-              boxShadow: '0 0 8px #93c5fd',
+              left: ff.left,
+              top: ff.top,
+              width: '4px',
+              height: '4px',
+              backgroundColor: '#fef08a',
+              boxShadow: '0 0 6px #facc15, 0 0 12px #a3e635',
+              animation: `firefly-drift 3.5s ease-in-out ${ff.delay} infinite alternate`,
+              willChange: 'transform',
             }}
           />
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* 2. Fireflies in Starry Night Zone */}
-      {isFireflies && (
-        <div className="absolute inset-0">
-          {fireflies.map((ff) => (
-            <div
-              key={ff.id}
-              className="absolute rounded-full"
-              style={{
-                left: ff.left,
-                top: ff.top,
-                width: '4px',
-                height: '4px',
-                backgroundColor: '#fef08a',
-                boxShadow: '0 0 6px #facc15, 0 0 12px #a3e635',
-                animation: `firefly-drift 3.5s ease-in-out ${ff.delay} infinite alternate`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* 3. Petal wind in Dawn Zone */}
-      {isPetalWind && (
-        <div className="absolute inset-0">
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <div
-              key={i}
-              className="absolute rounded-full opacity-70"
-              style={{
-                left: `${15 + (i * 12)}%`,
-                top: `${40 + ((i * 7) % 40)}%`,
-                width: '6px',
-                height: '4px',
-                backgroundColor: '#f472b6',
-                transform: 'rotate(25deg)',
-                animation: `petal-wind ${3 + (i % 3)}s ease-in-out ${i * 0.4}s infinite`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* 3. Petal wind in Dawn Zone — smooth cross-fade */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{ opacity: isPetalWind ? 0.8 : 0 }}
+      >
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <div
+            key={i}
+            className="absolute rounded-full opacity-70"
+            style={{
+              left: `${15 + (i * 12)}%`,
+              top: `${40 + ((i * 7) % 40)}%`,
+              width: '6px',
+              height: '4px',
+              backgroundColor: '#f472b6',
+              transform: 'rotate(25deg)',
+              animation: `petal-wind ${3 + (i % 3)}s ease-in-out ${i * 0.4}s infinite`,
+              willChange: 'transform',
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

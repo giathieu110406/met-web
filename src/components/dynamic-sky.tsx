@@ -1,52 +1,51 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 interface DynamicSkyProps {
   cameraX: number;
   isHillMap?: boolean;
 }
 
-export default function DynamicSky({ cameraX, isHillMap = false }: DynamicSkyProps) {
-  // Interpolate sky theme based on camera position (0 to 1800 max camera scroll)
+function DynamicSkyComponent({ cameraX, isHillMap = false }: DynamicSkyProps) {
+  // Quantize progress across the 1800px camera scroll range
   const progress = Math.max(0, Math.min(cameraX / 1800, 1));
 
-  // Determine current atmosphere
-  let topColor = '#1e1b4b';
-  let bottomColor = '#ea580c';
-  let showMoon = false;
-  let showStars = false;
-  let showSun = false;
+  // Compute smooth atmospheric layer opacities for continuous cross-fading
+  // Zone 0: Sunset (0 - 0.28)
+  // Zone 1: Twilight / Rain (0.28 - 0.65)
+  // Zone 2: Starry Night (0.65 - 0.88)
+  // Zone 3: Rosy Dawn (0.88 - 1.0)
+  let sunsetOp = 0;
+  let twilightOp = 0;
+  let nightOp = 0;
+  let dawnOp = 0;
 
-  if (isHillMap) {
-    // Map 2: Bright, radiant, romantic cherry blossom spring sky
-    topColor = '#60a5fa'; // azure spring morning sky
-    bottomColor = '#fed7aa'; // warm golden-pink blossom horizon
-    showSun = true;
-  } else if (progress < 0.28) {
-    // 1. Sunset (0 - 500px camera)
-    const t = progress / 0.28;
-    topColor = t < 0.5 ? '#7c2d12' : '#4c1d95';
-    bottomColor = t < 0.5 ? '#f97316' : '#d946ef';
-    showSun = true;
-  } else if (progress < 0.65) {
-    // 2. Twilight / Rain (500 - 1170px camera)
-    const t = (progress - 0.28) / (0.65 - 0.28);
-    topColor = t < 0.5 ? '#3b0764' : '#1e1b4b';
-    bottomColor = t < 0.5 ? '#581c87' : '#312e81';
-  } else if (progress < 0.88) {
-    // 3. Starry Night (1170 - 1580px camera)
-    topColor = '#030712';
-    bottomColor = '#0f172a';
-    showMoon = true;
-    showStars = true;
-  } else {
-    // 4. Rosy Dawn (1580 - 1800px camera)
-    const t = (progress - 0.88) / 0.12;
-    topColor = t < 0.5 ? '#4a044e' : '#be185d';
-    bottomColor = t < 0.5 ? '#ec4899' : '#fed7aa';
-    showSun = true;
+  if (!isHillMap) {
+    if (progress <= 0.28) {
+      const t = progress / 0.28;
+      sunsetOp = 1 - t * 0.4;
+      twilightOp = t * 0.4;
+    } else if (progress <= 0.65) {
+      const t = (progress - 0.28) / (0.65 - 0.28);
+      sunsetOp = Math.max(0, 0.6 * (1 - t * 2));
+      twilightOp = 1 - Math.max(0, (t - 0.5) * 2) * 0.3;
+      nightOp = Math.max(0, (t - 0.5) * 2);
+    } else if (progress <= 0.88) {
+      const t = (progress - 0.65) / (0.88 - 0.65);
+      twilightOp = Math.max(0, 0.7 * (1 - t * 2));
+      nightOp = 1 - Math.max(0, (t - 0.6) * 2.5) * 0.4;
+      dawnOp = Math.max(0, (t - 0.5) * 2);
+    } else {
+      const t = (progress - 0.88) / 0.12;
+      nightOp = Math.max(0, 0.6 * (1 - t * 2));
+      dawnOp = 1;
+    }
   }
+
+  const showSun = isHillMap || progress < 0.32 || progress > 0.85;
+  const showMoon = !isHillMap && progress >= 0.62 && progress <= 0.90;
+  const showStars = !isHillMap && progress >= 0.60 && progress <= 0.92;
 
   // Pre-calculated star positions
   const stars = useMemo(
@@ -66,15 +65,55 @@ export default function DynamicSky({ cameraX, isHillMap = false }: DynamicSkyPro
   );
 
   return (
-    <div
-      className="absolute inset-0 z-0 pointer-events-none transition-colors duration-700 select-none overflow-hidden"
-      style={{
-        background: `linear-gradient(180deg, ${topColor} 0%, ${bottomColor} 100%)`,
-      }}
-    >
-      {/* Distant mountains / cherry blossom hills silhouette */}
+    <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden bg-[#0a051b]">
+      {/* 1. Map 2: Spring Cherry Blossom Garden Sky Layer */}
       <div
-        className="absolute bottom-[80px] left-0 right-0 h-[60px] opacity-35"
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: isHillMap ? 1 : 0,
+          background: 'linear-gradient(180deg, #60a5fa 0%, #fed7aa 100%)',
+        }}
+      />
+
+      {/* 2. Map 1: Sunset Layer */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: isHillMap ? 0 : sunsetOp,
+          background: 'linear-gradient(180deg, #4c1d95 0%, #f97316 100%)',
+        }}
+      />
+
+      {/* 3. Map 1: Twilight & Rain Layer */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: isHillMap ? 0 : twilightOp,
+          background: 'linear-gradient(180deg, #1e1b4b 0%, #581c87 100%)',
+        }}
+      />
+
+      {/* 4. Map 1: Starry Night Layer */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: isHillMap ? 0 : nightOp,
+          background: 'linear-gradient(180deg, #030712 0%, #0f172a 100%)',
+        }}
+      />
+
+      {/* 5. Map 1: Rosy Dawn Layer */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: isHillMap ? 0 : dawnOp,
+          background: 'linear-gradient(180deg, #831843 0%, #fed7aa 100%)',
+        }}
+      />
+
+      {/* Distant mountains / cherry blossom hills silhouette with parallax */}
+      <div
+        className="absolute bottom-[80px] left-0 right-0 h-[60px] opacity-35 will-change-transform"
         style={{
           backgroundImage: isHillMap
             ? 'radial-gradient(ellipse 160px 50px at 15% 100%, #f472b6 100%, transparent 100%), radial-gradient(ellipse 220px 65px at 50% 100%, #fb7185 100%, transparent 100%), radial-gradient(ellipse 180px 55px at 85% 100%, #f472b6 100%, transparent 100%)'
@@ -83,44 +122,47 @@ export default function DynamicSky({ cameraX, isHillMap = false }: DynamicSkyPro
         }}
       />
 
-      {/* Sun during sunset or dawn or hill garden */}
-      {showSun && (
-        <div
-          className="absolute rounded-full transition-opacity duration-1000"
-          style={{
-            width: isHillMap ? '56px' : '48px',
-            height: isHillMap ? '56px' : '48px',
-            backgroundColor: isHillMap ? '#fef08a' : progress < 0.5 ? '#fef08a' : '#fecdd3',
-            boxShadow: isHillMap
-              ? '0 0 35px #fde047, 0 0 70px #f472b6, 0 0 100px rgba(254, 240, 138, 0.6)'
-              : progress < 0.5
-              ? '0 0 30px #f59e0b, 0 0 60px #ea580c'
-              : '0 0 35px #fb7185, 0 0 70px #f43f5e',
-            right: isHillMap ? '18%' : progress < 0.5 ? '15%' : '20%',
-            top: isHillMap ? '12%' : progress < 0.5 ? '25%' : '18%',
-          }}
-        />
-      )}
+      {/* Sun during sunset, dawn or hill garden */}
+      <div
+        className="absolute rounded-full transition-all duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: showSun ? 1 : 0,
+          width: isHillMap ? '56px' : '48px',
+          height: isHillMap ? '56px' : '48px',
+          backgroundColor: isHillMap ? '#fef08a' : progress < 0.5 ? '#fef08a' : '#fecdd3',
+          boxShadow: isHillMap
+            ? '0 0 35px #fde047, 0 0 70px #f472b6, 0 0 100px rgba(254, 240, 138, 0.6)'
+            : progress < 0.5
+            ? '0 0 30px #f59e0b, 0 0 60px #ea580c'
+            : '0 0 35px #fb7185, 0 0 70px #f43f5e',
+          right: isHillMap ? '18%' : progress < 0.5 ? '15%' : '20%',
+          top: isHillMap ? '12%' : progress < 0.5 ? '25%' : '18%',
+          transform: showSun ? 'scale(1)' : 'scale(0.8)',
+        }}
+      />
 
       {/* Moon during starry night */}
-      {showMoon && (
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: '32px',
-            height: '32px',
-            boxShadow: 'inset -6px -2px 0 0 #fef08a',
-            backgroundColor: 'transparent',
-            filter: 'drop-shadow(0 0 10px rgba(254, 240, 138, 0.8))',
-            right: '25%',
-            top: '18%',
-          }}
-        />
-      )}
+      <div
+        className="absolute rounded-full transition-all duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: showMoon ? 1 : 0,
+          width: '32px',
+          height: '32px',
+          boxShadow: 'inset -6px -2px 0 0 #fef08a',
+          backgroundColor: 'transparent',
+          filter: 'drop-shadow(0 0 10px rgba(254, 240, 138, 0.8))',
+          right: '25%',
+          top: '18%',
+          transform: showMoon ? 'scale(1)' : 'scale(0.8)',
+        }}
+      />
 
       {/* Twinkling stars */}
-      {showStars &&
-        stars.map((star, i) => (
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{ opacity: showStars ? 1 : 0 }}
+      >
+        {stars.map((star, i) => (
           <div
             key={i}
             className="absolute rounded-full"
@@ -135,6 +177,9 @@ export default function DynamicSky({ cameraX, isHillMap = false }: DynamicSkyPro
             }}
           />
         ))}
+      </div>
     </div>
   );
 }
+
+export default React.memo(DynamicSkyComponent);

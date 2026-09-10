@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 interface Petal {
   id: number;
@@ -34,7 +34,7 @@ function createPetals(): Petal[] {
   return list;
 }
 
-export default function PetalRain({ active }: { active: boolean }) {
+function PetalRainComponent({ active }: { active: boolean }) {
   const petals = useMemo(() => (active ? createPetals() : []), [active]);
 
   if (!active || petals.length === 0) return null;
@@ -63,3 +63,6 @@ export default function PetalRain({ active }: { active: boolean }) {
     </div>
   );
 }
+
+export default React.memo(PetalRainComponent);
+

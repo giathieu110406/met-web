@@ -49,7 +49,7 @@ export default function Game() {
   const [currentMap, setCurrentMap] = useState<'valley' | 'hill'>('valley');
   const [isAutoWalkingBack, setIsAutoWalkingBack] = useState(false);
   const [isAutoRunningToHill, setIsAutoRunningToHill] = useState(false);
-  const [isMapFading, setIsMapFading] = useState(false);
+  const [mapFadePhase, setMapFadePhase] = useState<'entering' | 'exiting' | null>(null);
 
   // Mailbox state (x = 200)
   const [hasOpenedMailbox, setHasOpenedMailbox] = useState(false);
@@ -256,15 +256,17 @@ export default function Game() {
 
   const handleRunOffScreen = useCallback(() => {
     if (currentMap === 'valley' && isAutoRunningToHill) {
-      setIsMapFading(true);
+      setMapFadePhase('entering');
       setTimeout(() => {
         setCurrentMap('hill');
         setHeroX(40);
         setCameraX(0);
         setIsAutoRunningToHill(false);
-        setIsMapFading(false);
-        // Task 6: Do not trigger cherry entrance immediately; boy will walk a distance first
-      }, 700);
+        setMapFadePhase('exiting');
+        setTimeout(() => {
+          setMapFadePhase(null);
+        }, 500);
+      }, 450);
     }
   }, [currentMap, isAutoRunningToHill]);
 
@@ -491,7 +493,7 @@ export default function Game() {
     setCurrentMap('valley');
     setIsAutoWalkingBack(false);
     setIsAutoRunningToHill(false);
-    setIsMapFading(false);
+    setMapFadePhase(null);
     setCameraX(0);
     setHeroX(LEVEL.heroSpawn.x);
     setCollectedIds(new Set());
@@ -521,6 +523,7 @@ export default function Game() {
   }, []);
 
   const isCinematic = gameState === 'dialogue' || gameState === 'ending';
+  const isMapFading = mapFadePhase !== null;
   const shouldLockHero = isCinematic || fpvScene !== null || isCraftingLetter || isSitting || isSwinging || isMapFading;
 
   return (
@@ -669,9 +672,13 @@ export default function Game() {
               spawnY={currentMap === 'hill' ? 272 : undefined}
             />
 
-            {/* Map Transition Screen Fade */}
-            {isMapFading && (
-              <div className="absolute inset-0 bg-slate-950 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-700">
+            {/* Cinematic 2-Phase Map Transition Screen Fade */}
+            {mapFadePhase && (
+              <div
+                className={`absolute inset-0 bg-slate-950 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-400 ease-in-out ${
+                  mapFadePhase === 'entering' ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
                 <div
                   className="text-pink-300 font-bold flex items-center gap-2 animate-pulse"
                   style={{ fontFamily: "'VT323', monospace", fontSize: '24px' }}
@@ -724,7 +731,7 @@ export default function Game() {
                   {isNearMailbox && !isSitting && !isSwinging && !hasOpenedMailbox && (
                     <button
                       onClick={() => triggerFPVSpot('mailbox')}
-                      className="flex items-center gap-2 text-amber-200 hover:text-white cursor-pointer"
+                      className="flex items-center gap-2 text-amber-200 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-amber-900/90 border border-amber-400 text-amber-100 text-xs font-bold shadow">E</kbd>
                       <span>Mở Hòm Thư</span>
@@ -736,7 +743,7 @@ export default function Game() {
                       <span className="text-emerald-300 font-bold">Xích đu:</span>
                       <button
                         onClick={() => setIsSwinging(false)}
-                        className="hover:text-rose-200 flex items-center gap-1 cursor-pointer transition-colors"
+                        className="hover:text-rose-200 flex items-center gap-1 cursor-pointer transition-all active:scale-95"
                       >
                         <kbd className="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500 text-rose-200 text-xs font-bold">Space / E</kbd>
                         <span>Bước xuống</span>
@@ -753,7 +760,7 @@ export default function Game() {
                           <>
                             <button
                               onClick={() => triggerFPVSpot('cat')}
-                              className="flex items-center gap-1.5 text-slate-100 hover:text-pink-200 cursor-pointer"
+                              className="flex items-center gap-1.5 text-slate-100 hover:text-pink-200 cursor-pointer active:scale-95 transition-all"
                             >
                               <kbd className="px-2 py-0.5 rounded bg-rose-900/90 border border-rose-400 text-rose-100 text-xs font-bold shadow">E</kbd>
                               <span>Vuốt ve chú mèo</span>
@@ -771,7 +778,7 @@ export default function Game() {
                       )}
                       <button
                         onClick={() => setIsSitting(false)}
-                        className="hover:text-rose-200 flex items-center gap-1 cursor-pointer transition-colors"
+                        className="hover:text-rose-200 flex items-center gap-1 cursor-pointer transition-all active:scale-95"
                       >
                         <kbd className="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500 text-rose-200 text-xs font-bold">S / ↓</kbd>
                         <span>Đứng dậy</span>
@@ -783,7 +790,7 @@ export default function Game() {
                   {!isSwinging && !isSitting && isNearCat && !hasLostLetter && (
                     <button
                       onClick={() => setIsSitting(true)}
-                      className="flex items-center gap-1.5 text-amber-200 hover:text-white cursor-pointer font-bold"
+                      className="flex items-center gap-1.5 text-amber-200 hover:text-white cursor-pointer font-bold active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-amber-900/90 border border-amber-400 text-amber-100 text-xs font-bold shadow">S / ↓</kbd>
                       <span>Ngồi nghỉ chân</span>
@@ -794,7 +801,7 @@ export default function Game() {
                   {!isSwinging && !isSitting && isNearCat && hasLostLetter && (
                     <button
                       onClick={() => setIsSitting(true)}
-                      className="flex items-center gap-1.5 text-slate-300 hover:text-white cursor-pointer"
+                      className="flex items-center gap-1.5 text-slate-300 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-200 text-xs font-bold shadow">S / ↓</kbd>
                       <span>Ngồi nghỉ chân & suy ngẫm</span>
@@ -807,7 +814,7 @@ export default function Game() {
                         setIsSwinging(true);
                         SFX.swingWhoosh();
                       }}
-                      className="flex items-center gap-2 text-slate-100 hover:text-white cursor-pointer"
+                      className="flex items-center gap-2 text-slate-100 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-rose-900/90 border border-rose-400 text-rose-100 text-xs font-bold shadow">E</kbd>
                       <span>Lên xích đu gỗ</span>
@@ -818,7 +825,7 @@ export default function Game() {
                   {isNearStreetlampFragment && (
                     <button
                       onClick={() => triggerFPVSpot('lamp-reach')}
-                      className="flex items-center gap-2 text-amber-200 hover:text-white cursor-pointer"
+                      className="flex items-center gap-2 text-amber-200 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-amber-900/90 border border-amber-400 text-amber-100 text-xs font-bold shadow">E</kbd>
                       <span>Nhảy với lấy Mảnh Thư #1</span>
@@ -829,7 +836,7 @@ export default function Game() {
                   {isNearPaperBoat && (
                     <button
                       onClick={() => triggerFPVSpot('boat-retrieve')}
-                      className="flex items-center gap-2 text-cyan-200 hover:text-white cursor-pointer"
+                      className="flex items-center gap-2 text-cyan-200 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-cyan-900/90 border border-cyan-400 text-cyan-100 text-xs font-bold shadow">E</kbd>
                       <span>Vớt Thuyền Giấy Ký Ức</span>
@@ -843,7 +850,7 @@ export default function Game() {
                         isPettingForestCatRef.current = true;
                         triggerFPVSpot('forest-cat-chase');
                       }}
-                      className="flex items-center gap-2 text-pink-200 hover:text-white cursor-pointer"
+                      className="flex items-center gap-2 text-pink-200 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-pink-900/90 border border-pink-400 text-pink-100 text-xs font-bold shadow">E</kbd>
                       <span>Dỗ dành Chú Mèo Dưới Gốc Sồi</span>
@@ -854,7 +861,7 @@ export default function Game() {
                   {isNearCraftingTable && collectedFragments.every(Boolean) && !isLetterCrafted && (
                     <button
                       onClick={() => setIsCraftingLetter(true)}
-                      className="flex items-center gap-2 text-rose-200 hover:text-white cursor-pointer"
+                      className="flex items-center gap-2 text-rose-200 hover:text-white cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-rose-900/90 border border-rose-400 text-rose-100 text-xs font-bold shadow">E</kbd>
                       <span>Hàn gắn bức thư ký ức</span>
@@ -871,7 +878,7 @@ export default function Game() {
                   {!isSwinging && !isSitting && !isNearCat && !isNearSwing && !isNearMailbox && !isNearStreetlampFragment && !isNearPaperBoat && !isNearForestCat && nearbyFPVSpot && (
                     <button
                       onClick={() => triggerFPVSpot(nearbyFPVSpot.id)}
-                      className="flex items-center gap-2 text-slate-100 hover:text-rose-200 cursor-pointer"
+                      className="flex items-center gap-2 text-slate-100 hover:text-rose-200 cursor-pointer active:scale-95 transition-all"
                     >
                       <kbd className="px-2 py-0.5 rounded bg-rose-900/90 border border-rose-400 text-rose-100 text-xs font-bold shadow">E</kbd>
                       <span>{nearbyFPVSpot.label}</span>
