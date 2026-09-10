@@ -465,7 +465,7 @@ export default function FirstPersonView({
       {/* SCENE 1: PETTING THE CAT & LETTER RIP COMIC CUTSCENE                     */}
       {/* ========================================================================= */}
       {scene === 'cat' && (
-        <div className="absolute inset-0 w-full h-full bg-[#fdfbf7] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 w-full h-full bg-[#140e1b] flex items-center justify-center overflow-hidden">
           {/* Floating Hearts upon Successful Pet */}
           {catHearts.map((h) => (
             <div
@@ -482,32 +482,34 @@ export default function FirstPersonView({
             </div>
           ))}
 
-          {/* Line 0: Petting Cat on Bench (Stable, no stretch/squash/breathing) */}
-          {lineIndex === 0 && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePetCat();
-              }}
-              className="relative w-full h-full cursor-pointer flex items-center justify-center select-none"
-            >
-              <div
-                className="relative w-full h-full max-w-[620px] max-h-[380px]"
-              >
-                <Image
-                  src="/assets/others/fpv-cat-storybook.png"
-                  alt="Petting Cat Storybook"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
+          {/* Line 0: Petting Cat on Bench (Persistent in DOM, cross-fades smoothly) */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePetCat();
+            }}
+            className={`absolute inset-0 w-full h-full flex items-center justify-center select-none transition-opacity duration-300 ease-in-out ${
+              lineIndex === 0 ? 'opacity-100 z-20 cursor-pointer' : 'opacity-0 pointer-events-none z-10'
+            }`}
+          >
+            <div className="relative w-full h-full max-w-[620px] max-h-[380px]">
+              <Image
+                src="/assets/others/fpv-cat-storybook.png"
+                alt="Petting Cat Storybook"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
-          )}
+          </div>
 
           {/* Line 1: Comic cutscene - Cat scratches letter into 3 pieces */}
-          {lineIndex === 1 && (
-            <div className="relative w-full h-full max-w-[640px] max-h-[400px] animate-fade-in">
+          <div
+            className={`absolute inset-0 w-full h-full flex items-center justify-center select-none transition-opacity duration-300 ease-in-out ${
+              lineIndex === 1 ? 'opacity-100 z-20' : 'opacity-0 pointer-events-none z-10'
+            }`}
+          >
+            <div className="relative w-full h-full max-w-[640px] max-h-[400px]">
               <Image
                 src="/assets/others/cutscene-letter-rip.jpg"
                 alt="Cat Scratches Letter Cutscene"
@@ -516,11 +518,15 @@ export default function FirstPersonView({
                 priority
               />
             </div>
-          )}
+          </div>
 
-          {/* Line 2: Comic cutscene - Wind blows fragments, cat runs away, boy chases */}
-          {lineIndex >= 2 && (
-            <div className="relative w-full h-full max-w-[640px] max-h-[400px] animate-fade-in">
+          {/* Line 2+: Comic cutscene - Wind blows fragments, cat runs away, boy chases */}
+          <div
+            className={`absolute inset-0 w-full h-full flex items-center justify-center select-none transition-opacity duration-300 ease-in-out ${
+              lineIndex >= 2 ? 'opacity-100 z-20' : 'opacity-0 pointer-events-none z-10'
+            }`}
+          >
+            <div className="relative w-full h-full max-w-[640px] max-h-[400px]">
               <Image
                 src="/assets/others/cutscene-cat-chase.jpg"
                 alt="Cat Chase Cutscene"
@@ -529,7 +535,7 @@ export default function FirstPersonView({
                 priority
               />
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -944,29 +950,28 @@ export default function FirstPersonView({
 
         return (
           <div
-            className="absolute bottom-2 left-0 right-0 mx-auto w-[96%] max-w-[570px] z-40 select-none"
-            style={{
-              animation: 'subtitle-appear 0.25s ease-out',
-            }}
+            className="absolute bottom-2.5 left-0 right-0 mx-auto w-[96%] max-w-[570px] z-40 select-none pointer-events-auto"
           >
             <div
-              className="relative px-3 py-1.5 shadow-2xl backdrop-blur-md"
+              className="relative px-3.5 py-2 shadow-2xl backdrop-blur-md min-h-[58px] flex items-start justify-between gap-3"
               style={{
-                backgroundColor: 'rgba(9, 7, 18, 0.94)',
+                backgroundColor: 'rgba(9, 7, 18, 0.95)',
                 border: '2px solid #e2b77a',
                 boxShadow: '0 0 0 1px #2d1808, 0 4px 16px rgba(0, 0, 0, 0.85)',
                 imageRendering: 'pixelated',
               }}
             >
-              <div className="flex items-center justify-between gap-2.5 min-h-[30px]">
+              {/* Dialogue text box with stable min-height to prevent bounce/jitter */}
+              <div className="flex-1 min-h-[42px] flex items-start">
                 <p
-                  className="leading-tight flex items-center flex-wrap flex-1"
+                  className="leading-snug flex-1"
                   style={{
                     color: '#fef3c7',
                     fontFamily: "'VT323', monospace",
                     fontSize: '17px',
                     letterSpacing: '0.02em',
                     textShadow: '1px 1px 0px #000',
+                    margin: 0,
                   }}
                 >
                   {scene === 'cherry-summit' && currentLine.speaker && (
@@ -982,7 +987,7 @@ export default function FirstPersonView({
                   <span>{displayedText}</span>
                   {isTyping && (
                     <span
-                      className="inline-block ml-1"
+                      className="inline-block ml-1 align-baseline"
                       style={{
                         width: '6px',
                         height: '2px',
@@ -992,50 +997,51 @@ export default function FirstPersonView({
                     />
                   )}
                 </p>
+              </div>
 
-                <div className="shrink-0 flex items-center gap-1.5 select-none">
-                  {/* Action key indicator: Pixel badge [E] */}
-                  {actionLabel && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleInteraction();
-                      }}
-                      className="px-2 py-0.5 bg-[#451a03] hover:bg-[#78350f] border border-[#f59e0b] text-[#fef3c7] text-xs font-bold flex items-center gap-1 cursor-pointer active:translate-y-0.5 transition-transform"
-                      style={{
-                        fontFamily: "'VT323', monospace",
-                        fontSize: '13px',
-                        boxShadow: '1px 1px 0px #000',
-                      }}
-                    >
-                      <span className="text-[#fbbf24] font-bold">[E]</span>
-                      <span>{actionLabel}</span>
-                    </button>
-                  )}
+              {/* Action buttons: anchored at top-right, never jumping vertically */}
+              <div className="shrink-0 flex items-center gap-1.5 pt-0.5 select-none">
+                {/* Action key indicator: Pixel badge [E] */}
+                {actionLabel && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleInteraction();
+                    }}
+                    className="px-2 py-0.5 bg-[#451a03] hover:bg-[#78350f] border border-[#f59e0b] text-[#fef3c7] text-xs font-bold flex items-center gap-1 cursor-pointer active:translate-y-0.5 transition-transform"
+                    style={{
+                      fontFamily: "'VT323', monospace",
+                      fontSize: '13px',
+                      boxShadow: '1px 1px 0px #000',
+                    }}
+                  >
+                    <span className="text-[#fbbf24] font-bold">[E]</span>
+                    <span>{actionLabel}</span>
+                  </button>
+                )}
 
-                  {/* Advance button: Pixel badge [➔] */}
-                  {/* Task 2: Hide Advance button during bench cat petting until letter is torn (lineIndex >= 1) */}
-                  {!(scene === 'cat' && !isForestCat && lineIndex === 0) && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        triggerAdvanceOneShot();
-                      }}
-                      className="px-2.5 py-0.5 bg-[#1e1b4b] hover:bg-[#312e81] border border-[#a855f7] text-[#f3e8ff] text-xs font-bold flex items-center gap-1 cursor-pointer active:translate-y-0.5 transition-transform"
-                      style={{
-                        fontFamily: "'VT323', monospace",
-                        fontSize: '13px',
-                        boxShadow: '1px 1px 0px #000',
-                      }}
-                      title="Bấm nút hoặc phím [➔] để tiếp tục"
-                    >
-                      <span>{lineIndex < dialogues.length - 1 ? 'Tiếp' : 'Xong'}</span>
-                      <span className="text-[#f472b6]">➔</span>
-                    </button>
-                  )}
-                </div>
+                {/* Advance button: Pixel badge [➔] */}
+                {/* Task 2: Hide Advance button during bench cat petting until letter is torn (lineIndex >= 1) */}
+                {!(scene === 'cat' && !isForestCat && lineIndex === 0) && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerAdvanceOneShot();
+                    }}
+                    className="px-2.5 py-0.5 bg-[#1e1b4b] hover:bg-[#312e81] border border-[#a855f7] text-[#f3e8ff] text-xs font-bold flex items-center gap-1 cursor-pointer active:translate-y-0.5 transition-transform"
+                    style={{
+                      fontFamily: "'VT323', monospace",
+                      fontSize: '13px',
+                      boxShadow: '1px 1px 0px #000',
+                    }}
+                    title="Bấm nút hoặc phím [➔] để tiếp tục"
+                  >
+                    <span>{lineIndex < dialogues.length - 1 ? 'Tiếp' : 'Xong'}</span>
+                    <span className="text-[#f472b6]">➔</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

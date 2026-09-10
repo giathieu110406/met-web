@@ -23,11 +23,15 @@ const PARTICLES = [
   { size: 6, left: '78%', top: '55%', color: '#86efac', duration: 4.6, delay: 1.7 },
 ];
 
+import { preloadGameAssets } from '@/lib/preload-assets';
+
 export default function TitleScreen({ onStart }: TitleScreenProps) {
   const [showPrompt, setShowPrompt] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
+    // Warm up all game assets in browser cache in background
+    preloadGameAssets();
     // Show "Press any key" prompt after a brief delay
     const timer = setTimeout(() => setShowPrompt(true), 600);
     return () => clearTimeout(timer);
