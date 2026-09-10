@@ -44,7 +44,7 @@ met-web/
 │   │   ├── fpv-rain-effect.tsx    # Hệ thống hạt mưa chân thực cho cảnh FPV Rain
 │   │   ├── thought-bubble.tsx     # Khung suy nghĩ khi nhặt hoa, tự đóng theo khoảng cách
 │   │   ├── props-layer.tsx        # Cảnh vật tương tác (xích đu, biển chỉ dẫn, mèo, đèn...)
-│   │   ├── ending-cutscene.tsx    # Đại kết cục (pháo hoa, cánh hoa rơi, thiệp "I LIKE U")
+│   │   ├── ending-cutscene.tsx    # Đại kết cục (pháo hoa, cánh hoa rơi, thiệp "I LOVE U")
 │   │   └── admin-panel.tsx        # Bảng điều khiển debug (~ hoặc F2)
 │   ├── hooks/
 │   │   ├── use-game-loop.ts       # Vòng lặp game chuẩn 60fps qua requestAnimationFrame

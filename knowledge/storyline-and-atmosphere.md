@@ -13,7 +13,7 @@
   1. **Khởi hành (Sunset)**: Hoàng hôn vàng cam ấm áp, rụt rè và bỡ ngỡ.
   2. **Thử thách (Twilight Rain)**: Mưa rào chạng vạng buốt lạnh, gợi lại những kỷ niệm ngọt ngào xen lẫn xót xa.
   3. **Tĩnh lặng & Niềm tin (Deep Night & Moonlit Bridge)**: Đêm sâu huyền ảo dưới ánh trăng và đom đóm, kiên định với tình cảm trong lòng.
-  4. **Tái ngộ & Tỏ tình (Dawn Summit)**: Bình minh rực rỡ trên đỉnh đồi hoa anh đào, trao gửi đóa hoa và tấm thiệp *"I LIKE U"*.
+  4. **Tái ngộ & Tỏ tình (Dawn Summit)**: Bình minh rực rỡ trên đỉnh đồi hoa anh đào, trao gửi đóa hoa và tấm thiệp *"I LOVE U"*.
 
 ---
 
@@ -82,7 +82,7 @@ Bản đồ trò chơi được chia làm 2 giai đoạn lớn với tổng chi�
 ── [Đỉnh đồi y=265: x=1850..2200] 
 ── [Cội Đại Thụ Anh Đào: x=1940] 
 ── [Em đứng chờ: x=2050] ── [FPV Tái Ngộ Dưới Gốc Anh Đào] 
-── [Ending: Pháo hoa, Trái tim dạ quang & Thiệp "I LIKE U" cuộn 60FPS]
+── [Ending: Pháo hoa, Trái tim dạ quang & Thiệp "I LOVE U" cuộn 60FPS]
 ```
 
 ---
@@ -361,7 +361,7 @@ Tất cả các cảnh FPV đều tuân thủ các quy tắc điện ảnh cốt
 ---
 
 ### 🌸 FPV 5: Tái Ngộ Dưới Gốc Anh Đào Đỉnh Đồi (`scene = "cherry-summit"`, $x = 2050$ trên Map 2)
-- **Hình ảnh**: Bầu trời ban mai trong trẻo màu lam ngọc và phấn hồng. Cội đại thụ hoa anh đào sum sê ($x = 1940$) rủ bóng che chở nơi đỉnh núi bình yên ($y = 265$). Phía đối diện: Bạn gái trong chiếc váy xanh dương ($x = 2050$), mỉm cười dịu dàng đón chào. Tiền cảnh: Đôi bàn tay chàng trai nâng niu bó 7 đóa hoa hồng đỏ thắm và tấm thiệp "I LIKE U" đã được dán phẳng phiu bằng những dải băng hoa đào.
+- **Hình ảnh**: Bầu trời ban mai trong trẻo màu lam ngọc và phấn hồng. Cội đại thụ hoa anh đào sum sê ($x = 1940$) rủ bóng che chở nơi đỉnh núi bình yên ($y = 265$). Phía đối diện: Bạn gái trong chiếc váy xanh dương ($x = 2050$), mỉm cười dịu dàng đón chào. Tiền cảnh: Đôi bàn tay chàng trai nâng niu bó 7 đóa hoa hồng đỏ thắm và tấm thiệp "I LOVE U" đã được dán phẳng phiu bằng những dải băng hoa đào.
 - **Đối thoại Tái Ngộ**:
   > **[Anh]**: *"Gió sớm khẽ lay lọn tóc em... Cuối cùng, anh cũng đã đến được nơi này."*  
   > **[Em]**: *"Em đã đợi anh rất lâu rồi... Thật mừng vì anh đã tới!"*  
@@ -382,7 +382,7 @@ Tất cả các cảnh FPV đều tuân thủ các quy tắc điện ảnh cốt
 - **3 Mảnh Thư Pixel Art (Pixel Kraft Fragments)**:
   - 3 mảnh giấy kraft nâu be viền rách răng cưa pixel chuẩn mực:
     - **Mảnh #1 (Trái)**: Nét chữ doodle pixel **"I"** viết tay đậm đà.
-    - **Mảnh #2 (Giữa)**: Nét chữ doodle pixel **"LIKE"** mộc mạc.
+    - **Mảnh #2 (Giữa)**: Nét chữ doodle pixel **"LOVE"** mộc mạc, bo góc mịn màng.
     - **Mảnh #3 (Phải)**: Nét chữ doodle pixel **"U"** và trái tim nhỏ đỏ thắm.
 - **Cơ chế tương tác Gameplay Pixel Retro**:
   1. Khay đựng mảnh vụn ở đáy màn hình hiển thị 3 mảnh thư pixel nhấp nhô lơ lửng nhẹ.
@@ -393,7 +393,7 @@ Tất cả các cảnh FPV đều tuân thủ các quy tắc điện ảnh cốt
 
 ---
 
-## 🎆 5. Đại Kết Cục: Tỏ Tình & Tấm Thiệp "I LIKE U" (Ending Cutscene)
+## 🎆 5. Đại Kết Cục: Tỏ Tình & Tấm Thiệp "I LOVE U" (Ending Cutscene)
 
 Ngay khi lời thoại thứ 4 của cảnh FPV 5 kết thúc, trò chơi chuyển sang `gameState = 'ending'`:
 
@@ -401,10 +401,10 @@ Ngay khi lời thoại thứ 4 của cảnh FPV 5 kết thúc, trò chơi chuy�
    - Nhân vật nam và bạn gái đứng kề bên nhau dưới cội hoa anh đào cổ thụ.
    - Những đợt pháo hoa rực rỡ (đỏ, vàng, hồng, lục, lam) bung nở liên tiếp trên nền trời bình minh.
    - Cánh hoa anh đào rơi ngập tràn không gian.
-2. **Tấm Thiệp Tỏ Tình Thần Thánh ("I LIKE U" Card)**:
-   - Tái hiện trung thành **100% nguyên tác** (theo đúng commit `4624329` của repository gốc và ảnh `message.png`):
+2. **Tấm Thiệp Tỏ Tình Thần Thánh ("I LOVE U" Card)**:
+   - Tái hiện trung thành **100% nguyên tác** với phông chữ doodle comic tự nhiên, mượt mà:
    - Tấm thiệp bìa kraft mộc mạc hai bàn tay nâng niu, mang dòng chữ viết tay lớn:
-     $$\mathbf{I\ LIKE\ U}$$
+     $$\mathbf{I\ LOVE\ U}$$
    - **Chuyển động mượt mà**: Thiệp trượt từ từ từ đáy màn hình lên giữa khung hình (`position` xuất phát từ 0, giảm 5px mỗi 100ms cho đến khi đạt ngưỡng cân đối).
    - **Âm thanh**: Tiếng nhạc nền Lo-Fi ấm áp và tiếng pháo hoa nhẹ nhàng ngân nga.
 
@@ -488,7 +488,7 @@ Toàn bộ âm thanh được lập trình bằng Web Audio API Synthesizer tron
 | **12.2** | Reunion | Gặp bạn gái dòng 2 ($x=2050$ Map 2) | Em | *"Em đã đợi anh rất lâu rồi... Thật mừng vì anh đã tới!"* |
 | **12.3** | Reunion | Gặp bạn gái dòng 3 ($x=2050$ Map 2) | Anh | *"Gió bão dọc đường đã xé rách bức thư anh viết... Nhưng anh đã nhặt lại từng mảnh, dán lại phẳng phiu cùng 7 đóa hoa này gửi trao em."* |
 | **12.4** | Reunion | Gặp bạn gái dòng 4 ($x=2050$ Map 2) | Em | *"Từng vết dán hoa đào này... thật đẹp và ấm áp. Cảm ơn anh vì đã không bỏ cuộc để mang trọn vẹn chân thành đến đây cùng em!"* |
-| **13** | Ending | Thiệp trượt từ dưới lên | Thiệp tỏ tình | **"I LIKE U"** (Bức thư viết tay kèm hào quang trái tim dạ quang) |
+| **13** | Ending | Thiệp trượt từ dưới lên | Thiệp tỏ tình | **"I LOVE U"** (Bức thư viết tay kèm hào quang trái tim dạ quang) |
 
 ---
 

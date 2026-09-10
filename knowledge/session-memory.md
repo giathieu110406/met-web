@@ -469,7 +469,7 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
     $$y(x) = \begin{cases} 320 - \frac{x}{750} \times 55 & \text{khi } x \le 750 \\ 265 & \text{khi } x > 750 \end{cases}$$
 ### 4. Nâng Cấp Nghệ Thuật Pixel & Tách Mảnh Thư Nguyên Tác (Session Update)
 - **Tách 3 mảnh thư từ `message.png` gốc**:
-  - *Kỹ thuật*: Sử dụng thuật toán giải mã PNG scanline defilter (hỗ trợ các bộ lọc sub, up, average, paeth của chuẩn PNG) để trích xuất trực tiếp dữ liệu thô từ ảnh bức thư gốc "I LIKE U", chia làm 3 mảnh ghép rách có đường xé tự nhiên và loại bỏ phần ngón tay cầm thư.
+  - *Kỹ thuật*: Sử dụng thuật toán giải mã PNG scanline defilter (hỗ trợ các bộ lọc sub, up, average, paeth của chuẩn PNG) để trích xuất trực tiếp dữ liệu thô từ ảnh bức thư gốc, chia làm 3 mảnh ghép rách có đường xé tự nhiên và loại bỏ phần ngón tay cầm thư.
   - *Snapping & Crafting*: Cập nhật tỉ lệ và tọa độ tự động hút `OVERLAP = 6px`, dán keo từng vết rách bằng thao tác kéo thả hoặc nhấn nhanh.
 - **Nâng cấp chiếc xích đu gỗ pixel**:
   - Thay thế toàn bộ thẻ vector SVG bằng sprite pixel art 16-bit nguyên bản `wooden-swing-frame.png` với hai móc sắt, dầm ngang và khớp nối vững chãi.
@@ -478,6 +478,28 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
   - Tạo vòm dù đỏ `fpv-umbrella-canopy-pixel.png` với múi vải phong phú, loại bỏ hoàn toàn chuyển động nhấp nhô `title-float`.
 - **Nâng cấp tranh minh họa 16:9 FPV**:
   - Bổ sung `fpv-bridge-starry.jpg` (cảnh ngắm sao trên cầu ban đêm) và `fpv-cherry-garden-entrance.jpg` (cảnh bước vào vườn hoa đào), đạt tính nhất quán hoàn hảo với phong cách tranh lấy thư từ thuyền giấy và hòm thư.
+
+### 5. Chuyển Đổi "I LIKE U" Sang "I LOVE U" & Tinh Chỉnh Cốt Truyện, Mỹ Thuật (Session Update)
+- **Thiết kế lại toàn diện Bức thư tỏ tình `message.png` ("I LOVE U")**:
+  - Tái tạo nét chữ viết tay comic doodle mượt mà với thuật toán khử răng cưa subpixel, loại bỏ hoàn toàn các đường gấp khúc và chồng lấn nét.
+  - Chữ "LOVE" tròn trịa, cân xứng, giữ nguyên drop shadow xám `#505050` chuẩn tỉ lệ gốc nghiêng sang phải và nền giấy kraft nâu `#d9a066`.
+  - Tái cấu trúc bộ 3 mảnh ghép rách tự nhiên:
+    - `message-piece-0.png`: Mảnh chữ "I"
+    - `message-piece-1.png`: Mảnh chữ "LOVE"
+    - `message-piece-2.png`: Mảnh chữ "U ♥"
+- **Đồng bộ hóa Mini-game Ghép thư FPV (`fpv-letter-crafting.tsx`)**:
+  - Cập nhật watermark nền mờ từ `"I LIKE U"` sang `"I LOVE U"`.
+  - Tiêu đề mảnh #2 đổi thành: `Mảnh #2: "LOVE"`.
+  - Toàn bộ hướng dẫn tương tác, thông báo hoàn thành đều đồng bộ sang "I LOVE U".
+- **Tinh chỉnh Lời thoại & Cốt truyện sâu sắc hơn**:
+  - Đổi ngôi xưng từ "mình - cậu" sang "anh - em" ở các phân đoạn quan trọng (đoạn giới thiệu Intro, hoa #2, gặp mặt đỉnh đồi).
+  - Bổ sung chi tiết mèo cào vuốt làm rách bức thư tại ghế đá công viên ($x = 450$).
+  - Bông hoa hồng #2 phản ánh ý chí kiên định: *"Dù trời mưa gió... anh vẫn muốn bước tiếp tới gặp em."*
+- **Tối ưu trải nghiệm FPV**:
+  - Nút bấm tương tác phím `[E]` tự động ẩn sau khi kích hoạt thành công, trả lại không gian thoáng đãng cho hộp thoại và tranh minh họa.
+- **Nâng cấp hình nền Web Pixel Art (`public/web-bg.jpg`)**:
+  - Cập nhật ảnh nền bối cảnh thành phố pixel lãng mạn dưới ánh hoàng hôn và màn đêm dịu nhẹ.
+
 
 
 

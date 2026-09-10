@@ -82,7 +82,7 @@ Tại $x = 1050$, một cơn lốc xoáy thổi rách bức thiệp viết tay t
 6. **Cảnh Dỗ Mèo Bìa Rừng (`scene = "cat_recover"`, $x = 1800$)**:
    - Nhấn `[E]` dỗ dành chú mèo bên gốc sồi già để nhận lại Mảnh thư #3.
 7. **Cảnh Bàn Dán Thư Tự Do (`FpvLetterCrafting`, $x = 2210$)**:
-   - 3 mảnh giấy rách ("I", "LIKE", "U") đặt ngẫu nhiên tự do trên mặt bàn gỗ retro pixel art.
+   - 3 mảnh giấy rách ("I", "LOVE", "U") đặt ngẫu nhiên tự do trên mặt bàn gỗ retro pixel art.
    - Người chơi tự do kéo-thả ghép các mép rách rồi dán cố định bằng băng keo washi hoa đào.
 
 ---
@@ -100,5 +100,5 @@ Tại $x = 1050$, một cơn lốc xoáy thổi rách bức thiệp viết tay t
 - **Mưa cánh hoa bay (`PetalRain`)**: 50+ cánh hoa đào bay phấp phới ngập tràn không gian.
 - **Đại Kết Cục (Ending)**:
   - Chàng trai bước đến bên cô gái ($x = 840, y = 201$).
-  - Bức thư tình "I LIKE U" hoàn chỉnh từ từ trượt lên màn hình trong tiếng chuông ngân vang và mưa cánh hoa đào.
+  - Bức thư tình "I LOVE U" hoàn chỉnh từ từ trượt lên màn hình trong tiếng chuông ngân vang và mưa cánh hoa đào.
 

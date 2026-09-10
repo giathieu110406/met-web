@@ -33,11 +33,11 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
   const [isFullyAssembled, setIsFullyAssembled] = useState(false);
 
   // Glue / Washi tape state
-  const [gluedSeams, setGluedSeams] = useState<boolean[]>([false, false]); // seam 0: between I & LIKE, seam 1: between LIKE & U
+  const [gluedSeams, setGluedSeams] = useState<boolean[]>([false, false]); // seam 0: between I & LOVE, seam 1: between LOVE & U
   const [isTaped, setIsTaped] = useState(false);
 
   const [activeMessage, setActiveMessage] = useState<string>(
-    'Các mảnh thư đang nằm lộn xộn trên bàn... Hãy kéo và sắp xếp 3 mảnh lại theo thứ tự: "I" ➔ "LIKE" ➔ "U".'
+    'Các mảnh thư đang nằm lộn xộn trên bàn... Hãy kéo và sắp xếp 3 mảnh lại theo thứ tự: "I" ➔ "LOVE" ➔ "U".'
   );
 
   // Dragging state
@@ -60,7 +60,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
     },
     {
       id: 1,
-      title: 'Mảnh #2: "LIKE"',
+      title: 'Mảnh #2: "LOVE"',
       text: '“Những đêm cậu mệt mỏi, mình chỉ ước có thể mang cho cậu một ly trà ấm...”',
     },
     {
@@ -80,7 +80,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
       let snapped01 = isPair01Snapped;
       let snapped12 = isPair12Snapped;
 
-      // Check Pair 0 & 1 ("I" and "LIKE")
+      // Check Pair 0 & 1 ("I" and "LOVE")
       if (!snapped01) {
         // Target: p1.x should be near p0.x + PIECE_W[0] - OVERLAP, and p1.y near p0.y
         const idealP1X = p0.x + PIECE_W[0] - OVERLAP;
@@ -95,11 +95,11 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
           p0.rot = 0;
           p1.rot = 0;
           SFX.paperPickup();
-          setActiveMessage('Đã ghép được "I" và "LIKE"! Hãy kéo mảnh "U ♥" lại gần bên phải.');
+          setActiveMessage('Đã ghép được "I" và "LOVE"! Hãy kéo mảnh "U ♥" lại gần bên phải.');
         }
       }
 
-      // Check Pair 1 & 2 ("LIKE" and "U")
+      // Check Pair 1 & 2 ("LOVE" and "U")
       if (!snapped12) {
         const idealP2X = p1.x + PIECE_W[1] - OVERLAP;
         const dx12 = Math.abs(p2.x - idealP2X);
@@ -113,7 +113,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
           p1.rot = 0;
           p2.rot = 0;
           SFX.paperPickup();
-          setActiveMessage('Đã ghép được "LIKE" và "U ♥"! Hãy ghép nốt mảnh còn lại.');
+          setActiveMessage('Đã ghép được "LOVE" và "U ♥"! Hãy ghép nốt mảnh còn lại.');
         }
       }
 
@@ -133,7 +133,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
 
         setTimeout(() => {
           SFX.harpChime();
-          setActiveMessage('♥ Đã xếp hoàn chỉnh "I LIKE U"! Hãy kéo chai keo dán qua 2 đường nối để dán kín bức thư.');
+          setActiveMessage('♥ Đã xếp hoàn chỉnh "I LOVE U"! Hãy kéo chai keo dán qua 2 đường nối để dán kín bức thư.');
         }, 300);
       }
 
@@ -341,7 +341,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
                 className="text-amber-200 font-bold tracking-widest text-2xl"
                 style={{ fontFamily: "'Press Start 2P', monospace" }}
               >
-                I LIKE U
+                I LOVE U
               </span>
               <span
                 className="text-amber-100 text-xs mt-1"
@@ -388,7 +388,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
             />
           </div>
 
-          {/* Seam 0 between "I" & "LIKE" (active when fully assembled) */}
+          {/* Seam 0 between "I" & "LOVE" (active when fully assembled) */}
           {isFullyAssembled && (
             <div
               ref={seam0Ref}
@@ -423,7 +423,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
             </div>
           )}
 
-          {/* Piece 1: "LIKE" */}
+          {/* Piece 1: "LOVE" */}
           <div
             onPointerDown={(e) => handlePointerDownPiece(e, 1)}
             className={`absolute transition-all duration-150 select-none ${
@@ -445,7 +445,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
           >
             <Image
               src="/assets/others/message-piece-1.png"
-              alt='Mảnh thư: "LIKE"'
+              alt='Mảnh thư: "LOVE"'
               fill
               sizes={`${PIECE_W[1]}px`}
               className="object-contain pointer-events-none"
@@ -455,7 +455,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
             />
           </div>
 
-          {/* Seam 1 between "LIKE" & "U" (active when fully assembled) */}
+          {/* Seam 1 between "LOVE" & "U" (active when fully assembled) */}
           {isFullyAssembled && (
             <div
               ref={seam1Ref}

@@ -10,7 +10,7 @@ Thư mục `knowledge/` là trung tâm lưu trữ tri thức, kiến trúc, quy 
 | Tài liệu | Mô tả nội dung |
 | :--- | :--- |
 | 🗺️ **[architecture.md](./architecture.md)** | Kiến trúc tổng quan, luồng dữ liệu, hệ thống State, Hooks (`useGameLoop`, `useKeyboard`), âm thanh (`SFX`, `BGMController`). |
-| 📖 **[storyline-and-atmosphere.md](./storyline-and-atmosphere.md)** | **Kịch bản gốc**: Toàn bộ cốt truyện, lời thoại nhân vật, hiệu ứng âm thanh, ánh sáng bầu trời, góc nhìn camera, FPV và tấm thiệp "I LIKE U". Bắt buộc cập nhật khi sửa cốt truyện. |
+| 📖 **[storyline-and-atmosphere.md](./storyline-and-atmosphere.md)** | **Kịch bản gốc**: Toàn bộ cốt truyện, lời thoại nhân vật, hiệu ứng âm thanh, ánh sáng bầu trời, góc nhìn camera, FPV và tấm thiệp "I LOVE U". Bắt buộc cập nhật khi sửa cốt truyện. |
 | 🎮 **[gameplay-mechanics.md](./gameplay-mechanics.md)** | Cơ chế vật lý, 7 cơ chế nhặt hoa, hộp thoại chỉ dẫn đáy khung hình, tương tác xem lại FPV, cơ chế ngắt đà di chuyển `resetKeys`. |
 | 🎨 **[visual-assets.md](./visual-assets.md)** | Bảng màu DawnBringer DB32, quy chuẩn kích thước, script sinh pixel art (`generate-hd-fpv-all.js`), hiệu ứng mưa `FpvRainEffect`. |
 | 💡 **[troubleshooting-and-learnings.md](./troubleshooting-and-learnings.md)** | Tổng hợp các lỗi kỹ thuật đã giải quyết triệt để (lỗi frame lệch trái, re-render 60fps), bài học và kinh nghiệm đúc kết. |

@@ -96,23 +96,25 @@ export default function Game() {
   const isNearPaperBoat = currentMap === 'valley' && heroX >= 1430 && heroX <= 1610 && hasLostLetter && !collectedFragments[1];
   const isNearForestCat = currentMap === 'valley' && heroX >= 1740 && heroX <= 1860 && hasLostLetter && !collectedFragments[2];
   const isNearCraftingTable = currentMap === 'valley' && heroX >= 2180 && heroX <= 2240;
+  const isNearHillBench = currentMap === 'hill' && Math.abs(heroX - 940) < 50;
 
   // 1. Adaptive BGM Control
   useEffect(() => {
     if (gameState !== 'title' && gameState !== 'intro') {
       resumeAudio();
       BGM.start();
-      const inRain = heroX >= 580 && heroX <= 1350;
+      const inRain = currentMap === 'valley' && heroX >= 580 && heroX <= 1350;
       const isCinematic = gameState === 'dialogue' || gameState === 'ending';
       BGM.updateLayers({
         flowerCount: collectedIds.size,
         inRain,
         isCinematic,
+        currentMap,
       });
     } else {
       BGM.stop();
     }
-  }, [gameState, heroX, collectedIds.size]);
+  }, [gameState, heroX, collectedIds.size, currentMap]);
 
   // 2. Pendulum Swing Animation Loop & 2-Phase Solitary Rain Contemplation
   useEffect(() => {
@@ -132,7 +134,7 @@ export default function Game() {
       setCurrentStory({
         flowerId: 95,
         x: LEVEL.props.swing.x,
-        text: 'Đến cả một bức thư cũng không giữ trọn vẹn được... thì lấy tư cách gì nói lời yêu thương? Hay là mình bỏ cuộc ở đây thôi...',
+        text: 'Đến cả một bức thư cũng không giữ trọn vẹn được... Bây giờ mình phải làm sao đây...',
       });
 
       // Phase 2: Spark of Courage (after 4.2s of swinging in rain)
@@ -140,7 +142,7 @@ export default function Game() {
         setCurrentStory({
           flowerId: 95,
           x: LEVEL.props.swing.x,
-          text: 'Nhưng nhìn nhành hoa dại bên chân xích đu xem... Dù mưa gió quăng quật tả tơi vẫn đỏ thắm kiên cường. Bức thư có thể rách, nhưng lòng chân thành của mình đâu có rách! Nhất định phải đi tìm lại từng mảnh!',
+          text: 'Nhưng mình sẽ kiên cường như nhành hoa này... Dù mưa gió quăng quật tả tơi vẫn đỏ thắm kiên cường. Bức thư có thể rách, nhưng lòng chân thành của mình đâu có rách! Nhất định phải đi tìm lại từng mảnh!',
         });
       }, 4200);
     }
@@ -174,12 +176,25 @@ export default function Game() {
     }
   }, [isSitting, isNearCat, hasLostLetter]);
 
+  // 2.6. Mountain trail resting bench on Map 2 (x = 940)
+  const hasContemplatedHillBenchRef = useRef(false);
+  useEffect(() => {
+    if (isSitting && isNearHillBench && !hasContemplatedHillBenchRef.current) {
+      hasContemplatedHillBenchRef.current = true;
+      setCurrentStory({
+        flowerId: 98,
+        x: 940,
+        text: 'Con đường lên đỉnh đồi tuy dốc và dài, nhưng mỗi bước chân lại đưa anh đến gần em hơn...',
+      });
+    }
+  }, [isSitting, isNearHillBench]);
+
   // Reminder when player tries to pet cat before sitting
   const handleSitReminder = useCallback(() => {
     setCurrentStory({
       flowerId: 93,
       x: LEVEL.props.cat.x,
-      text: 'Mình nên ngồi xuống ghế [S] nghỉ chân một chút... Chú mèo trông có vẻ đang ngủ rất say.',
+      text: 'Mệt quá đi thôi! Mình nên ngồi xuống ghế [S] nghỉ chân một chút vậy... Chú mèo trông cuti đấy chứ ❤️.',
     });
   }, []);
 
@@ -441,7 +456,7 @@ export default function Game() {
           setIsSitting(false);
           return;
         }
-      } else if ((e.key === 'ArrowDown' || key === 's') && isNearCat) {
+      } else if ((e.key === 'ArrowDown' || key === 's') && (isNearCat || isNearHillBench)) {
         setIsSitting(true);
         return;
       }
@@ -808,6 +823,17 @@ export default function Game() {
                     </button>
                   )}
 
+                  {/* Standing near hill bench on Map 2: can sit to contemplate */}
+                  {!isSwinging && !isSitting && isNearHillBench && (
+                    <button
+                      onClick={() => setIsSitting(true)}
+                      className="flex items-center gap-1.5 text-pink-200 hover:text-white cursor-pointer active:scale-95 transition-all"
+                    >
+                      <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-200 text-xs font-bold shadow">S / ↓</kbd>
+                      <span>Ngồi nghỉ chân sườn đồi</span>
+                    </button>
+                  )}
+
                   {!isSwinging && !isSitting && !isNearCat && isNearSwing && (
                     <button
                       onClick={() => {
@@ -949,7 +975,7 @@ export default function Game() {
                         setCurrentStory({
                           flowerId: 99,
                           x: 450,
-                          text: 'Không thể nào! Bức thư mình nắn nót viết suốt bao đêm qua... Gió thổi bay mất rồi! Chú mèo cũng giật mình phóng chạy... Kìa dưới ghế rơi lại đóa hoa hồng #2, phải đuổi theo tìm lại đủ các mảnh thư!',
+                          text: 'Không thể nào! Bức thư mình nắn nót viết suốt bao đêm qua... Gió thổi bay mất rồi!... Phải đuổi theo tìm lại đủ các mảnh thư mới được!',
                         });
                         // Turn off flying fragment animation after 2.6 seconds
                         setTimeout(() => {
@@ -995,7 +1021,7 @@ export default function Game() {
               </>
             )}
 
-            {/* 14. Grand Ending Cutscene (Fireworks, Petal Rain, I LIKE U letter) */}
+            {/* 14. Grand Ending Cutscene (Fireworks, Petal Rain, I LOVE U letter) */}
             {gameState === 'ending' && <EndingCutscene />}
           </>
         )}

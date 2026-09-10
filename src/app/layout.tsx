@@ -29,7 +29,10 @@ const vt323 = VT323({
 
 export const metadata: Metadata = {
   title: 'Met — A Tiny Love Story',
-  description: 'A pixel-art love story game',
+  description: 'A cozy 2D pixel-art love story game',
+  icons: {
+    icon: '/assets/others/rose-item.png',
+  },
 };
 
 export default function RootLayout({

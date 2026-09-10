@@ -19,7 +19,7 @@ export default function EndingCutscene() {
         />
       </div>
 
-      {/* Message "I LIKE U" — silky smooth 60FPS gliding up into center */}
+      {/* Message "I LOVE U" — silky smooth 60FPS gliding up into center */}
       <div
         className="absolute z-50 pointer-events-none"
         style={{

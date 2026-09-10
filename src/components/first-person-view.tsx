@@ -32,25 +32,25 @@ interface DialogueLine {
 
 const MAILBOX_DIALOGUES: DialogueLine[] = [
   {
-    text: 'Một bưu kiện gửi đến hòm thư... Là cuốn sách hôm trước cậu ấy nhắc tới!',
+    text: 'Bưu kiện gửi đến sao... \nLà cuốn sách hôm trước em ấy nhắc tới!',
   },
   {
-    text: "Mẩu giấy nhắn kẹp kèm theo... 'Đỉnh đồi Hoa Anh Đào'. Đây chính là địa chỉ nơi cậu ấy đang đợi!",
+    text: "Còn có mẩu giấy này ghi gì vậy?... \n'Đỉnh đồi Hoa Anh Đào'. Đây sẽ là chúng ta gặp nhau!",
   },
   {
-    text: 'Bức thư tình này mình đã nắn nót viết suốt bao đêm... Mình phải lên đường ngay để trao tận tay cậu ấy!',
+    text: 'Mình có nên mang theo nó không nhỉ?... \nCứ mang theo lên đường trước đã!',
   },
 ];
 
 const CAT_BENCH_DIALOGUES: DialogueLine[] = [
   {
-    text: 'Bộ lông ấm áp thật đấy... Ngoan quá. Mình đặt bức thư tỏ tình ở đây một chút nhé, nắn nót viết mãi mới xong đấy...',
+    text: 'Bộ lông ấm áp thật đấy... Ngoan quá....',
   },
   {
-    text: 'Ô kìa, chú mèo cựa mình vươn móng vuốt... Mèo ơi đừng cào vào phong bì thư!',
+    text: 'Đột nhiên, chú mèo thức giấc và cào móng vuốt... Không may rằng bức thư ở gần đó và ngay tầm với!',
   },
   {
-    text: 'Gió bất ngờ thổi thốc qua cuốn 3 mảnh thư bay vút đi! Chú mèo cũng giật mình phóng chạy... Mình phải đuổi theo ngay!',
+    text: 'Gió bất ngờ thổi thốc qua cuốn 3 mảnh thư bay vút đi! Chú mèo cũng giật mình phóng chạy...',
   },
 ];
 
@@ -65,10 +65,10 @@ const FOREST_CAT_DIALOGUES: DialogueLine[] = [
 
 const RAIN_DIALOGUES: DialogueLine[] = [
   {
-    text: 'Tiếng mưa rơi tí tách trên mặt ô nghe thật êm đềm...',
+    text: 'Hôm nay lại là một ngày mưa, không hiểu sao anh lại nhớ đến em rồi...',
   },
   {
-    text: 'Chiếc ô này ngày ấy quá nhỏ cho cả hai... nhưng em lại cố tình nép sát vào vai anh. Mưa làm ướt một bên áo, mà tim anh lúc đó lại ấm lạ thường.',
+    text: 'Ngày hôm ấy hai ta cùng đứng dưới mưa... nhưng tay em lại nắm lấy đôi bàn tay anh. Mưa làm ướt một bên áo, mà tim anh lúc đó lại ấm lạ thường.',
   },
 ];
 
@@ -86,10 +86,10 @@ const LAMP_REACH_DIALOGUES: DialogueLine[] = [
     text: 'Ánh đèn đường soi rọi qua màn mưa... Kìa, trên cành cây sát chao đèn có một mảnh giấy màu nâu!',
   },
   {
-    text: "Đúng là Mảnh #1 rồi! 'Cậu có nhớ lần đầu tiên chúng mình ngồi trú mưa ở hiên quán cũ không? Cậu chia cho mình nửa chiếc bánh quy...' Mình phải nhảy lên lấy lại mới được!",
+    text: 'Đúng là Mảnh #1 rồi!... Mình phải nhảy lên lấy lại mới được!',
   },
   {
-    text: 'Bắt được rồi! May quá, con chữ vẫn còn nguyên vẹn. Cố lên, mình sẽ tìm lại đủ cả 3 mảnh!',
+    text: 'Bắt được rồi! May quá, con chữ vẫn còn nguyên vẹn. Cố lên, mình sẽ tìm lại đủ cả các mảnh!',
   },
 ];
 
@@ -119,7 +119,7 @@ const CHERRY_ENTRANCE_DIALOGUES: DialogueLine[] = [
     text: 'Từng cánh hoa đào đang rơi phấp phới trong làn gió xuân... Đẹp tựa như một giấc mơ vậy.',
   },
   {
-    text: 'Cô ấy đang đứng đợi mình trên đỉnh đồi kia rồi. Mình phải bước tiếp lên gặp cậu ấy ngay!',
+    text: 'Cô ấy đang đứng đợi mình trên đỉnh đồi kia rồi. Mình phải lên đấy ngay!',
   },
 ];
 
@@ -128,7 +128,7 @@ const BOAT_RETRIEVE_DIALOGUES: DialogueLine[] = [
     text: 'Một chiếc thuyền giấy đang trôi dưới suối đêm... Bên trong chở một mảnh thư!',
   },
   {
-    text: "Mảnh #2: 'Có những đêm nghe cậu thở dài vì mệt mỏi, mình chỉ ước có thể mang cho cậu một ly trà ấm. Mình sợ sự vụng về làm phiền cậu, nên chỉ biết lặng lẽ thức cùng cậu...'",
+    text: "Mảnh #2: 'Có những đêm nghe em thở dài vì mệt mỏi, anh chỉ ước có thể mang cho cậu một ly trà ấm. Anh sợ sự vụng về làm phiền em, nên chỉ biết lặng lẽ thức cùng em...'",
   },
   {
     text: 'Từng con chữ ướt sương đêm nhưng vẫn vẹn nguyên tấm lòng... Chỉ còn một mảnh nữa thôi!',
@@ -140,7 +140,7 @@ const FOREST_CAT_CHASE_DIALOGUES: DialogueLine[] = [
     text: 'Chú mèo dừng lại rồi... Ngoan nào, đừng sợ, anh không làm đau em đâu.',
   },
   {
-    text: "Mảnh #3: 'Hôm nay, mình gom hết tất cả sự can đảm tích cóp từ những ngày tháng ngắm nhìn cậu từ xa... Dù câu trả lời có là gì, cảm ơn cậu vì đã xuất hiện trong thanh xuân của mình.' Cả 3 mảnh đã đủ rồi!",
+    text: "Mảnh #3: 'Hôm nay, anh đã gom hết tất cả sự can đảm tích cóp từ những ngày tháng ngắm nhìn em từ xa... Dù câu trả lời có là gì, cảm ơn em vì đã xuất hiện trong thanh xuân của mình.'",
   },
   {
     text: 'Mình phải mang các mảnh thư tới chiếc bàn gỗ trước thềm đồi hoa anh đào để dán lại ngay!',
@@ -198,6 +198,7 @@ export default function FirstPersonView({
   // --- Lamp Warmth State ---
   const [warmth, setWarmth] = useState(25);
   const [steamPuffs, setSteamPuffs] = useState<{ id: number; left: number }[]>([]);
+  const [hasActionInteracted, setHasActionInteracted] = useState(false);
 
   let dialogues = BRIDGE_DIALOGUES;
   if (scene === 'mailbox') dialogues = MAILBOX_DIALOGUES;
@@ -386,6 +387,7 @@ export default function FirstPersonView({
 
   // Generalized Interaction Trigger (Click or Space)
   const handleInteraction = useCallback(() => {
+    setHasActionInteracted(true);
     if (scene === 'mailbox') {
       SFX.paperPickup();
     } else if (scene === 'cat') {
@@ -957,15 +959,29 @@ export default function FirstPersonView({
       {/* ========================================================================= */}
       {(() => {
         let actionLabel: string | null = null;
-        if (scene === 'cat') actionLabel = isForestCat ? 'Vuốt ve mèo' : 'Vuốt ve mèo';
-        else if (scene === 'forest-cat-chase') actionLabel = 'Dỗ dành mèo';
-        else if (scene === 'lamp-reach') actionLabel = 'Nhảy với thư';
-        else if (scene === 'boat-retrieve') actionLabel = 'Vớt thuyền';
-        else if (scene === 'lamp') actionLabel = 'Sưởi ấm';
-        else if (scene === 'rain') actionLabel = 'Lắng nghe';
-        else if (scene === 'bridge') actionLabel = hasWished ? 'Ước thêm lần nữa' : 'Ngắm sao & Ước';
-        else if (scene === 'cherry-entrance') actionLabel = null;
-        else if (scene === 'cherry-summit') actionLabel = 'Trao hoa & thư';
+        if (scene === 'cat') {
+          if (!isForestCat) {
+            actionLabel = (lineIndex >= 1 || catPetProgress >= 100) ? null : 'Vuốt ve mèo';
+          } else {
+            actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Dỗ dành mèo';
+          }
+        } else if (scene === 'forest-cat-chase') {
+          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Dỗ dành mèo';
+        } else if (scene === 'lamp-reach') {
+          actionLabel = (reachHops >= 3 || lineIndex >= 1) ? null : 'Nhảy với thư';
+        } else if (scene === 'boat-retrieve') {
+          actionLabel = (boatLifted || lineIndex >= 1) ? null : 'Vớt thuyền';
+        } else if (scene === 'lamp') {
+          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Sưởi ấm';
+        } else if (scene === 'rain') {
+          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Lắng nghe';
+        } else if (scene === 'bridge') {
+          actionLabel = (hasWished || lineIndex >= 1) ? null : 'Ngắm sao & Ước';
+        } else if (scene === 'cherry-entrance') {
+          actionLabel = null;
+        } else if (scene === 'cherry-summit') {
+          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Trao hoa & thư';
+        }
 
         return (
           <div

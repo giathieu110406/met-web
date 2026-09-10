@@ -7,8 +7,8 @@ interface IntroTextProps {
 }
 
 const LINES = [
-  'Hôm nay, mình muốn nói với bạn một điều...',
-  'Nhưng trước tiên, mình phải tìm đến bạn.',
+  'Hôm nay, anh muốn nói với em một điều...',
+  'Nhưng trước tiên, anh có vài việc phải làm.',
 ];
 
 const CHAR_DELAY = 50; // ms per character

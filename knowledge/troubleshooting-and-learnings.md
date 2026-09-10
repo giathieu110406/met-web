@@ -151,7 +151,7 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
 - **Hiện tượng trước đây**: Bàn ghép thư có các ô rập khuôn sẵn khiến tương tác trở nên cứng nhắc và máy móc, giống như làm bài trắc nghiệm hơn là tự tay hàn gắn kỷ vật tình yêu.
 - **Cách khắc phục chuẩn**:
   - Xóa bỏ hoàn toàn các slot cố định.
-  - Đặt ngẫu nhiên các mảnh thư ("I", "LIKE", "U") lệch góc tự nhiên trên mặt bàn gỗ pixel art.
+  - Đặt ngẫu nhiên các mảnh thư ("I", "LOVE", "U") lệch góc tự nhiên trên mặt bàn gỗ pixel art.
   - Người chơi tự do kéo-thả, xếp khít các mép rách rồi dán cố định bằng các miếng băng keo washi hoa đào, mang lại cảm giác chân thực và xúc động.
 
 ### 1.16. Lỗi Hoa Không Hiển Thị Trên GitHub Pages (Missing Flower Assets & Dynamic SVG Fallback)
