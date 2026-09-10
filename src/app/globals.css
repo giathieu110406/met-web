@@ -34,6 +34,7 @@ body {
   background-repeat: repeat-x;
   animation: moveBackground 20s linear infinite;
   image-rendering: pixelated;
+  will-change: background-position;
 }
 
 @keyframes moveBackground {

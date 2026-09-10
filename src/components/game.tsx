@@ -97,22 +97,25 @@ export default function Game() {
   const isNearForestCat = currentMap === 'valley' && heroX >= 1740 && heroX <= 1860 && hasLostLetter && !collectedFragments[2];
   const isNearCraftingTable = currentMap === 'valley' && heroX >= 2180 && heroX <= 2240;
 
-  // 1. Adaptive BGM Control
+  // Cinematic & Ambient conditions
+  const isCinematic = gameState === 'dialogue' || gameState === 'ending';
+  const inRain = currentMap === 'valley' && heroX >= 580 && heroX <= 1350;
+  const flowerCount = collectedIds.size;
+
+  // 1. Adaptive BGM Control — only re-evaluates when zone or story state changes, NOT on every heroX frame
   useEffect(() => {
     if (gameState !== 'title' && gameState !== 'intro') {
       resumeAudio();
       BGM.start();
-      const inRain = heroX >= 580 && heroX <= 1350;
-      const isCinematic = gameState === 'dialogue' || gameState === 'ending';
       BGM.updateLayers({
-        flowerCount: collectedIds.size,
+        flowerCount,
         inRain,
         isCinematic,
       });
     } else {
       BGM.stop();
     }
-  }, [gameState, heroX, collectedIds.size]);
+  }, [gameState, inRain, isCinematic, flowerCount]);
 
   // 2. Pendulum Swing Animation Loop & 2-Phase Solitary Rain Contemplation
   useEffect(() => {
@@ -520,7 +523,6 @@ export default function Game() {
     BGM.stop();
   }, []);
 
-  const isCinematic = gameState === 'dialogue' || gameState === 'ending';
   const shouldLockHero = isCinematic || fpvScene !== null || isCraftingLetter || isSitting || isSwinging || isMapFading;
 
   return (
