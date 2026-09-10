@@ -238,35 +238,65 @@ export default function FirstPersonView({
     return () => clearInterval(interval);
   }, [scene]);
 
+  const typewriterTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(true);
+
   // Typewriter effect for dialogues
   useEffect(() => {
     if (!currentLine) return;
+
+    if (typewriterTimerRef.current) {
+      clearInterval(typewriterTimerRef.current);
+      typewriterTimerRef.current = null;
+    }
+
     setDisplayedText('');
     setIsTyping(true);
+    isTypingRef.current = true;
+
     let idx = 0;
-    const interval = setInterval(() => {
-      if (idx < currentLine.text.length) {
-        setDisplayedText(currentLine.text.slice(0, idx + 1));
-        idx++;
-      } else {
-        setIsTyping(false);
-        clearInterval(interval);
+    const fullText = currentLine.text;
+
+    typewriterTimerRef.current = setInterval(() => {
+      idx++;
+      if (idx <= fullText.length) {
+        setDisplayedText(fullText.slice(0, idx));
       }
-    }, 28);
-    return () => clearInterval(interval);
+      if (idx >= fullText.length) {
+        if (typewriterTimerRef.current) {
+          clearInterval(typewriterTimerRef.current);
+          typewriterTimerRef.current = null;
+        }
+        setIsTyping(false);
+        isTypingRef.current = false;
+      }
+    }, 22);
+
+    return () => {
+      if (typewriterTimerRef.current) {
+        clearInterval(typewriterTimerRef.current);
+        typewriterTimerRef.current = null;
+      }
+    };
   }, [currentLine]);
 
   // Advance dialogue or close
   const handleAdvance = useCallback(() => {
     if (isFadingOut) return;
 
-    if (isTyping) {
-      setDisplayedText(currentLine.text);
+    // If currently typing, stop typewriter immediately and reveal full line!
+    if (isTypingRef.current) {
+      if (typewriterTimerRef.current) {
+        clearInterval(typewriterTimerRef.current);
+        typewriterTimerRef.current = null;
+      }
+      isTypingRef.current = false;
       setIsTyping(false);
+      setDisplayedText(currentLine.text);
       return;
     }
 
-    // Task 2: In bench cat scene, cannot advance manually before petting is complete
+    // In bench cat scene, cannot advance manually before petting is complete
     if (scene === 'cat' && !isForestCat && lineIndex === 0) {
       return;
     }
@@ -277,9 +307,9 @@ export default function FirstPersonView({
       setIsFadingOut(true);
       setTimeout(() => {
         onComplete();
-      }, 400);
+      }, 350);
     }
-  }, [isTyping, lineIndex, dialogues.length, currentLine, isFadingOut, onComplete, scene, isForestCat]);
+  }, [lineIndex, dialogues.length, currentLine, isFadingOut, onComplete, scene, isForestCat]);
 
   // Micro-action: Stroke the cat
   const handlePetCat = useCallback(() => {
@@ -384,19 +414,18 @@ export default function FirstPersonView({
     }
   }, [scene, handlePetCat, handleLampReachHop, handleBoatRetrieve, handleWarmHands, handleAdvance]);
 
-  // One-shot latch state: guarantees 1 press = 1 skip, then self-cuts off ("tự ngắt")
-  const isRightKeyHeldRef = useRef(false);
   const mountTimeRef = useRef(Date.now());
   const lastAdvanceTimeRef = useRef(0);
 
   const triggerAdvanceOneShot = useCallback(() => {
     const now = Date.now();
-    if (now - lastAdvanceTimeRef.current < 250) return;
+    // 75ms debounce: lightning-fast skipping while filtering out hardware glitch
+    if (now - lastAdvanceTimeRef.current < 75) return;
     lastAdvanceTimeRef.current = now;
     handleAdvance();
   }, [handleAdvance]);
 
-  // Keyboard navigation & interaction shortcuts ([E] for action, [➔] or [Enter] to advance)
+  // Keyboard navigation & interaction shortcuts ([E] for action, [➔], [Enter], or [Space] to advance)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
@@ -409,29 +438,19 @@ export default function FirstPersonView({
         return;
       }
 
-      // [ArrowRight] or [Enter] advances dialogue line
-      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+      // [ArrowRight], [Enter], or [Space] advances dialogue line or reveals full text
+      if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        if (e.repeat || isRightKeyHeldRef.current) return;
-        if (Date.now() - mountTimeRef.current < 350) return;
-
-        isRightKeyHeldRef.current = true;
+        if (e.repeat) return;
+        if (Date.now() - mountTimeRef.current < 150) return;
         triggerAdvanceOneShot();
         return;
       }
     };
 
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'Enter') {
-        isRightKeyHeldRef.current = false;
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [handleInteraction, triggerAdvanceOneShot]);
 
@@ -953,7 +972,7 @@ export default function FirstPersonView({
             className="absolute bottom-2.5 left-0 right-0 mx-auto w-[96%] max-w-[570px] z-40 select-none pointer-events-auto"
           >
             <div
-              className="relative px-3.5 py-2 shadow-2xl backdrop-blur-md min-h-[58px] flex items-start justify-between gap-3"
+              className="relative px-3.5 py-2 shadow-2xl backdrop-blur-md h-[68px] flex items-start justify-between gap-3 box-border"
               style={{
                 backgroundColor: 'rgba(9, 7, 18, 0.95)',
                 border: '2px solid #e2b77a',
@@ -961,8 +980,8 @@ export default function FirstPersonView({
                 imageRendering: 'pixelated',
               }}
             >
-              {/* Dialogue text box with stable min-height to prevent bounce/jitter */}
-              <div className="flex-1 min-h-[42px] flex items-start">
+              {/* Dialogue text box with strictly constant height so it NEVER jumps or twitches */}
+              <div className="flex-1 h-[50px] flex items-start overflow-hidden">
                 <p
                   className="leading-snug flex-1"
                   style={{

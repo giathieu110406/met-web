@@ -9,100 +9,138 @@ interface ThoughtBubbleProps {
   onDismiss: () => void;
 }
 
-export default function ThoughtBubble({ currentStory, heroX, onDismiss }: ThoughtBubbleProps) {
+export default function ThoughtBubble({ currentStory, onDismiss }: ThoughtBubbleProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isTyping, setIsTyping] = useState(true);
 
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
-  // Track the exact heroX when this story dialog first opened
-  const initialHeroXRef = useRef<number | null>(null);
-  const prevStoryIdRef = useRef<number | null>(null);
+  const typewriterTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoDismissTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(true);
   const isClosingRef = useRef(false);
-
-  // Record initial hero position whenever a new milestone opens
-  useEffect(() => {
-    if (currentStory) {
-      if (prevStoryIdRef.current !== currentStory.flowerId) {
-        prevStoryIdRef.current = currentStory.flowerId;
-        initialHeroXRef.current = heroX !== undefined ? heroX : currentStory.x;
-      }
-    } else {
-      prevStoryIdRef.current = null;
-      initialHeroXRef.current = null;
-      isClosingRef.current = false;
-    }
-  }, [currentStory, heroX]);
+  const mountTimeRef = useRef(0);
 
   const handleDismiss = useCallback(() => {
     if (isClosingRef.current) return;
     isClosingRef.current = true;
     setIsClosing(true);
+
+    if (typewriterTimerRef.current) {
+      clearInterval(typewriterTimerRef.current);
+      typewriterTimerRef.current = null;
+    }
+    if (autoDismissTimerRef.current) {
+      clearTimeout(autoDismissTimerRef.current);
+      autoDismissTimerRef.current = null;
+    }
+
     setTimeout(() => {
       setIsVisible(false);
       setIsClosing(false);
       isClosingRef.current = false;
       onDismissRef.current();
-    }, 300);
+    }, 280);
   }, []);
 
   const storyId = currentStory?.flowerId;
   const storyText = currentStory?.text;
 
-  // Typewriter effect, followed by exactly 3 seconds wait before auto-dismiss
+  // Typewriter effect & Auto-dismiss timer
   useEffect(() => {
     if (!storyText || storyId === undefined) {
       setIsVisible(false);
       setIsClosing(false);
       setDisplayedText('');
+      isClosingRef.current = false;
       return;
     }
 
+    // Clear previous timers
+    if (typewriterTimerRef.current) clearInterval(typewriterTimerRef.current);
+    if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
+
     setIsVisible(true);
     setIsClosing(false);
+    setIsTyping(true);
+    isTypingRef.current = true;
+    isClosingRef.current = false;
     setDisplayedText('');
+    mountTimeRef.current = Date.now();
 
     let idx = 0;
     const fullText = storyText;
-    let autoDismissTimer: NodeJS.Timeout | null = null;
 
-    // Typewriter effect (~25ms per character)
-    const typewriterInterval = setInterval(() => {
+    typewriterTimerRef.current = setInterval(() => {
       idx++;
       if (idx <= fullText.length) {
         setDisplayedText(fullText.substring(0, idx));
       }
       if (idx >= fullText.length) {
-        clearInterval(typewriterInterval);
-        // Text has completely finished typing. Wait 3 seconds before auto-dismissing:
-        autoDismissTimer = setTimeout(() => {
+        if (typewriterTimerRef.current) {
+          clearInterval(typewriterTimerRef.current);
+          typewriterTimerRef.current = null;
+        }
+        setIsTyping(false);
+        isTypingRef.current = false;
+
+        // Keep visible for 4.5s after typewriter finishes so player can read peacefully
+        autoDismissTimerRef.current = setTimeout(() => {
           handleDismiss();
-        }, 3000);
+        }, 4500);
       }
-    }, 25);
+    }, 24);
 
     return () => {
-      clearInterval(typewriterInterval);
-      if (autoDismissTimer) {
-        clearTimeout(autoDismissTimer);
-      }
+      if (typewriterTimerRef.current) clearInterval(typewriterTimerRef.current);
+      if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
     };
   }, [storyId, storyText, handleDismiss]);
 
-  // Keyboard shortcut: Press ArrowRight to dismiss dialogue immediately (Task 6)
+  // Fast skip or dismiss on user action
+  const handleSkipOrClose = useCallback(() => {
+    if (isClosingRef.current || !currentStory) return;
+
+    if (isTypingRef.current) {
+      // Reveal full text immediately and stop typewriter interval
+      if (typewriterTimerRef.current) {
+        clearInterval(typewriterTimerRef.current);
+        typewriterTimerRef.current = null;
+      }
+      isTypingRef.current = false;
+      setIsTyping(false);
+      setDisplayedText(currentStory.text);
+
+      // Start 4.5s auto-dismiss countdown from the moment text is completed
+      if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
+      autoDismissTimerRef.current = setTimeout(() => {
+        handleDismiss();
+      }, 4500);
+      return;
+    }
+
+    // If text was already revealed, dismiss bubble
+    handleDismiss();
+  }, [currentStory, handleDismiss]);
+
+  // Keyboard shortcut: Space / Enter / Escape to skip typewriter or close
+  // (NOTE: We DO NOT bind ArrowRight here because ArrowRight is the hero's movement key!)
   useEffect(() => {
     if (!isVisible || isClosing) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.code === 'ArrowRight') {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') {
         e.preventDefault();
-        handleDismiss();
+        if (e.repeat) return;
+        if (Date.now() - mountTimeRef.current < 200) return;
+        handleSkipOrClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isVisible, isClosing, handleDismiss]);
+  }, [isVisible, isClosing, handleSkipOrClose]);
 
   if (!currentStory || !isVisible) return null;
 
@@ -154,15 +192,19 @@ export default function ThoughtBubble({ currentStory, heroX, onDismiss }: Though
           </div>
 
           <button
-            onClick={handleDismiss}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSkipOrClose();
+            }}
             className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs text-rose-300/80 hover:text-white hover:bg-rose-500/20 cursor-pointer transition-colors"
             style={{
               fontFamily: "'VT323', monospace",
               fontSize: '14px',
             }}
           >
-            <span>✕ Đóng</span>
-            <span className="text-amber-300 font-bold">[➔]</span>
+            <span>{isTyping ? '⏩ Xem hết' : '✕ Đóng'}</span>
+            <span className="text-amber-300 font-bold">[Space]</span>
           </button>
         </div>
 
