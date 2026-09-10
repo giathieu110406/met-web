@@ -38,8 +38,8 @@
   > **Dòng 2**: *"Nhưng trước tiên, mình phải tìm đến bạn."*
 - **Âm thanh**: Tiếng gió lướt nhẹ chuyển cảnh sang màn chơi chính.
 
-### 2.3. Hòm Thư Trước Ngõ & Bưu Kiện Cuốn Sách Kèm Địa Chỉ (Mailbox & Parcel FPV, $x = 80$)
-- **Vị trí**: Chiếc hòm thư gỗ mộc cắm bên vệ đường trước ngõ ($x = 80, y = 272$).
+### 2.3. Hòm Thư Trước Ngõ & Bưu Kiện Cuốn Sách Kèm Địa Chỉ (Mailbox & Parcel FPV, $x = 200$)
+- **Vị trí**: Chiếc hòm thư gỗ mộc cắm bên vệ đường trước ngõ ($x = 200, y = 272$).
 - **Bối cảnh & Ánh sáng**: Ráng chiều hoàng hôn buông lơi, ánh nắng vàng cam hắt bóng dài trên con đường đất.
 - **Cơ chế & Hành động**:
   - Nhân vật bước tới hòm thư, xuất hiện chỉ dẫn: `[E] Mở hòm thư`.
@@ -53,17 +53,17 @@
 - **Lời thoại / Độc thoại**:
   > **Dòng 1**: *"Một bưu kiện gửi đến hòm thư... Là cuốn sách hôm trước cậu ấy nhắc tới!"*  
   > **Dòng 2**: *"Mẩu giấy nhắn kẹp kèm theo... 'Đỉnh đồi Hoa Anh Đào'. Đây chính là địa chỉ nơi cậu ấy đang đợi!"*  
-  > **Dòng 3**: *"Mình đã chuẩn bị sẵn bức thư tình này và đóa hoa đẹp nhất. Mình phải đi ngay mới kịp giờ hẹn!"*
+  > **Dòng 3**: *"Bức thư tình này mình đã nắn nót viết suốt bao đêm... Mình phải lên đường ngay để trao tận tay cậu ấy!"*
 
 ---
 
 ## 🗺️ 3. Hành Trình Thu Thập 7 Đóa Hoa & 3 Mảnh Thư (Master Milestones Arc)
 
-Bản đồ có chiều dài $2400\text{ px}$. Tuyến đường được thiết kế liên hoàn với các mốc tương tác, biến cố và chốt chặn kịch bản nghiêm ngặt:
+Bản đồ trò chơi được chia làm 2 giai đoạn lớn với tổng chiều dài $4600\text{ px}$ ($2400\text{ px}$ Thung lũng Kỷ niệm + $2200\text{ px}$ Đỉnh đồi Hoa Anh Đào), được kết nối bằng hiệu ứng điện ảnh chuyển cảnh 2 pha (Cinematic 2-Phase Map Crossfade):
 
 ```
-[Hòm thư: x=80 - Bưu kiện sách & Địa chỉ] 
-── (Hoa #1: x=220) 
+[BẢN ĐỒ 1: THUNG LŨNG KỶ NIỆM (VALLEY MAP) - 2400px]
+[Spawn: x=40] ── [Hòm thư: x=200 - Bưu kiện sách & Địa chỉ] ── (Hoa #1: x=220) 
 ── [Ghế đá & Mèo cào xé thư: x=450 - Hoa #2 (Bắt buộc ngồi [S] mới vuốt [E])] 
 ── [Xích đu chữ A: x=680] 
 ── [Vùng Mưa: x=580..1350] ── (Hoa #3: x=850) 
@@ -73,7 +73,16 @@ Bản đồ có chiều dài $2400\text{ px}$. Tuyến đường được thiế
 ── [Mảnh #3 rượt đuổi Mèo bìa rừng: x=1800 (FPV Rượt đuổi & Dỗ dành)] 
 ── (Hoa #7: x=2100) 
 ── [Bàn đá dán thư FPV Pixel Art: x=2210] 
-── [Đồi hoa đào & Em: x=2320] ── [Ending "I LIKE U"]
+── [Chuyển cảnh 2-pha mờ đen "Đang tiến về Đồi Hoa Anh Đào...": x=2400]
+
+[BẢN ĐỒ 2: ĐỒI HOA ANH ĐÀO (CHERRY HILL MAP) - 2200px]
+[Cổng Vườn Đào: x=0..130 - FPV cherry-entrance choáng ngợp] 
+── [Con dốc uốn lượn 2200px & 28 cây anh đào bạt ngàn] 
+── [Ghế sườn núi nghỉ chân: x=940] 
+── [Đỉnh đồi y=265: x=1850..2200] 
+── [Cội Đại Thụ Anh Đào: x=1940] 
+── [Em đứng chờ: x=2050] ── [FPV Tái Ngộ Dưới Gốc Anh Đào] 
+── [Ending: Pháo hoa, Trái tim dạ quang & Thiệp "I LIKE U" cuộn 60FPS]
 ```
 
 ---
@@ -338,8 +347,21 @@ Tất cả các cảnh FPV đều tuân thủ các quy tắc điện ảnh cốt
 
 ---
 
-### 🌸 FPV 5: Tái Ngộ Dưới Gốc Anh Đào Đỉnh Đồi (`scene = "cherry-summit"`, $x = 2320$)
-- **Hình ảnh**: Bầu trời ban mai trong trẻo màu lam ngọc và phấn hồng. Tán cây hoa anh đào sum sê rủ bóng, những cánh hoa rơi chao nghiêng. Phía đối diện: Bạn gái trong chiếc váy xanh dương, mỉm cười dịu dàng. Tiền cảnh: Đôi bàn tay chàng trai nâng niu bó 7 đóa hoa hồng đỏ thắm và tấm thiệp "I LIKE U" đã được dán phẳng phiu.
+### 🌸 FPV 4.8: Choáng Ngợp Trước Cổng Vườn Hoa Anh Đào (`scene = "cherry-entrance"`, $x = 130$ trên Map 2)
+- **Vị trí & Kích hoạt**: Sau khi chuyển màn 2 và bước những bước đầu tiên vào khu vườn mùa xuân ($x \ge 130$), chàng trai tự động dừng bước, ngỡ ngàng trước vẻ đẹp thần tiên của Đồi Hoa Anh Đào.
+- **Hình ảnh & Mỹ thuật**:
+  - Không gian chuyển từ đêm bão sang vòm trời lam biếc `#60a5fa` và chân trời vàng hồng `#fed7aa`.
+  - Hàng cây hoa đào nở rộ đa tầng, từng luồng cánh hoa hồng phấn rơi chao nghiêng ngập tràn trong gió xuân.
+  - Phía xa xa trên triền đồi cao vút, bóng dáng cội đại thụ anh đào cổ thụ và người thương đang ẩn hiện.
+- **Lời thoại / Độc thoại**:
+  > **Dòng 1**: *"Khu vườn hoa anh đào... Khung cảnh nơi đây rực rỡ và bình yên đến nghẹn ngào."*  
+  > **Dòng 2**: *"Từng cánh hoa đào đang rơi phấp phới trong làn gió xuân... Đẹp tựa như một giấc mơ vậy."*  
+  > **Dòng 3**: *"Cô ấy đang đứng đợi mình trên đỉnh đồi kia rồi. Mình phải bước tiếp lên gặp cậu ấy ngay!"*
+
+---
+
+### 🌸 FPV 5: Tái Ngộ Dưới Gốc Anh Đào Đỉnh Đồi (`scene = "cherry-summit"`, $x = 2050$ trên Map 2)
+- **Hình ảnh**: Bầu trời ban mai trong trẻo màu lam ngọc và phấn hồng. Cội đại thụ hoa anh đào sum sê ($x = 1940$) rủ bóng che chở nơi đỉnh núi bình yên ($y = 265$). Phía đối diện: Bạn gái trong chiếc váy xanh dương ($x = 2050$), mỉm cười dịu dàng đón chào. Tiền cảnh: Đôi bàn tay chàng trai nâng niu bó 7 đóa hoa hồng đỏ thắm và tấm thiệp "I LIKE U" đã được dán phẳng phiu bằng những dải băng hoa đào.
 - **Đối thoại Tái Ngộ**:
   > **[Anh]**: *"Gió sớm khẽ lay lọn tóc em... Cuối cùng, anh cũng đã đến được nơi này."*  
   > **[Em]**: *"Em đã đợi anh rất lâu rồi... Thật mừng vì anh đã tới!"*  
@@ -430,9 +452,9 @@ Toàn bộ âm thanh được lập trình bằng Web Audio API Synthesizer tron
 | :---: | :--- | :--- | :---: | :--- |
 | **0.1** | Intro | Bắt đầu game dòng 1 | Dẫn chuyện | *"Hôm nay, mình muốn nói với bạn một điều..."* |
 | **0.2** | Intro | Bắt đầu game dòng 2 | Dẫn chuyện | *"Nhưng trước tiên, mình phải tìm đến bạn."* |
-| **0.3** | FPV Mailbox | Mở hòm thư dòng 1 ($x=80$) | Chàng trai | *"Một bưu kiện gửi đến hòm thư... Là cuốn sách hôm trước cậu ấy nhắc tới!"* |
-| **0.4** | FPV Mailbox | Mở hòm thư dòng 2 ($x=80$) | Chàng trai | *"Mẩu giấy nhắn kẹp kèm theo... 'Đỉnh đồi Hoa Anh Đào'. Đây chính là địa chỉ nơi cậu ấy đang đợi!"* |
-| **0.5** | FPV Mailbox | Mở hòm thư dòng 3 ($x=80$) | Chàng trai | *"Bức thư tình này mình đã nắn nót viết suốt bao đêm... Mình phải lên đường ngay để trao tận tay cậu ấy!"* |
+| **0.3** | FPV Mailbox | Mở hòm thư dòng 1 ($x=200$) | Chàng trai | *"Một bưu kiện gửi đến hòm thư... Là cuốn sách hôm trước cậu ấy nhắc tới!"* |
+| **0.4** | FPV Mailbox | Mở hòm thư dòng 2 ($x=200$) | Chàng trai | *"Mẩu giấy nhắn kẹp kèm theo... 'Đỉnh đồi Hoa Anh Đào'. Đây chính là địa chỉ nơi cậu ấy đang đợi!"* |
+| **0.5** | FPV Mailbox | Mở hòm thư dòng 3 ($x=200$) | Chàng trai | *"Bức thư tình này mình đã nắn nót viết suốt bao đêm... Mình phải lên đường ngay để trao tận tay cậu ấy!"* |
 | **1** | Thought #1 | Nhặt Hoa #1 ($x=220$) | Độc thoại nội tâm | *"Ngày hôm ấy, trời chẳng nắng cũng chẳng mưa... Nhưng khoảnh khắc cậu quay đầu lại cười, thế giới của mình tự nhiên có màu."* |
 | **1.8** | Stand Hint | Bấm [E] khi chưa ngồi ghế ($x=450$) | Độc thoại nội tâm | *"Mình nên ngồi xuống ghế nghỉ chân một chút..."* |
 | **1.9** | Empty Bench Sit | Ngồi xuống ghế sau khi rách thư ($x=450$) | Độc thoại nội tâm | *"Chiếc ghế giờ chỉ còn lại mình... Bức thư đã bị gió cuốn đi, mình phải tìm lại cho bằng được!"* |
@@ -459,11 +481,14 @@ Toàn bộ âm thanh được lập trình bằng Web Audio API Synthesizer tron
 | **6.3** | FPV Cat Chase | Đọc Mảnh #3 & vuốt ve dòng 3 | Chàng trai | *"Mảnh #3: 'Hôm nay, mình gom hết tất cả sự can đảm tích cóp từ những ngày tháng ngắm nhìn cậu từ xa... Dù câu trả lời có là gì, cảm ơn cậu vì đã xuất hiện trong thanh xuân của mình.' Cả 3 mảnh đã đủ rồi!"* |
 | **7** | Thought #7 | Nhặt Hoa #7 ($x=2100$) | Độc thoại nội tâm | *"Và bông hoa này... là tất cả dũng khí mình gom góp bấy lâu nay. Để hôm nay, mình có thể đứng trước mặt cậu mà không còn ngập ngừng."* |
 | **7.5** | Crafting Complete | Hoàn tất dán thư trên bàn pixel ($x=2210$) | Độc thoại nội tâm | *"Bức thư đã được hàn gắn lại trọn vẹn bằng những dải băng hoa anh đào... Giờ mình có thể tự tin bước tới gặp em!"* |
-| **12.1** | Reunion | Gặp bạn gái dòng 1 ($x=2320$) | Anh | *"Gió sớm khẽ lay lọn tóc em... Cuối cùng, anh cũng đã đến được nơi này."* |
-| **12.2** | Reunion | Gặp bạn gái dòng 2 ($x=2320$) | Em | *"Em đã đợi anh rất lâu rồi... Thật mừng vì anh đã tới!"* |
-| **12.3** | Reunion | Gặp bạn gái dòng 3 ($x=2320$) | Anh | *"Gió bão dọc đường đã xé rách bức thư anh viết... Nhưng anh đã nhặt lại từng mảnh, dán lại phẳng phiu cùng 7 đóa hoa này gửi trao em."* |
-| **12.4** | Reunion | Gặp bạn gái dòng 4 ($x=2320$) | Em | *"Từng vết dán hoa đào này... thật đẹp và ấm áp. Cảm ơn anh vì đã không bỏ cuộc để mang trọn vẹn chân thành đến đây cùng em!"* |
-| **13** | Ending | Thiệp trượt từ dưới lên | Thiệp tỏ tình | **"I LIKE U"** |
+| **8.1** | FPV Cherry Entrance | Bước vào cổng vườn đào dòng 1 ($x=130$) | Chàng trai | *"Khu vườn hoa anh đào... Khung cảnh nơi đây rực rỡ và bình yên đến nghẹn ngào."* |
+| **8.2** | FPV Cherry Entrance | Bước vào cổng vườn đào dòng 2 ($x=130$) | Chàng trai | *"Từng cánh hoa đào đang rơi phấp phới trong làn gió xuân... Đẹp tựa như một giấc mơ vậy."* |
+| **8.3** | FPV Cherry Entrance | Bước vào cổng vườn đào dòng 3 ($x=130$) | Chàng trai | *"Cô ấy đang đứng đợi mình trên đỉnh đồi kia rồi. Mình phải bước tiếp lên gặp cậu ấy ngay!"* |
+| **12.1** | Reunion | Gặp bạn gái dòng 1 ($x=2050$ Map 2) | Anh | *"Gió sớm khẽ lay lọn tóc em... Cuối cùng, anh cũng đã đến được nơi này."* |
+| **12.2** | Reunion | Gặp bạn gái dòng 2 ($x=2050$ Map 2) | Em | *"Em đã đợi anh rất lâu rồi... Thật mừng vì anh đã tới!"* |
+| **12.3** | Reunion | Gặp bạn gái dòng 3 ($x=2050$ Map 2) | Anh | *"Gió bão dọc đường đã xé rách bức thư anh viết... Nhưng anh đã nhặt lại từng mảnh, dán lại phẳng phiu cùng 7 đóa hoa này gửi trao em."* |
+| **12.4** | Reunion | Gặp bạn gái dòng 4 ($x=2050$ Map 2) | Em | *"Từng vết dán hoa đào này... thật đẹp và ấm áp. Cảm ơn anh vì đã không bỏ cuộc để mang trọn vẹn chân thành đến đây cùng em!"* |
+| **13** | Ending | Thiệp trượt từ dưới lên | Thiệp tỏ tình | **"I LIKE U"** (Bức thư viết tay kèm hào quang trái tim dạ quang) |
 
 ---
 

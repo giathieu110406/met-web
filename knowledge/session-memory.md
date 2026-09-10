@@ -4,7 +4,21 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
 
 ---
 
-## 📌 Phiên Hiện Tại: Đợt 22 — Hoàn Thiện 8 Yêu Cầu Tinh Chỉnh Sâu (Xóa Pill Rỗng Hòm Thư, Tự Nhặt Hoa 2 Không Teleport, Xích Đu Cắm Đất y=322, Tán Ô Vòm Pixel, Sao Mảnh Tinh Tế, Bỏ Qua Hộp Thoại Bằng Phím [➔], Đồi Hoa Đào Dài 2200px Gian Nan)
+## 📌 Phiên Hiện Tại: Đợt 23 — Tối Ưu Toàn Diện Hoạt Ảnh Chuyển Cảnh, Triệt Tiêu Giật Khung Thoại, Nâng Cấp 60FPS Game & Đồng Bộ Đẩy Lên GitHub
+- **Thời gian ghi nhận**: 10/09/2026
+- **Nội dung thực hiện theo yêu cầu người dùng (/goal)**:
+  1. **Khắc phục lỗi hiển thị hoa trên GitHub Pages**: Thêm `images: { unoptimized: true }` vào `next.config.ts`, tạo bộ renderer hoa pixel art inline SVG động trong `decorations.tsx` theo màu sắc chuẩn của từng hoa, đồng thời sinh sẵn file ảnh tĩnh fallback PNG trong `public/assets/others/`.
+  2. **Khắc phục biến mất ô thoại hoa hồng khi di chuyển**: Gỡ bỏ lắng nghe `ArrowRight` trong `thought-bubble.tsx`, chỉ dùng `[Space]`, `[Enter]` hoặc `[Esc]`, cố định thời gian hiển thị sau typewriter là 4.5s.
+  3. **Triệt tiêu hoàn toàn giật rung khung thoại FPV & huỷ Typewriter Zombie Interval**: Khóa cứng kích thước khung FPV `h-[68px]` và khung chữ `h-[50px] overflow-hidden`, căn chỉnh nút ở phía trên (`items-start pt-0.5`). Gọi `clearInterval(typewriterTimerRef.current)` ngay lập tức khi người chơi ấn tiến câu thoại hoặc skip, hạ debounce xuống 75ms.
+  4. **Triệt tiêu chớp màn hình trắng khi chuyển cảnh FPV**: Đổi màu nền sang `#140e1b`, thiết lập 2 lớp ảnh tĩnh độc lập chuyển mượt bằng `opacity-100`/`opacity-0` và `transition-opacity duration-300`, kết hợp pre-decode 12 ảnh FPV qua `preload-assets.ts`.
+  5. **Chuyển cảnh bản đồ 2-pha (Cinematic 2-Phase Map Crossfade)**: Màn hình mờ đen trong 450ms kèm dòng chữ `🌸 Đang tiến về Đồi Hoa Anh Đào...`, hoán đổi tọa độ rồi mới sáng dần trong 500ms.
+  6. **Bầu trời đa tầng GPU Opacity & Cuộn thư Ending 60FPS**: Tách 5 tầng gradient cố định trong `dynamic-sky.tsx` điều khiển bằng GPU `opacity`. Thay thế vòng lặp `setInterval(100ms)` ở Ending bằng CSS keyframe animation `message-scroll-smooth` mượt mà 60FPS kết hợp hào quang trái tim dạ quang.
+  7. **Tối ưu hóa hiệu năng render 60/120FPS**: Bọc `React.memo` cho `DynamicSky`, `Ground`, `Decorations`, `PetalRain`, `PropsLayer`. Đưa việc tính toán chuỗi đường cong SVG và mảng cây hoa đào ra ngoài hàm (module hoisting).
+  8. **Kiểm tra build & Push GitHub**: `npm run build` thành công rực rỡ (Exit Code 0), commit `e8e1d7d` đẩy thành công lên nhánh `main` của `https://github.com/giathieu110406/met-web.git`.
+
+---
+
+## 📌 Phiên Trước: Đợt 22 — Hoàn Thiện 8 Yêu Cầu Tinh Chỉnh Sâu (Xóa Pill Rỗng Hòm Thư, Tự Nhặt Hoa 2 Không Teleport, Xích Đu Cắm Đất y=322, Tán Ô Vòm Pixel, Sao Mảnh Tinh Tế, Bỏ Qua Hộp Thoại Bằng Phím [➔], Đồi Hoa Đào Dài 2200px Gian Nan)
 - **Thời gian ghi nhận**: 10/09/2026
 - **Nội dung thực hiện theo yêu cầu người dùng (/goal)**:
   1. **Task 1 (Xóa hộp thoại nhỏ dưới đất sau khi đọc thư)**: Điều chỉnh điều kiện outer container ở [game.tsx](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/game.tsx) thành `(isNearMailbox && !hasOpenedMailbox)`. Khi đã đọc thư, hoàn toàn không render pill rỗng có viền tím/hồng dưới mặt đất.

@@ -154,37 +154,93 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
   - Đặt ngẫu nhiên các mảnh thư ("I", "LIKE", "U") lệch góc tự nhiên trên mặt bàn gỗ pixel art.
   - Người chơi tự do kéo-thả, xếp khít các mép rách rồi dán cố định bằng các miếng băng keo washi hoa đào, mang lại cảm giác chân thực và xúc động.
 
+### 1.16. Lỗi Hoa Không Hiển Thị Trên GitHub Pages (Missing Flower Assets & Dynamic SVG Fallback)
+- **Hiện tượng**: Khi triển khai lên môi trường GitHub Pages, một số bông hoa dọc đường biến mất hoặc hiển thị biểu tượng ảnh lỗi (broken image placeholder).
+- **Nguyên nhân cốt lõi**:
+  - Máy chủ tĩnh GitHub Pages phục vụ file từ thư mục con hoặc domain tĩnh, một số đường dẫn ảnh tĩnh có thể gặp mã lỗi 404 nếu thiếu cấu hình export hoặc tên file sai khác chữ hoa/thường.
+  - Trong `next.config.ts`, trình tối ưu ảnh mặc định của Next.js yêu cầu Node.js server runtime, không tương thích với hosting tĩnh thuần túy nếu không khai báo `images: { unoptimized: true }`.
+- **Cách khắc phục chuẩn**:
+  - Thêm `images: { unoptimized: true }` vào `next.config.ts` để tương thích 100% với static hosting.
+  - Xây dựng bộ renderer hoa 16-bit retro pixel art động bằng inline SVG trong [decorations.tsx](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/decorations.tsx) với bảng màu chuẩn từng loại hoa theo `level-data.ts` (`#f0abfc`, `#fbbf24`, `#f9a8d4`, `#fde68a`, `#c4b5fd`, `#f43f5e`), độc lập hoàn toàn khỏi file ảnh tĩnh bên ngoài.
+  - Sinh sẵn các file ảnh dự phòng `flower-{red,yellow,pink,purple}.png` trong `public/assets/others/`.
+
+### 1.17. Lỗi Biến Mất Ô Thoại Hoa Hồng Khi Giữ Phím Di Chuyển (ThoughtBubble Keydown Collision)
+- **Hiện tượng**: Người chơi nhặt hoa hồng nhưng không thấy ô lời thoại xuất hiện, hoặc chỉ lóe lên 1 frame rồi biến mất tăm.
+- **Nguyên nhân cốt lõi**:
+  - Phím `ArrowRight` (mũi tên phải) vừa là phím di chuyển nhân vật sang phải, vừa bị gán làm phím tắt đóng nhanh ô thoại trong `ThoughtBubble`.
+  - Khi người chơi giữ đè `ArrowRight` để chạy về phía trước và chạm vào hoa, ngay khoảnh khắc ô thoại vừa mount, sự kiện `keydown` đóng hộp thoại lập tức được kích hoạt trong 0ms trước khi mắt người kịp nhận diện.
+- **Cách khắc phục chuẩn**:
+  - Gỡ bỏ hoàn toàn mọi phím điều hướng (`ArrowRight`, `ArrowLeft`, `KeyD`, `KeyA`) khỏi sự kiện đóng thoại.
+  - Chỉ cho phép bỏ qua/đóng thoại bằng phím chủ ý: `[Space]`, `[Enter]` hoặc `[Esc]`, đồng thời ghi chú rõ ràng trên giao diện `[Space]`.
+  - Cố định thời gian chờ sau hiệu ứng gõ máy typewriter là 4.5 giây để người chơi thưởng thức trọn vẹn từng câu thoại.
+
+### 1.18. Lỗi Giật Ô Thoại FPV & Xung Đột Zombie Typewriter Timer
+- **Hiện tượng**: Khi nhấn nút mũi tên phải để chuyển câu thoại FPV hoặc skip nhanh, ô thoại bị nhảy giật vị trí lên xuống dữ dội, chữ bị thụt lùi hoặc giật lùi vài ký tự.
+- **Nguyên nhân cốt lõi**:
+  - Ô thoại FPV dùng `min-h-[58px]`, khi câu thoại chuyển từ 1 dòng sang 2-3 dòng, chiều cao container giãn nở bất thường đẩy cả nút bấm và viền hộp thoại co giật theo trục Y.
+  - Khi người chơi bấm phím tiến câu thoại, mã nguồn gán `displayedText = fullText` nhưng **không hủy bộ đếm `setInterval` typewriter cũ**. Vài mili-giây sau, interval cũ tiếp tục kích hoạt và gõ tiếp từ vị trí ký tự dở dang, tranh chấp bộ nhớ và ghi đè lùi text.
+- **Cách khắc phục chuẩn**:
+  - Khóa cứng kích thước khung hội thoại `h-[68px]` và khung văn bản `h-[50px] overflow-hidden`, căn chỉnh nút ở phía trên (`items-start pt-0.5`). Khung thoại cố định 100% vị trí, triệt tiêu hoàn toàn layout shift.
+  - Khai báo `typewriterTimerRef` và gọi `clearInterval(typewriterTimerRef.current)` ngay lập tức khi người chơi ấn tiến thoại hoặc skip.
+  - Hạ thời gian debounce bàn phím xuống 75ms để phản hồi nhấn phím đạt độ nhạy cực cao và không bị nuốt phím.
+
+### 1.19. Lỗi Chớp Màn Trắng & Trễ Khung Hình Khi Chuyển Cảnh FPV (DOM Cross-Fade & Asset Pre-decoding)
+- **Hiện tượng**: Khi chuyển cảnh giữa các khung tranh FPV (đặc biệt là cảnh mèo xé thư), màn hình đôi khi bị chớp trắng 1-2 frame rồi mới hiện ảnh, gây đứt gãy mạch cảm xúc.
+- **Nguyên nhân cốt lõi**:
+  - Màu nền container FPV để mặc định hoặc trong suốt, khi ảnh mới chưa kịp giải mã (decode), nền trình duyệt hiển thị màu trắng.
+  - Trình duyệt chỉ bắt đầu tải và giải mã tranh vẽ khi component FPV được mount lên DOM, tạo độ trễ vài trăm mili-giây.
+- **Cách khắc phục chuẩn**:
+  - Đổi màu nền cố định của container FPV thành `#140e1b` (tông tím than tối đồng bộ với sắc độ tranh minh họa).
+  - Sử dụng 2 lớp ảnh tĩnh độc lập gắn sẵn trong DOM, chuyển đổi mượt mà bằng `opacity-100` / `opacity-0` cùng `transition-opacity duration-300`, triệt tiêu 100% hiện tượng chớp trắng.
+  - Xây dựng module [preload-assets.ts](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/lib/preload-assets.ts) sử dụng `new Image()` và `img.decode()` để làm nóng (warm-up) toàn bộ 12 tranh minh họa FPV và sprite ngay từ Title Screen.
+
+### 1.20. Tăng Tốc Render 60/120FPS Bằng Multi-layer GPU Opacity & Module-Level Path Hoisting
+- **Hiện tượng**: Khi nhân vật chạy liên tục, game có cảm giác hơi giật vi mô (micro-stutter), đặc biệt là trên màn hình tần số quét cao 120Hz/144Hz.
+- **Nguyên nhân cốt lõi**:
+  - [DynamicSky](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/dynamic-sky.tsx) cập nhật chuỗi `background: linear-gradient(...)` mỗi frame theo tọa độ camera, buộc trình duyệt phải chạy layout & style recalculation liên tục trên CPU.
+  - Bản đồ 2 Đồi Hoa Anh Đào tính toán lại hàng trăm tọa độ đường cong SVG trong hàm render mỗi frame.
+- **Cách khắc phục chuẩn**:
+  - Tách bầu trời thành 5 tầng gradient cố định (Hoàng hôn, Chiều tà mưa rơi, Đêm sao, Bình minh, Vườn hoa đào) và dùng GPU điều khiển độ mờ qua `opacity` (`transition-opacity duration-700 ease-in-out`).
+  - Đưa toàn bộ việc tính toán chuỗi SVG path (`HILL_SURFACE_PATH`, `HILL_FILL_PATH`, `HILL_DECOR_POINTS`) và mảng cây hoa đào (`BG_SAKURA_TREES`, `FG_SAKURA_TREES`) ra ngoài phạm vi hàm (module-level hoisting).
+  - Bọc tất cả các component nền tảng ([DynamicSky](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/dynamic-sky.tsx), [Ground](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/ground.tsx), [Decorations](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/decorations.tsx), [PetalRain](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/petal-rain.tsx), [PropsLayer](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/props-layer.tsx)) bằng `React.memo`.
+
 ---
 
 ## 2. 🎓 Bài Học & Kinh Nghiệm Đúc Kết (Study Experience Extractor)
 
 ### 2.1. Tổng hợp các lỗi sai phổ biến
-1. **Lỗi Phụ Kiện Tách Rời (Detached Component Traps)**:
-   - Trong 2D side-scrolling, ghép nối các phụ kiện lớn (ô dù, khiên, vũ khí dài) bằng các thẻ DOM riêng biệt lồng nhau thường xuyên phát sinh lỗi lệch tâm và lơ lửng khi nhân vật chuyển trạng thái hoạt ảnh.
-2. **Lỗi Đặt Điều Kiện Tiên Quyết Ẩn (Hidden Gating Conditions)**:
-   - Ép người chơi phải thực hiện chuỗi thao tác phức tạp để tương tác với vật phẩm bắt buộc của màn chơi mà không có gợi ý trực quan sẽ biến trải nghiệm thư giãn thành sự ức chế (friction).
-3. **Lỗi Gãy Khúc Cảm Xúc Tự Sự (Narrative Disconnect Trap)**:
-   - Khi một sự kiện lớn xảy ra (như bức thư bị xé), nếu chỉ dùng một pop-up chữ thông báo đơn thuần mà không có chuyển động thị giác đi kèm (mảnh giấy bay, đạo cụ thay đổi, nhân vật chới với), người chơi sẽ cảm thấy sự việc gượng gạo và thiếu thuyết phục.
-4. **Lỗi Quá Tải Giao Diện (HUD Cluttering)**:
-   - Đặt các nút điều khiển ảo quá to hoặc nổi bồng bềnh trên màn hình sẽ phá vỡ không gian nghệ thuật pixel hoài niệm. Gợi ý phím bấm nên được đặt phẳng chìm sát mặt đất, tối giản và tự động ẩn khi không cần thiết.
+1. **Lỗi Xung Đột Phím Điều Khiển Với Phím Giao Diện (Input Collisions Trap)**:
+   - Trong game 2D side-scroller, tuyệt đối không dùng phím di chuyển (`ArrowRight`, `D`) để kiêm nhiệm việc đóng hoặc bỏ qua hộp thoại, vì người chơi thường xuyên giữ đè phím di chuyển khi nhặt vật phẩm.
+2. **Lỗi Typewriter Zombie Interval (Uncancelled Timers)**:
+   - Khi hiện thực hiệu ứng gõ máy typewriter có tính năng bấm để hiện hết câu (fast-forward / skip), nếu chỉ gán `text = fullText` mà quên `clearInterval()`, timer cũ sẽ tiếp tục chạy ngầm và làm hỏng hiển thị.
+3. **Lỗi Bố Cục Co Giãn Theo Độ Dài Văn Bản (Unstable Typography Layout)**:
+   - Hộp thoại game luôn phải có chiều cao khóa cứng (`fixed height`) và xử lý tràn văn bản (`overflow-hidden`), tránh việc hộp thoại rung lắc khi số lượng dòng chữ thay đổi.
+4. **Lỗi GPU Thất Thoát Khi Thay Đổi Gradient Thuộc Tính Động**:
+   - Trình duyệt không thể tăng tốc phần cứng khi nội suy giữa 2 chuỗi CSS gradient. Muốn chuyển màu bầu trời mượt mà, giải pháp tối ưu là xếp chồng các lớp gradient tĩnh và điều khiển bằng `opacity`.
 
 ### 2.2. Các lưu ý về mặt tư duy thiết kế
-1. **Nguyên Tắc "Show, Don't Tell" Trong Tự Sự Tương Tác**:
-   - Mọi biến cố cốt truyện cần được biểu đạt thông qua chuỗi hành động nhân quả trực quan: Thấy phong bì đặt trên ghế $\rightarrow$ thấy móng vuốt cào $\rightarrow$ thấy mảnh giấy bay trong gió $\rightarrow$ thấy nhành hoa kiên cường nở bên chân xích đu làm đòn bẩy tâm lý.
-2. **Chuỗi Chuyển Biến Cảm Xúc (Emotional Arc Pacing)**:
-   - Một câu chuyện hay luôn cần "điểm trũng cảm xúc" (Emotional Valley) trước khi bật lên cao trào. Khoảng lặng trên chiếc xích đu dưới mưa chính là khoảng nghỉ cần thiết để người chơi đồng cảm sâu sắc với quyết tâm của nhân vật.
-3. **Tương Phản Không Gian & Ánh Sáng (Spatial Catharsis)**:
-   - Sự ngột ngạt và lạnh lẽo của khu phố mưa đêm (Map 1) được giải tỏa trọn vẹn khi bước chân sang khu vườn hoa anh đào ngập tràn ánh nắng xuân (Map 2). Tỉ lệ địa hình 1/3 mở toang không gian bao la cho cảm xúc vỡ òa khi đôi lứa gặp lại nhau.
+1. **Nguyên Tắc "Zero-White-Flash" Trong Điện Ảnh Game**:
+   - Mọi container chuyển cảnh toàn màn hình phải luôn mang màu nền tối nhất của chủ đề mỹ thuật thay vì màu trắng mặc định, ngăn chặn hoàn toàn hiện tượng chói lóa mắt người chơi khi tài nguyên đang tải.
+2. **Tối Ưu Trước Trải Nghiệm (Optimistic Pre-loading)**:
+   - Các tài nguyên FPV và cutscene nặng cần được giải mã sẵn trong bộ nhớ RAM của trình duyệt ngay tại màn hình chờ để khi chuyển cảnh, khung hình xuất hiện tức thì trong 0ms.
+3. **Phân Định Rõ Ràng Trọng Tâm Khung Hình (Visual Anchor)**:
+   - Khi nhân vật leo dốc trên Map 2 dài 2200px, việc duy trì một cội đại thụ anh đào kiêu hãnh trên đỉnh núi cao làm đích ngắm thị giác giúp người chơi luôn cảm nhận được mục tiêu phấn đấu rõ ràng qua từng bước chân.
 
 ### 2.3. Mẹo tính toán & Kỹ thuật lập trình
-1. **Kỹ thuật Chuyển Pha Lời Thoại Tuần Tự (Sequential Thought Chaining)**:
-   - Sử dụng timer ref phối hợp cleanup chặt chẽ khi component unmount hoặc state đổi (`clearTimeout` trong cleanup effect) để xâu chuỗi 2 câu thoại có độ trễ tâm lý tự nhiên mà không bị rò rỉ bộ nhớ.
-2. **Công thức định vị tiếp đất chuẩn trên địa hình dốc**:
-   $$\text{top} = y_{\text{ground}}(x) - H_{\text{prop}}$$
-3. **Kỹ thuật Micro-transforms tạo chiều sâu với 1 asset**:
-   - Kết hợp `scale()` và `scaleX(-1)` cùng thay đổi opacity để tạo ra cả một rừng cây phong phú từ một sprite duy nhất mà không tốn dung lượng tải trang.
+1. **Công thức Typewriter Clean Latch**:
+   ```typescript
+   if (typewriterTimerRef.current) {
+     clearInterval(typewriterTimerRef.current);
+     typewriterTimerRef.current = null;
+   }
+   setDisplayedText(fullText);
+   setIsTyping(false);
+   ```
+2. **Kỹ thuật Module-Level SVG Hoisting**:
+   - Tránh tính toán `Math.sin()`, tọa độ `getHillGroundY(x)` trong component body 60 lần/giây; hãy tính trước 1 lần duy nhất khi file JavaScript được nạp vào trình duyệt.
 
 ### 2.4. Chuẩn bị nền tảng cho phần tiếp theo
-- Cơ chế triền dốc biến thiên và hệ thống hạt đa tầng (`PetalRain`) ở Map 2 tạo nền tảng vững chắc cho bất kỳ màn chơi đồi núi, thung lũng hay các hiệu ứng thời tiết (tuyết rơi, lá thu bay) trong các bản cập nhật mở rộng sau này.
+- Hệ thống FPV đa tầng với cơ chế cross-fade 2 lớp và quản lý typewriter ổn định này là mẫu kiến trúc chuẩn (gold standard) sẵn sàng để mở rộng cho các chương tiếp theo, các màn thoại phân nhánh (branching dialogue) hoặc các mini-game tương tác chạm mới.
+
 
 
