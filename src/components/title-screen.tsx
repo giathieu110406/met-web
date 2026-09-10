@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { resumeAudio, SFX } from '@/lib/sound';
-import { preloadGameAssets } from '@/lib/preload-assets';
 
 interface TitleScreenProps {
   onStart: () => void;
@@ -29,13 +28,10 @@ export default function TitleScreen({ onStart }: TitleScreenProps) {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    // Warm up all game assets in browser cache in background
-    preloadGameAssets();
     // Show "Press any key" prompt after a brief delay
     const timer = setTimeout(() => setShowPrompt(true), 600);
     return () => clearTimeout(timer);
   }, []);
-
 
   const handleStart = () => {
     if (fadeOut) return;

@@ -55,7 +55,6 @@ export default function PetalRain({ active }: { active: boolean }) {
             transform: 'rotate(45deg)',
             opacity: 0.75,
             animation: `petal-fall ${petal.duration}s ease-in ${petal.delay}s infinite`,
-            willChange: 'transform, opacity',
             // @ts-expect-error custom CSS property for sway
             '--sway': `${petal.swayAmount}px`,
           }}
