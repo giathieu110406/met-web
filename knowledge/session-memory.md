@@ -500,23 +500,26 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
 - **Nâng cấp hình nền Web Pixel Art (`public/web-bg.jpg`)**:
   - Cập nhật ảnh nền bối cảnh thành phố pixel lãng mạn dưới ánh hoàng hôn và màn đêm dịu nhẹ.
 
-### 6. Cuốn Sách Kỷ Niệm 3D (Easter Egg Storybook) & Kết Nối Bộ Plugin Agent (Playwright CLI, Ponytail) (Session Update: 2026-09-11)
-- **Xây dựng Cuốn Sách Kỷ Niệm 3D (`src/components/easter-egg-book.tsx`)**:
-  - Gồm 4 tờ giấy kép (8 mặt trang) do `DEFAULT_BOOK_SHEETS` định nghĩa (`src/lib/book-content.ts`), tái hiện câu chuyện từ chiếc hòm thư nơi thung lũng mưa lạnh đến đỉnh đồi hoa anh đào.
-  - **Kiến trúc Solid 3D Dual-Sided Sheet**: Khắc phục triệt để hiện tượng trang giấy bị trong suốt nhìn xuyên thấu khi dừng lật giữa chừng. Cả mặt trước và mặt sau đều đục 100% (`#faf5eb` / `#240c0f`) với `backface-visibility: hidden`.
-  - **Xóa vệt sáng phản quang**: Loại bỏ toàn bộ lớp phủ highlight màu trắng nhân tạo, giữ nguyên chất giấy mỹ thuật mờ tự nhiên (Matte Ivory Parchment) với bóng tối êm dịu ở gáy sách.
-  - **Khóa trục quay hình học**: Khóa `rotateZ = 0`, chỉ xoay quanh trục gáy $Y$ (`transform-origin: left center`), triệt tiêu hoàn toàn góc xiên lệch hay nhô mép ra ngoài khung bìa da.
-  - **Bổ sung phím lật nổi hai bên (`❮` và `❯`)**: Hỗ trợ lật trang linh hoạt bằng nút bấm nổi rìa sách, kéo chuột tự do (drag-anywhere), bấm phím mũi tên `[←] [→]`, và thanh điều hướng chân trang với chấm sáng tiến trình.
-  - **Âm thanh Web Audio API (`src/lib/sound.ts`)**: Bổ sung `SFX.pageFlip()` tổng hợp âm thanh sột soạt giấy tự nhiên qua White Noise và Bandpass Filter 0ms latency.
-  - **Font chữ Việt hóa cao cấp (`src/app/layout.tsx`, `src/app/globals.css`)**: Tích hợp Google Fonts `Lora` (Drop Cap chữ cái đầu chương và tiêu đề thơ mộng) và `Be Vietnam Pro` (nội dung tâm tình).
-- **Kết nối Plugin & Skill Hỗ trợ Coding Agent**:
-  - **Microsoft Playwright CLI (`microsoft/playwright-cli`)**:
-    - Cài đặt binary `@playwright/cli@latest` toàn cục (`v0.1.19`).
-    - Cài đặt skill vào `.agents/skills/playwright-cli/` và `~/.gemini/config/skills/playwright-cli/`.
-  - **Ponytail (`DietrichGebert/ponytail`)**:
-    - Cài đặt plugin toàn cục vào `~/.gemini/config/plugins/ponytail/` và quy tắc vào `.agents/rules/ponytail.md`.
-    - Cài đặt 6 skill chuyên sâu vào `.agents/skills/` và `~/.gemini/config/skills/` (`ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`).
+---
 
+## Session: Easter Egg Cuốn Sách Kỷ Niệm 3D (Ending Storybook)
+- **Tính năng mới**:
+  - Tích hợp cuốn sách lật trang 3D xuất hiện sau bức thư "I LOVE U" tại đoạn kết.
+  - Kết nối cốt truyện logic với bưu kiện nhận được tại hòm thư đầu làng ($x = 200$, Map 1).
+  - Sử dụng thư viện `page-flip` (StPageFlip v2.0.7) với vật lý trang giấy mềm mại, hỗ trợ lật vuốt bằng chuột từ bất kỳ mép nào hoặc điều hướng phím mũi tên.
+  - Âm thanh Web Audio API `SFX.pageFlip()` phát tiếng xoạt lật giấy tự nhiên.
+  - Phông chữ tiếng Việt chuẩn đẹp: `Lora` (serif trang trọng) và `Be Vietnam Pro` (sans rõ nét).
+- **Tái thiết kế giao diện theo Hình 1 (Vector Cổ Điển, Loại bỏ hoàn toàn Emoji/Icon)**:
+  - Bỏ hoàn toàn các icon emoji (`🌸`, `✦`, `📖`, `🕊️`, sao Gemini `✦`).
+  - Sử dụng 100% SVG vector: 4 góc bọc đồng (`BrassCorner`), cành hoa đào uốn lượn 4 góc trang (`CherryBranchCorner`), huy hiệu hoa đỉnh (`CherryCrest`), khung trích dẫn tình yêu (`QuoteBox`) với điểm nhấn kim cương `◇`.
+  - Vỏ bìa da mận thẫm (`Burgundy Leather`) kết hợp mép giấy xếp lớp (`Stacked Paper Block Edge`).
+  - Gáy sách da đính đinh tán vàng kim `◇`.
+  - Dải ruy băng nhung đỏ với huy hiệu hoa ở đầu, tự động ẩn khi ở Bìa trước (Page 0) và Bìa sau (Page 7).
+- **Sửa dứt điểm lỗi sách không xuất hiện ở màn hình nhỏ**:
+  - Khắc phục lỗi React lifecycle dependency: thêm `isMounted` vào dependency array của `useEffect` khởi tạo `PageFlip`.
+  - Luôn sử dụng `createPortal(bookDOM, document.body)` để modal không bao giờ bị cắt cụt bởi Canvas $600 \times 400\text{px}` và `overflow: hidden`.
+  - Bổ sung đầy đủ luật CSS cốt lõi của `stPageFlip` vào `globals.css` (`.stf__block`, `.stf__wrapper`, `.stf__parent`).
+  - Hỗ trợ tham số URL `?scene=ending` và `?scene=ending&book=1` cho việc kiểm thử và mở sách trực tiếp.
 
 
 

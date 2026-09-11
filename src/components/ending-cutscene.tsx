@@ -8,21 +8,19 @@ import EasterEggBook from './easter-egg-book';
 import { SFX } from '@/lib/sound';
 
 export default function EndingCutscene() {
-  const [showBook, setShowBook] = useState(() => {
-    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('book') === '1') {
-      return true;
-    }
-    return false;
-  });
-  const [bookHintVisible, setBookHintVisible] = useState(() => {
-    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('book') === '1') {
-      return true;
-    }
-    return false;
-  });
+  const [showBook, setShowBook] = useState(false);
+  const [bookHintVisible, setBookHintVisible] = useState(false);
 
   // Reveal glowing Easter Egg book prompt after the "I LOVE U" message scrolls into place
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('book') === '1') {
+        setBookHintVisible(true);
+        setShowBook(true);
+        return;
+      }
+    }
     const timer = setTimeout(() => {
       setBookHintVisible(true);
     }, 3200);
@@ -79,29 +77,56 @@ export default function EndingCutscene() {
         />
       </div>
 
-      {/* Glowing Easter Egg Book Trigger Prompt */}
+      {/* Authentic Retro 16-bit Pixel Art Easter Egg Box / Prompt */}
       {bookHintVisible && !showBook && (
         <div
-          className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center animate-bounce cursor-pointer select-none"
-          style={{ animationDuration: '2.2s' }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center cursor-pointer select-none group"
+          style={{
+            imageRendering: 'pixelated',
+            animation: 'title-float 2.4s ease-in-out infinite',
+          }}
           onClick={() => {
             SFX.click();
             setShowBook(true);
           }}
         >
-          <div className="relative group px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#4a1c24]/90 via-[#632630]/90 to-[#4a1c24]/90 border border-amber-300/60 shadow-[0_0_15px_rgba(251,191,36,0.5)] backdrop-blur-xs flex items-center gap-2 hover:scale-105 transition-transform">
-            <span className="text-base animate-pulse">📖</span>
-            <span className="text-[11px] font-serif font-bold text-[#fef08a] drop-shadow-sm tracking-wide">
-              Món quà từ hòm thư... [Nhấn E / Mở sách]
-            </span>
-            <span className="text-xs">🌸</span>
 
-            {/* Radiant glow ring around the button */}
-            <div className="absolute -inset-1 rounded-full bg-amber-400/20 blur-sm pointer-events-none -z-10 group-hover:bg-amber-400/40 transition-colors" />
+          {/* Retro Pixel Dialog Box with DB32 gold border */}
+          <div
+            className="px-3.5 py-1 flex items-center gap-2 rounded-xs group-hover:scale-105 transition-transform"
+            style={{
+              backgroundColor: 'rgba(15, 10, 24, 0.95)',
+              border: '2px solid #e2b77a',
+              boxShadow: '0 0 0 1px #2d1808, 0 4px 14px rgba(0,0,0,0.85), inset 0 0 8px rgba(226,183,122,0.15)',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'VT323', monospace",
+                fontSize: '19px',
+                color: '#fef3c7',
+                letterSpacing: '0.04em',
+                textShadow: '1px 1px 0 #000',
+              }}
+            >
+              Món quà từ hòm thư...
+            </span>
+
+            {/* Retro Pixel Keycap [E] */}
+            <span
+              className="px-1.5 py-0.5 rounded-xs font-bold inline-flex items-center gap-1 group-hover:bg-amber-300 transition-colors"
+              style={{
+                fontFamily: "'VT323', monospace",
+                fontSize: '15px',
+                backgroundColor: '#fbbf24',
+                color: '#2d1808',
+                border: '1px solid #b45309',
+                boxShadow: '0 1px 0 #78350f',
+              }}
+            >
+              [E] Mở sách
+            </span>
           </div>
-          <span className="text-[9px] font-mono text-white/70 mt-1 bg-black/40 px-2 py-0.5 rounded">
-            ✨ Easter Egg bí mật
-          </span>
         </div>
       )}
 

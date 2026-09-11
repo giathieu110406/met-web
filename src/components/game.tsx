@@ -39,12 +39,7 @@ const FPV_SPOTS: FPVSpot[] = [
 ];
 
 export default function Game() {
-  const [gameState, setGameState] = useState<GameState>(() => {
-    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('scene') === 'ending') {
-      return 'ending';
-    }
-    return 'title';
-  });
+  const [gameState, setGameState] = useState<GameState>('title');
   const [cameraX, setCameraX] = useState(0);
   const [heroX, setHeroX] = useState(LEVEL.heroSpawn.x);
   const [collectedIds, setCollectedIds] = useState<Set<number>>(new Set());
@@ -52,6 +47,23 @@ export default function Game() {
 
   // Map 1 (Valley) vs Map 2 (Hill) state
   const [currentMap, setCurrentMap] = useState<'valley' | 'hill'>('valley');
+
+  // Support ?scene=ending / ?scene=playing URL query params for direct debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const sceneParam = params.get('scene');
+      if (sceneParam === 'ending') {
+        setGameState('ending');
+        setCurrentMap('hill');
+      } else if (sceneParam === 'playing') {
+        setGameState('playing');
+      } else if (sceneParam === 'dialogue') {
+        setGameState('dialogue');
+        setCurrentMap('hill');
+      }
+    }
+  }, []);
   const [isAutoWalkingBack, setIsAutoWalkingBack] = useState(false);
   const [isAutoRunningToHill, setIsAutoRunningToHill] = useState(false);
   const [mapFadePhase, setMapFadePhase] = useState<'entering' | 'exiting' | null>(null);

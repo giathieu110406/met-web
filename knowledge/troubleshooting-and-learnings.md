@@ -244,43 +244,40 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
 
 ---
 
-## 3. Bài Học & Kinh Nghiệm Đúc Kết: Hệ Thống Cuốn Sách 3D Flipbook & Tích Hợp Coding Agent Plugins (Playwright CLI, Ponytail)
+## 3. 📖 Chuyên Đề: Cuốn Sách Kỷ Niệm 3D (Easter Egg Storybook)
 
-### 3.1. Các lỗi sai phổ biến & Cách khắc phục
-1. **Lỗi Trang Sách Trong Suốt & Chữ Bị Đè Lên Nhau (See-through Ghosting)**:
-   - *Nguyên nhân*: Các thư viện lật sách giả lập 2D (như soft mode của `page-flip`) dùng kỹ thuật sao chép DOM `cloneNode` kết hợp `clip-path` nhưng không có khái niệm hai mặt giấy độc lập. Kết quả là mặt trước bị xoay ngược nằm đè lên mặt sau, tạo cảm giác trang giấy bị trong suốt nhìn xuyên thấu.
-   - *Kinh nghiệm khắc phục*: Chuyển sang kiến trúc **Dual-Sided Solid 3D Sheet Engine**:
-     - Mặt trước (Front Face): Nền giấy ngà đục 100% (`#faf5eb` / `#240c0f`), `backface-visibility: hidden`.
-     - Mặt sau (Back Face): Nền giấy ngà đục 100%, xoay $180^\circ$, `backface-visibility: hidden`.
-     - Khi lật dở chừng ở bất kỳ góc độ nào ($45^\circ$, $90^\circ$, $135^\circ$), GPU sẽ tự động loại bỏ mặt khuất, đảm bảo giấy đục 100%, tách biệt hoàn toàn hai mặt và che phủ hoàn toàn các trang nằm dưới.
-2. **Lỗi Vệt Sáng Phản Quang Chạy Dọc Trang (Specular Highlight Streak)**:
-   - *Nguyên nhân*: Sử dụng gradient dải sáng màu trắng (`rgba(255, 255, 255, 0.25)`) hoặc hiệu ứng tương phản sáng-tối giả lập bóng cong khiến trang sách xuất hiện một vệt sáng bóng loáng chạy dọc nếp gấp gây khó chịu cho thị giác.
-   - *Kinh nghiệm khắc phục*: Loại bỏ triệt để toàn bộ dải màu trắng phản quang. Giữ nguyên chất giấy mỹ thuật mờ tự nhiên (Matte Ivory Parchment), chỉ đổ bóng tối nhẹ ở rãnh gáy sách (`rgba(50, 22, 8, 0.1)`).
-3. **Lỗi Mép Giấy Bị Xiên Lệch & Nhô Khỏi Khung Bìa (Diagonal Corner Protrusion)**:
-   - *Nguyên nhân*: Áp dụng góc xoay trục $Z$ (`rotateZ`) khi kéo góc trang sách khiến toàn bộ hình chữ nhật bị xiên chéo và nhô các góc trên/dưới ra ngoài khung viền bìa da.
-   - *Kinh nghiệm khắc phục*: Khóa cứng `rotateZ = 0`, chỉ cho phép trang xoay quanh trục gáy sách $Y$ (`transform-origin: left center`). Các mép giấy luôn song song phẳng phiu tuyệt đối trong khung bìa sách.
-4. **Lỗi Che Khuất Thanh Điều Khiển Chân Trang (Canvas Viewport Clipping)**:
-   - *Nguyên nhân*: Trong khung game $600\text{px} \times 400\text{px}$, nếu chiều cao sách quá lớn ($386\text{px}$) thì thanh điều hướng chân trang sẽ bị đẩy ra ngoài rìa dưới màn hình.
-   - *Kinh nghiệm khắc phục*: Tinh chỉnh kích thước trang sách về $265\text{px} \times 336\text{px}$ ở chế độ Canvas, chừa khoảng trống $28\text{px}$ cho thanh điều hướng chân trang và bổ sung hai phím lật nổi `❮` và `❯` ở hai bên rìa ngoài.
+### 3.1. Sự cố: Sách không xuất hiện ở màn hình nhỏ (Bị trống trơn)
+- **Triệu chứng**:
+  - Sau đoạn kết thúc "I LOVE U", khi nhấn phím `[E]` để mở sách ở cửa sổ mặc định (chưa bật toàn màn hình), cuốn sách chỉ hiện khung vỏ da màu đỏ mận, toàn bộ trang giấy trắng tinh/trống trơn không có nội dung.
+  - Phải bấm chuyển sang chế độ "Toàn màn hình" thì các trang sách mới bất ngờ xuất hiện.
+- **Phân tích 3 nguyên nhân gốc rễ**:
+  1. **Lỗi Vòng đời React (React Lifecycle Hook Dependency Bug)**:
+     - Component [EasterEggBook](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/easter-egg-book.tsx) sử dụng cờ `isMounted` để chỉ render portal sau khi client hydrate (`if (!isMounted) return null;`).
+     - Ở lần render đầu tiên, `isMounted === false` nên DOM refs (`bookContainerRef`, `templatesRef`) mang giá trị `null`.
+     - Tuy nhiên, trong `useEffect` khởi tạo `PageFlip`, dependency array chỉ chứa `[pageWidth, pageHeight, isExpanded, allPages]` mà **thiếu `isMounted`**.
+     - Khi `isMounted` chuyển thành `true` và kích hoạt re-render, effect khởi tạo `PageFlip` **không hề chạy lại**. `PageFlip` hoàn toàn không được khởi tạo, container rỗng không. Khi người dùng bấm "Toàn màn hình", `isExpanded` đổi từ `false` sang `true` mới kích hoạt effect chạy.
+  2. **Thiếu CSS cấu trúc cốt lõi của thư viện StPageFlip**:
+     - Thư viện `page-flip` yêu cầu các lớp CSS `.stf__block { position: absolute; width: 100%; height: 100%; perspective: 2000px; }` và `.stf__wrapper { width: 100%; height: 100%; }`.
+     - Do CSS không được import, `.stf__block` có `offsetHeight = 0`. Hàm tính tọa độ của `page-flip` tính ra `top = -184px`, đẩy toàn bộ các trang sách lên tọa độ âm phía trên khung nhìn.
+  3. **Giới hạn khung nhìn Canvas $600 \times 400\text{px}$ & `overflow: hidden`**:
+     - Trước đây ở chế độ thu nhỏ, modal sách được render trực tiếp trong [Canvas](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/canvas.tsx), bị giới hạn kích thước $600 \times 400\text{px}$ và bị `overflow: hidden` cắt cụt khi có bất kỳ lệch tọa độ nào.
+- **Giải pháp dứt điểm**:
+  1. Thêm `isMounted` vào dependency array của `useEffect` trong [EasterEggBook](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/easter-egg-book.tsx) để engine luôn nạp trang ngay khi DOM sẵn sàng.
+  2. Luôn neo modal bằng `createPortal(bookDOM, document.body)` bất kể ở chế độ cửa sổ hay toàn màn hình.
+  3. Bổ sung các luật CSS chuẩn mực của `stPageFlip` vào [globals.css](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/app/globals.css).
+  4. Thêm lệnh ép layout cập nhật `pageFlip.update()` sau 50ms mount.
 
-### 3.2. Lưu ý về mặt tư duy thiết kế
-1. **Triết Lý "Ponytail" — Tối Giản Hóa Kiến Trúc (YAGNI & Native Platform First)**:
-   - Trước khi tích hợp bất kỳ thư viện bên ngoài nào, hãy tự hỏi: *Nền tảng chuẩn (CSS 3D Transforms, Web Audio API) có tự giải quyết được không?*
-   - Việc tự xây dựng engine 3D mỏng nhẹ bằng CSS thuần giúp giảm thiểu phụ thuộc bên ngoài, đạt hiệu năng 120fps mượt mà và kiểm soát 100% hành vi giao diện người dùng.
-2. **Cân Bằng Giữa Tự Động Hóa & Trải Nghiệm Cảm Xúc (Illuminated Storybook Aesthetics)**:
-   - Một cuốn sách kỷ niệm mang tính cá nhân cao cần sự trau chuốt tỉ mỉ từng chi tiết: Illuminated Drop Cap kiểu kinh thánh cổ điển, dải ruy băng sa-tin đỏ bordeaux, hoa văn góc filigree, chữ viết tay nghiêng và hoa đào phân cách tạo chiều sâu tình cảm.
-
-### 3.3. Mẹo tính toán & Kỹ thuật lập trình
-1. **Hàm Gia Tốc Đàn Hồi Trượt Lụa (Silky Spring Release)**:
-   - Sử dụng đường cong cubic bezier `cubic-bezier(0.16, 1, 0.3, 1)` cho thời gian lướt $500\text{ms} - 600\text{ms}$, giúp trang giấy khi buông chuột lướt nhẹ nhàng vào vị trí đích mà không bị giật khựng.
-2. **Tổng Hợp Âm Thanh Giấy Sột Soạt Bằng Web Audio API**:
-   - Dùng White Noise Buffer kết hợp Bandpass Filter (tần số trung tâm $1200\text{Hz}$, Q = 1.2) và Gain Envelope dạng Exponential Decay ($0.001 \to 0.08 \to 0.0001$) trong $280\text{ms}$ để tạo tiếng xào xạc tự nhiên của giấy thật mà không cần tải file âm thanh mp3/wav ngoài.
-
-### 3.4. Chuẩn bị nền tảng cho phần tiếp theo
-- **Tích hợp bộ đôi công cụ Playwright CLI & Ponytail**:
-  - `Playwright CLI` cung cấp công cụ tự động hóa trình duyệt qua Accessibility Snapshot cho agent, sẵn sàng cho việc viết test E2E tự động cho toàn bộ cốt truyện và các mini-game tương tác.
-  - `Ponytail` cung cấp quy chuẩn kiểm duyệt code tinh gọn (YAGNI, stdlib first, code tối giản), làm kim chỉ nam vững chắc cho các bản cập nhật tính năng tiếp theo.
-
+### 3.2. Chuẩn mực thẩm mỹ: Nghệ thuật Vector Cổ Điển vs. Icon/Emoji
+- **Vấn đề**: Các emoji unicode như `🌸`, `✦`, `📖`, `🕊️` và đặc biệt là ngôi sao Gemini `✦` mang nét hiện đại, công nghiệp, làm giảm giá trị cổ kính và cảm xúc chân thành của cuốn sách tình yêu.
+- **Quy tắc thiết kế mới**:
+  1. Tuyệt đối không dùng emoji/icon đồ họa hệ thống trong sách và hộp thoại cutscene.
+  2. Sử dụng 100% SVG vector pixel-art chuyên biệt:
+     - `BrassCorner`: 4 miếng bọc góc đồng vàng chạm khắc phong cách Baroque/Victorian ở 4 góc bìa ngoài.
+     - `CherryBranchCorner`: Nhánh cành đào uốn lượn mềm mại với hoa đào 5 cánh và lá non ở 4 góc của từng trang giấy ngà.
+     - `CherryCrest`: Huy hiệu hoa anh đào nở rộ ở đầu trang giữa hai nhánh chỉ vàng đối xứng.
+     - `SmallFlowerDivider` & `QuoteBox`: Hộp trích dẫn tình yêu với các hạt kim cương hình học `◇` sang trọng.
+  3. **Logic ruy băng đánh dấu trang vật lý**:
+     - Khi sách đóng (ở Bìa trước hoặc Bìa sau), dải ruy băng nhung đỏ và rãnh gáy phải được **ẩn hoàn toàn** (`!isOuterCover`). Ruy băng chỉ thả xuống khi sách được lật mở vào các trang ruột bên trong.
 
 
 

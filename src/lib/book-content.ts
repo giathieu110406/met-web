@@ -29,12 +29,12 @@ export const DEFAULT_BOOK_SHEETS: BookSheet[] = [
       type: 'cover',
       title: 'Kỷ Niệm Của Chúng Mình',
       subtitle: 'Món quà mang theo suốt chuyến hành trình',
-      tag: '🌸 Easter Egg Chapter',
+      tag: 'Kỷ Niệm Của Chúng Mình',
       paragraphs: [
         'Một cuốn sách nhỏ dành riêng cho người anh thương, được bọc cẩn thận từ chiếc hòm thư nơi đầu thung lũng...',
       ],
       quote: '“Gặp được người mình thương, mọi bước chân đều hóa dịu dàng.”',
-      signature: 'Gửi em 🕊️',
+      signature: 'GỬI EM',
     },
     back: {
       id: 'page-1',
@@ -110,7 +110,7 @@ export const DEFAULT_BOOK_SHEETS: BookSheet[] = [
         'Cuốn sách này vẫn còn nhiều trang trống — để chúng mình cùng viết tiếp những kỷ niệm đẹp tiếp theo nhé!',
       ],
       quote: '“Happy Ending is just the beginning of our new chapter.”',
-      signature: 'Yêu em rất nhiều 💕',
+      signature: 'Yêu em rất nhiều',
     },
   },
 
@@ -134,7 +134,7 @@ export const DEFAULT_BOOK_SHEETS: BookSheet[] = [
       id: 'cover-back',
       type: 'back-cover',
       title: 'Met — A Tiny Love Story',
-      subtitle: 'The Special Easter Egg',
+      subtitle: 'Kỷ Niệm Của Chúng Mình',
       paragraphs: [
         'Made with love, care, and pixel nostalgia.',
         'Cảm ơn bạn đã lật mở và lắng nghe trọn vẹn câu chuyện này.',

@@ -102,21 +102,19 @@ Tại $x = 1050$, một cơn lốc xoáy thổi rách bức thiệp viết tay t
   - Chàng trai bước đến bên cô gái ($x = 840, y = 201$).
   - Bức thư tình "I LOVE U" hoàn chỉnh từ từ trượt lên màn hình trong tiếng chuông ngân vang và mưa cánh hoa đào.
 
----
-
-## 7. Cuốn Sách Kỷ Niệm Bí Mật (Easter Egg Storybook)
-- **Kích hoạt**: Sau khi bức thư *"I LOVE U"* cuộn lên hoàn tất ở màn Ending (~3.2s), xuất hiện nút phát sáng nhấp nháy: `📖 Món quà từ hòm thư... [Nhấn E / Mở sách]`.
-- **Nội dung câu chuyện 4 tờ giấy kép (8 mặt trang)**:
-  - Sheet 0: Bìa Da Bordeaux ("Kỷ Niệm Của Chúng Mình") & Trang 1 ("Khởi Đầu & Chiếc Hòm Thư").
+## 7. Mở Rộng Sau Kết Thúc: Cuốn Sách Kỷ Niệm 3D (Easter Egg Storybook)
+- **Kích hoạt**: Sau khi bức thư "I LOVE U" trượt lên ổn định (3.2 giây), một hộp thoại gợi ý cổ điển xuất hiện phía dưới: `Món quà từ hòm thư... [E] Mở sách`.
+- **Cơ chế tương tác**:
+  - Nhấn phím `[E]` hoặc click chuột vào hộp thoại để mở sách.
+  - Phím mũi tên `ArrowRight` / `Space` / `Enter` để lật sang trang sau, `ArrowLeft` để lật về trang trước.
+  - Phím `Escape` để thu nhỏ hoặc đóng sách.
+  - Hỗ trợ kéo vuốt lật trang bằng chuột hoặc chạm từ bất kỳ mép/góc trang nào với vật lý uốn cong trang giấy 3D (`PageFlip`).
+  - Nút chuyển đổi `[⛶ Toàn màn hình]` / `[⊡ Thu nhỏ]` linh hoạt.
+- **Âm thanh chân thực**: Hiệu ứng Web Audio API `SFX.pageFlip()` phát ra tiếng xoạt lật giấy mộc mạc và chân thực mỗi khi trang giấy quay.
+- **Nội dung 8 trang**:
+  - Sheet 0: Bìa trước ("Kỷ Niệm Của Chúng Mình") & Trang 1 ("Khởi Đầu & Chiếc Hòm Thư").
   - Sheet 1: Trang 2 ("Cơn Mưa & Những Mảnh Thư") & Trang 3 ("Đồi Hoa Anh Đào Mùa Xuân").
   - Sheet 2: Trang 4 ("Tái Ngộ Dưới Gốc Cây") & Trang 5 ("Gửi Đến Người Thương").
-  - Sheet 3: Trang 6 ("To Be Continued...") & Bìa Sau ("Met — A Tiny Love Story").
-- **Cơ chế chuyển động lật trang (Solid 3D Dual-Sided Sheet Engine)**:
-  - Mặt trước (Front) và mặt sau (Back) hoàn toàn độc lập, nền đục 100% (`#faf5eb` / `#240c0f`), `backface-visibility: hidden`.
-  - Tuyệt đối không có hiện tượng nhìn xuyên thấu (ghosting) khi dừng ở góc lật giữa chừng ($45^\circ$, $90^\circ$, $135^\circ$).
-  - Khóa trục quay quanh gáy sách $Y$ (`rotateZ = 0`), mép giấy luôn song song phẳng phiu trong khung bìa.
-  - Loại bỏ hoàn toàn mọi vệt sáng phản quang trắng nhân tạo, bề mặt giấy giữ trọn vẻ mờ tự nhiên (Matte Parchment) với bóng tối nhẹ ở gáy sách.
-  - Tích hợp âm thanh lật giấy tổng hợp qua Web Audio API `SFX.pageFlip()`.
-  - Hỗ trợ kéo rê chuột tự do (drag-anywhere), bấm phím mũi tên `[←] [→]`, hai phím nổi rìa sách `❮` và `❯`, thanh điều hướng chân trang với chấm sáng tiến trình, và chế độ mở rộng toàn màn hình `⛶`.
-
+  - Sheet 3: Trang 6 ("To Be Continued...") & Bìa sau ("Met — A Tiny Love Story").
+- **Mỹ thuật**: Giấy ngà cổ điển (`Aged Parchment`), 4 góc cành đào SVG, khung trích dẫn tình yêu bo góc đính hạt kim cương `◇`, gáy sách đính đinh tán mạ vàng và dải ruy băng nhung đỏ mềm mại.
 

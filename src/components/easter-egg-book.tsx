@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { PageFlip } from 'page-flip';
 import { SFX } from '@/lib/sound';
 import { DEFAULT_BOOK_SHEETS, BookSheet, BookPageSide } from '@/lib/book-content';
 
@@ -16,102 +17,137 @@ export default function EasterEggBook({
 }: EasterEggBookProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-
-  // flippedCount = number of sheets turned from right to left (0 to sheets.length)
-  // 0: Book closed at front cover (Cover on right, inside casing on left)
-  // 1: Sheet 0 flipped (Page 1 on left, Page 2 on right)
-  // 2: Sheet 1 flipped (Page 3 on left, Page 4 on right)
-  // 3: Sheet 2 flipped (Page 5 on left, Page 6 on right)
-  // 4: Sheet 3 flipped (Back Cover on left, inside casing on right)
-  const [flippedCount, setFlippedCount] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
   const bookContainerRef = useRef<HTMLDivElement>(null);
-  const sheetRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Drag tracking ref
-  const dragRef = useRef<{
-    isDragging: boolean;
-    targetIndex: number;
-    direction: 'forward' | 'backward';
-    startX: number;
-    startY: number;
-    startTime: number;
-    currentAngle: number;
-  } | null>(null);
+  const templatesRef = useRef<HTMLDivElement>(null);
+  const pageFlipInstanceRef = useRef<PageFlip | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Dimensions:
-  // Canvas mode (600x400 viewport): 265px x 336px per page (total book 530px x 336px)
-  // Fullscreen mode: 430px x 560px per page (total book 860px x 560px)
-  const pageWidth = isExpanded ? 430 : 265;
-  const pageHeight = isExpanded ? 560 : 336;
-
-  // Turn forward (right to left)
-  const flipForward = useCallback(() => {
-    if (isAnimating || flippedCount >= sheets.length) return;
-    const targetIndex = flippedCount;
-    const sheetEl = sheetRefs.current[targetIndex];
-    if (!sheetEl) return;
-
-    setIsAnimating(true);
-    SFX.pageFlip();
-
-    sheetEl.style.zIndex = '100';
-    sheetEl.style.transition = 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)';
-    sheetEl.style.transform = 'rotateY(-180deg)';
-
-    setTimeout(() => {
-      setFlippedCount((prev) => prev + 1);
-      setIsAnimating(false);
-    }, 600);
-  }, [flippedCount, isAnimating, sheets.length]);
-
-  // Turn backward (left to right)
-  const flipBackward = useCallback(() => {
-    if (isAnimating || flippedCount <= 0) return;
-    const targetIndex = flippedCount - 1;
-    const sheetEl = sheetRefs.current[targetIndex];
-    if (!sheetEl) return;
-
-    setIsAnimating(true);
-    SFX.pageFlip();
-
-    sheetEl.style.zIndex = '100';
-    sheetEl.style.transition = 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)';
-    sheetEl.style.transform = 'rotateY(0deg)';
-
-    setTimeout(() => {
-      setFlippedCount((prev) => prev - 1);
-      setIsAnimating(false);
-    }, 600);
-  }, [flippedCount, isAnimating]);
-
-  // Sync sheet positions and z-indices whenever flippedCount changes and not animating
-  useEffect(() => {
-    sheets.forEach((_, idx) => {
-      const el = sheetRefs.current[idx];
-      if (!el) return;
-
-      const isFlipped = idx < flippedCount;
-      el.style.transition = 'none';
-      el.style.transform = `rotateY(${isFlipped ? -180 : 0}deg)`;
-      el.style.zIndex = isFlipped ? `${(idx + 1) * 5}` : `${(sheets.length - idx) * 5}`;
+  // Sequential single pages list:
+  // [Sheet0.front (Cover), Sheet0.back (p1), Sheet1.front (p2), Sheet1.back (p3), Sheet2.front (p4), Sheet2.back (p5), Sheet3.front (p6), Sheet3.back (Back Cover)]
+  const allPages = useMemo(() => {
+    const list: BookPageSide[] = [];
+    sheets.forEach((sheet) => {
+      list.push(sheet.front);
+      list.push(sheet.back);
     });
-  }, [flippedCount, sheets]);
+    return list;
+  }, [sheets]);
+
+  // Dimensions:
+  // Windowed mode: single page 290px x 380px (open spread 580px x 380px)
+  // Fullscreen mode: single page 440px x 580px (open spread 880px x 580px)
+  const pageWidth = isExpanded ? 440 : 290;
+  const pageHeight = isExpanded ? 580 : 380;
+
+  // Outer covers: Page 0 (Front Cover) and Page 7 / last page (Back Cover)
+  const isOuterCover = currentPageIndex === 0 || currentPageIndex >= allPages.length - 1;
+
+  // Initialize and update PageFlip instance with robust cloned template strategy
+  useEffect(() => {
+    if (!isMounted || !bookContainerRef.current || !templatesRef.current) return;
+    if (templatesRef.current.children.length === 0) return;
+
+    // Destroy existing instance cleanly before creating a new one
+    if (pageFlipInstanceRef.current) {
+      try {
+        pageFlipInstanceRef.current.destroy();
+      } catch {
+        // ignore
+      }
+      pageFlipInstanceRef.current = null;
+    }
+
+    const container = bookContainerRef.current;
+    container.innerHTML = ''; // Reset container cleanly to prevent any DOM collisions
+
+    // Clone fresh copies of the pages from the template container
+    const clonedPageNodes = Array.from(templatesRef.current.children).map((child) =>
+      child.cloneNode(true) as HTMLElement
+    );
+
+    let initTimer: NodeJS.Timeout | null = null;
+
+    try {
+      const pageFlip = new PageFlip(container, {
+        width: pageWidth,
+        height: pageHeight,
+        size: 'fixed',
+        minWidth: pageWidth,
+        maxWidth: pageWidth,
+        minHeight: pageHeight,
+        maxHeight: pageHeight,
+        showCover: true, // Page 0 is Front Cover, last page is Back Cover
+        drawShadow: true,
+        maxShadowOpacity: 0.5,
+        flippingTime: 750, // silky smooth transition
+        usePortrait: false, // keep 2-page spread
+        startPage: currentPageIndex,
+        autoSize: false,
+        showPageCorners: true,
+        useMouseEvents: true,
+        swipeDistance: 15,
+        clickEventForward: true,
+        disableFlipByClick: false,
+      });
+
+      pageFlipInstanceRef.current = pageFlip;
+      pageFlip.loadFromHTML(clonedPageNodes);
+
+      // Track initial page index
+      pageFlip.on('init', (e) => {
+        if (e && typeof e.data?.page === 'number') {
+          setCurrentPageIndex(e.data.page);
+        }
+      });
+
+      // Audio on page curl & page tracking
+      pageFlip.on('flip', (e) => {
+        SFX.pageFlip();
+        if (typeof e.data === 'number') {
+          setCurrentPageIndex(e.data);
+        }
+      });
+
+      // Recalculate layout after DOM mounting
+      initTimer = setTimeout(() => {
+        try {
+          pageFlip.update();
+        } catch {
+          // ignore
+        }
+      }, 50);
+    } catch (err) {
+      console.error('Failed to initialize PageFlip:', err);
+    }
+
+    return () => {
+      if (initTimer) clearTimeout(initTimer);
+      if (pageFlipInstanceRef.current) {
+        try {
+          pageFlipInstanceRef.current.destroy();
+        } catch {
+          // ignore
+        }
+        pageFlipInstanceRef.current = null;
+      }
+    };
+  }, [isMounted, pageWidth, pageHeight, isExpanded, allPages]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const pf = pageFlipInstanceRef.current;
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        flipForward();
+        pf?.flipNext();
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        flipBackward();
+        pf?.flipPrev();
       } else if (e.key === 'Escape') {
         e.preventDefault();
         if (isExpanded) {
@@ -124,189 +160,209 @@ export default function EasterEggBook({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExpanded, onClose, flipForward, flipBackward]);
-
-  // Pointer Drag Handlers (Smooth, silky drag from any edge/point)
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (isAnimating) return;
-    const rect = bookContainerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const clickX = e.clientX - rect.left;
-    const isRightSide = clickX >= rect.width / 2;
-
-    if (isRightSide) {
-      if (flippedCount >= sheets.length) return;
-      const targetIndex = flippedCount;
-      const sheetEl = sheetRefs.current[targetIndex];
-      if (!sheetEl) return;
-
-      sheetEl.style.zIndex = '100';
-      sheetEl.style.transition = 'none';
-
-      dragRef.current = {
-        isDragging: true,
-        targetIndex,
-        direction: 'forward',
-        startX: e.clientX,
-        startY: e.clientY,
-        startTime: Date.now(),
-        currentAngle: 0,
-      };
-
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-    } else {
-      if (flippedCount <= 0) return;
-      const targetIndex = flippedCount - 1;
-      const sheetEl = sheetRefs.current[targetIndex];
-      if (!sheetEl) return;
-
-      sheetEl.style.zIndex = '100';
-      sheetEl.style.transition = 'none';
-
-      dragRef.current = {
-        isDragging: true,
-        targetIndex,
-        direction: 'backward',
-        startX: e.clientX,
-        startY: e.clientY,
-        startTime: Date.now(),
-        currentAngle: -180,
-      };
-
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-    }
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragRef.current?.isDragging) return;
-    const { targetIndex, direction, startX } = dragRef.current;
-    const sheetEl = sheetRefs.current[targetIndex];
-    if (!sheetEl) return;
-
-    const deltaX = e.clientX - startX;
-    const maxDrag = pageWidth * 1.25;
-
-    if (direction === 'forward') {
-      // Dragging left means deltaX < 0
-      const progress = Math.max(0, Math.min(1, -deltaX / maxDrag));
-      const angle = -progress * 180;
-      dragRef.current.currentAngle = angle;
-      sheetEl.style.transform = `rotateY(${angle}deg)`;
-    } else {
-      // Dragging right means deltaX > 0
-      const progress = Math.max(0, Math.min(1, deltaX / maxDrag));
-      const angle = -180 + progress * 180;
-      dragRef.current.currentAngle = angle;
-      sheetEl.style.transform = `rotateY(${angle}deg)`;
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!dragRef.current?.isDragging) return;
-    const { targetIndex, direction, startX, startTime, currentAngle } = dragRef.current;
-    const sheetEl = sheetRefs.current[targetIndex];
-    dragRef.current = null;
-
-    try {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
-
-    if (!sheetEl) return;
-
-    const elapsed = Date.now() - startTime;
-    const deltaX = e.clientX - startX;
-    const isQuickClick = Math.abs(deltaX) < 10 && elapsed < 350;
-
-    setIsAnimating(true);
-    sheetEl.style.transition = 'transform 550ms cubic-bezier(0.16, 1, 0.3, 1)';
-
-    if (direction === 'forward') {
-      const shouldFlip = isQuickClick || currentAngle < -45 || (deltaX < -30 && elapsed < 400);
-      if (shouldFlip) {
-        SFX.pageFlip();
-        sheetEl.style.transform = 'rotateY(-180deg)';
-        setTimeout(() => {
-          setFlippedCount((prev) => prev + 1);
-          setIsAnimating(false);
-        }, 550);
-      } else {
-        sheetEl.style.transform = 'rotateY(0deg)';
-        setTimeout(() => {
-          sheetEl.style.zIndex = `${(sheets.length - targetIndex) * 5}`;
-          setIsAnimating(false);
-        }, 550);
-      }
-    } else {
-      const shouldFlip = isQuickClick || currentAngle > -135 || (deltaX > 30 && elapsed < 400);
-      if (shouldFlip) {
-        SFX.pageFlip();
-        sheetEl.style.transform = 'rotateY(0deg)';
-        setTimeout(() => {
-          setFlippedCount((prev) => prev - 1);
-          setIsAnimating(false);
-        }, 550);
-      } else {
-        sheetEl.style.transform = 'rotateY(-180deg)';
-        setTimeout(() => {
-          sheetEl.style.zIndex = `${(targetIndex + 1) * 5}`;
-          setIsAnimating(false);
-        }, 550);
-      }
-    }
-  };
+  }, [isExpanded, onClose]);
 
   // ============================================================================
-  // ORNAMENTAL ARTISAN DESIGN HELPERS
+  // PURE VECTOR ARTISAN GRAPHICS (MATCHING IMAGE 1 - NO EMOJIS)
   // ============================================================================
 
-  const CherryDivider = () => (
-    <div className="flex items-center justify-center gap-2 my-1.5 opacity-75 select-none pointer-events-none">
-      <div className="w-10 h-[0.75px] bg-gradient-to-r from-transparent via-[#c49f75] to-[#a37c56]" />
-      <span className="text-[10px] text-[#cf768b] leading-none">🌸</span>
-      <div className="w-10 h-[0.75px] bg-gradient-to-l from-transparent via-[#c49f75] to-[#a37c56]" />
+  // 1. Brass Corner Protectors on Outer Book Casing
+  const BrassCorner = ({
+    position,
+  }: {
+    position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  }) => {
+    const rotation =
+      position === 'top-left'
+        ? 'rotate(0deg)'
+        : position === 'top-right'
+          ? 'rotate(90deg)'
+          : position === 'bottom-right'
+            ? 'rotate(180deg)'
+            : 'rotate(270deg)';
+
+    const posClasses =
+      position === 'top-left'
+        ? '-top-1.5 -left-1.5'
+        : position === 'top-right'
+          ? '-top-1.5 -right-1.5'
+          : position === 'bottom-right'
+            ? '-bottom-1.5 -right-1.5'
+            : '-bottom-1.5 -left-1.5';
+
+    return (
+      <div
+        className={`absolute ${posClasses} w-7 h-7 pointer-events-none z-50`}
+        style={{ transform: rotation }}
+      >
+        <svg viewBox="0 0 32 32" className="w-full h-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+          {/* Outer Brass Bracket */}
+          <path
+            d="M 2 2 L 25 2 C 25 7 21 9 19 11 C 17 13 15 17 13 21 C 11 23 7 25 2 25 Z"
+            fill="#caa059"
+            stroke="#6e451b"
+            strokeWidth="1.2"
+          />
+          {/* Inner Highlight Layer */}
+          <path
+            d="M 4 4 L 19 4 C 19 7 16 9 14 11 C 12 13 10 16 8 19 L 4 19 Z"
+            fill="#eacb88"
+            stroke="#916327"
+            strokeWidth="0.8"
+          />
+          {/* Rivet Stud */}
+          <circle cx="8.5" cy="8.5" r="1.8" fill="#52310f" stroke="#e8c784" strokeWidth="0.6" />
+          <path d="M 13 5 Q 12 9 8 12" fill="none" stroke="#7e4c20" strokeWidth="0.8" />
+        </svg>
+      </div>
+    );
+  };
+
+  // 2. Cherry Blossom Branch Filigree on Page Corners (Vector SVG)
+  const CherryBranchCorner = ({
+    isLeft,
+    isTop,
+  }: {
+    isLeft: boolean;
+    isTop: boolean;
+  }) => {
+    const transform = `${isLeft ? '' : 'scaleX(-1)'} ${isTop ? '' : 'scaleY(-1)'}`;
+    const posClass = `${isLeft ? 'left-2.5' : 'right-2.5'} ${isTop ? 'top-2.5' : 'bottom-2.5'}`;
+
+    return (
+      <div
+        className={`absolute ${posClass} w-13 h-13 pointer-events-none opacity-90 select-none`}
+        style={{ transform, transformOrigin: 'center center' }}
+      >
+        <svg viewBox="0 0 60 60" className="w-full h-full">
+          {/* Delicate tree branch in warm brown */}
+          <path
+            d="M 5 55 C 13 42 19 30 38 18 C 45 14 52 10 56 6"
+            fill="none"
+            stroke="#734e37"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 23 27 C 18 22 16 14 18 8"
+            fill="none"
+            stroke="#80573e"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 37 19 C 39 12 43 8 49 6"
+            fill="none"
+            stroke="#80573e"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+          />
+
+          {/* Tiny olive leaves */}
+          <path d="M 28 22 Q 33 19 31 16 Q 26 19 28 22 Z" fill="#757c46" opacity="0.85" />
+          <path d="M 44 14 Q 48 10 46 8 Q 42 12 44 14 Z" fill="#757c46" opacity="0.85" />
+          <path d="M 18 19 Q 14 17 14 13 Q 19 15 18 19 Z" fill="#757c46" opacity="0.85" />
+
+          {/* Center 5-petal Blossom */}
+          <g transform="translate(36, 20)">
+            <path d="M 0 -7 C 2 -11 6 -11 6 -7 C 6 -3 2 -1 0 0 Z" fill="#de7d92" />
+            <path d="M 0 -7 C -2 -11 -6 -11 -6 -7 C -6 -3 -2 -1 0 0 Z" fill="#ea94a7" />
+            <path d="M 7 -2 C 11 -3 12 1 8 4 C 5 5 2 2 0 0 Z" fill="#de7d92" />
+            <path d="M 5 6 C 6 10 2 12 -2 9 C -4 6 -2 3 0 0 Z" fill="#ea94a7" />
+            <path d="M -5 6 C -7 9 -11 7 -9 3 C -7 0 -3 0 0 0 Z" fill="#de7d92" />
+            <path d="M -7 -2 C -11 -2 -11 2 -7 5 C -4 5 -2 2 0 0 Z" fill="#ea94a7" />
+            <circle cx="0" cy="0" r="1.8" fill="#c0752d" />
+            <circle cx="0" cy="0" r="0.7" fill="#fef08a" />
+          </g>
+
+          {/* Secondary bud */}
+          <g transform="translate(19, 8)">
+            <path d="M 0 -4 C 3 -6 5 -3 2 0 C 0 1 0 0 0 0 Z" fill="#de7d92" />
+            <path d="M 0 -4 C -3 -6 -5 -3 -2 0 C 0 1 0 0 0 0 Z" fill="#ea94a7" />
+            <circle cx="0" cy="0" r="1" fill="#c0752d" />
+          </g>
+
+          {/* Tertiary bud */}
+          <g transform="translate(49, 7)">
+            <path d="M 0 -3 C 2 -5 4 -2 2 0 Z" fill="#de7d92" />
+            <path d="M 0 -3 C -2 -5 -4 -2 -2 0 Z" fill="#ea94a7" />
+            <circle cx="0" cy="0" r="1" fill="#c0752d" />
+          </g>
+        </svg>
+      </div>
+    );
+  };
+
+  // 3. Top Symmetrical Cherry Blossom Crest
+  const CherryCrest = () => (
+    <div className="flex items-center justify-center gap-2 my-1 select-none pointer-events-none">
+      <div className="flex items-center gap-1.5 opacity-75">
+        <div className="w-8 h-[0.75px] bg-gradient-to-r from-transparent to-[#b88e63]" />
+        <span className="text-[6.5px] text-[#9c6f44]">◇</span>
+        <div className="w-4 h-[0.75px] bg-[#b88e63]" />
+        <span className="text-[6.5px] text-[#9c6f44]">◇</span>
+        <div className="w-2.5 h-[0.75px] bg-[#b88e63]" />
+      </div>
+
+      <svg viewBox="0 0 24 24" className="w-5 h-5 drop-shadow-2xs">
+        <g transform="translate(12, 12)">
+          {[0, 72, 144, 216, 288].map((angle, i) => (
+            <path
+              key={i}
+              d="M 0 0 C -2 -4 -3 -7 -1.5 -8.5 C 0 -9.5 1.5 -9.5 2 -8 C 2.5 -9.5 4 -9.5 4.5 -8 C 5 -6.5 3 -3 0 0 Z"
+              fill={i % 2 === 0 ? '#d46d82' : '#e68499'}
+              stroke="#8c2f42"
+              strokeWidth="0.4"
+              transform={`rotate(${angle})`}
+            />
+          ))}
+          <circle cx="0" cy="0" r="2.2" fill="#bc7126" />
+          <circle cx="0" cy="0" r="0.9" fill="#fef08a" />
+        </g>
+      </svg>
+
+      <div className="flex items-center gap-1.5 opacity-75">
+        <div className="w-2.5 h-[0.75px] bg-[#b88e63]" />
+        <span className="text-[6.5px] text-[#9c6f44]">◇</span>
+        <div className="w-4 h-[0.75px] bg-[#b88e63]" />
+        <span className="text-[6.5px] text-[#9c6f44]">◇</span>
+        <div className="w-8 h-[0.75px] bg-gradient-to-l from-transparent to-[#b88e63]" />
+      </div>
     </div>
   );
 
-  const CornerOrnament = ({ isLeft, isTop }: { isLeft: boolean; isTop: boolean }) => (
-    <svg
-      viewBox="0 0 24 24"
-      className={`absolute w-3.5 h-3.5 pointer-events-none opacity-30 text-[#8f6d52] ${
-        isLeft ? 'left-2.5' : 'right-2.5'
-      } ${isTop ? 'top-2.5' : 'bottom-2.5'} ${
-        !isLeft && !isTop
-          ? 'rotate-180'
-          : isLeft && !isTop
-            ? '-rotate-90'
-            : !isLeft && isTop
-              ? 'rotate-90'
-              : ''
-      }`}
-    >
-      <path
-        d="M2 2 H14 Q8 8 2 14 Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="0.85"
-      />
-      <circle cx="5" cy="5" r="1" fill="currentColor" />
-    </svg>
+  // 4. Subtle Flower Divider for Body
+  const SmallFlowerDivider = () => (
+    <div className="flex items-center justify-center gap-2 my-1.5 select-none pointer-events-none opacity-85">
+      <div className="w-8 h-[0.75px] bg-gradient-to-r from-transparent to-[#b88e63]" />
+      <span className="text-[6.5px] text-[#9c6f44]">◇</span>
+      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5">
+        <g transform="translate(8, 8)">
+          {[0, 72, 144, 216, 288].map((angle, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy="-3.8"
+              rx="1.9"
+              ry="2.8"
+              fill={i % 2 === 0 ? '#d46d82' : '#e68499'}
+              stroke="#8c2f42"
+              strokeWidth="0.3"
+              transform={`rotate(${angle})`}
+            />
+          ))}
+          <circle cx="0" cy="0" r="1.4" fill="#bc7126" />
+        </g>
+      </svg>
+      <span className="text-[6.5px] text-[#9c6f44]">◇</span>
+      <div className="w-8 h-[0.75px] bg-gradient-to-l from-transparent to-[#b88e63]" />
+    </div>
   );
 
   const renderParagraphWithDropCap = (para: string, isFirst: boolean) => {
     if (!isFirst || !para || para.length < 2) {
       return (
-        <p className="book-sans text-[10.5px] sm:text-[11px] leading-[1.72] text-[#3c2a1f] text-justify font-normal tracking-normal select-none">
+        <p className="book-sans text-[10px] sm:text-[11px] leading-[1.68] text-[#3e271c] text-justify font-normal tracking-normal select-none">
           {para}
         </p>
       );
@@ -314,8 +370,8 @@ export default function EasterEggBook({
     const firstLetter = para.charAt(0);
     const rest = para.slice(1);
     return (
-      <p className="book-sans text-[10.5px] sm:text-[11px] leading-[1.72] text-[#3c2a1f] text-justify font-normal tracking-normal select-none">
-        <span className="book-serif float-left text-[24px] leading-[0.8] font-bold text-[#91323f] mr-1.5 pt-0.5 select-none drop-shadow-xs">
+      <p className="book-sans text-[10px] sm:text-[11px] leading-[1.68] text-[#3e271c] text-justify font-normal tracking-normal select-none">
+        <span className="book-serif float-left text-[23px] leading-[0.8] font-bold text-[#882b3a] mr-1.5 pt-0.5 select-none">
           {firstLetter}
         </span>
         {rest}
@@ -323,182 +379,131 @@ export default function EasterEggBook({
     );
   };
 
+  // Render a Single Page Side (Both Left & Right use authentic Aged Parchment from Image 1)
   const renderPageContent = (page: BookPageSide, isLeft: boolean) => {
     const isCover = page.type === 'cover';
     const isBackCover = page.type === 'back-cover';
 
-    // FRONT COVER (100% Solid Opaque Burgundy Leather)
-    if (isCover) {
-      return (
-        <div className="w-full h-full p-6 flex flex-col justify-between items-center text-center select-none bg-[#240c0f] text-[#f7e8ce] rounded-r-md relative overflow-hidden border-r-2 border-y border-[#4d1f23]">
-          <div className="absolute inset-2 border border-[#d4af37]/45 rounded-sm pointer-events-none" />
-          <div className="absolute inset-3 border border-dashed border-[#d4af37]/25 rounded-sm pointer-events-none" />
-
-          <div className="pt-3 z-10">
-            <span className="text-2xl inline-block animate-pulse">🌸</span>
-          </div>
-
-          <div className="my-auto z-10 flex flex-col items-center max-w-[230px]">
-            <h1 className="book-serif text-lg sm:text-xl font-semibold text-[#fedca2] tracking-wide drop-shadow-[0_2px_5px_rgba(0,0,0,0.9)]">
-              {page.title}
-            </h1>
-            <p className="book-sans text-[10.5px] text-[#dfbe95] mt-1.5 italic">
-              {page.subtitle}
-            </p>
-
-            <CherryDivider />
-
-            {page.paragraphs?.map((p, idx) => (
-              <p key={idx} className="book-sans text-[10px] text-[#f0e2cf] leading-relaxed mb-2 select-none">
-                {p}
-              </p>
-            ))}
-
-            {page.quote && (
-              <p className="book-serif text-[9.5px] text-[#f8d4ad] italic mt-1 px-3 py-1.5 bg-black/30 rounded border border-[#d4af37]/25 leading-relaxed select-none">
-                {page.quote}
-              </p>
-            )}
-          </div>
-
-          <div className="pb-2 z-10">
-            <span className="book-sans text-[9px] text-[#dfbe95]/90 tracking-widest uppercase select-none">
-              {page.signature || 'Gửi em 🕊️'}
-            </span>
-          </div>
-        </div>
-      );
-    }
-
-    // BACK COVER (100% Solid Opaque Burgundy Leather)
-    if (isBackCover) {
-      return (
-        <div className="w-full h-full p-6 flex flex-col justify-between items-center text-center select-none bg-[#240c0f] text-[#f7e8ce] rounded-l-md relative overflow-hidden border-l-2 border-y border-[#4d1f23]">
-          <div className="absolute inset-2 border border-[#d4af37]/45 rounded-sm pointer-events-none" />
-
-          <div className="pt-3 z-10">
-            <span className="text-2xl">🌸</span>
-          </div>
-
-          <div className="my-auto z-10 flex flex-col items-center max-w-[230px]">
-            <h2 className="book-serif text-base sm:text-lg font-semibold text-[#fedca2]">
-              {page.title}
-            </h2>
-            <p className="book-sans text-[10px] text-[#dfbe95] mt-1">
-              {page.subtitle}
-            </p>
-
-            <CherryDivider />
-
-            {page.paragraphs?.map((p, idx) => (
-              <p key={idx} className="book-sans text-[10px] text-[#f0e2cf] leading-relaxed mb-1.5 select-none">
-                {p}
-              </p>
-            ))}
-
-            {page.quote && (
-              <p className="book-serif text-[9.5px] text-[#f8d4ad] italic mt-2 px-2.5 select-none">
-                {page.quote}
-              </p>
-            )}
-          </div>
-
-          <div className="pb-2 z-10">
-            <span className="book-sans text-[9px] text-[#d4af37]/80 tracking-wider select-none">
-              Met — A Tiny Love Story
-            </span>
-          </div>
-        </div>
-      );
-    }
-
-    // STORY & LETTER PAGES (100% Solid Opaque Warm Ivory Paper)
-    // No transparent gradient, no specular shine, completely matte fine parchment
     return (
       <div
-        className={`w-full h-full p-5 sm:p-6 flex flex-col justify-between select-none relative overflow-hidden bg-[#faf5eb] text-[#3b271d] ${
-          isLeft ? 'rounded-l-xs border-r border-[#e8d5c0]' : 'rounded-r-xs border-l border-[#e8d5c0]'
+        className={`w-full h-full p-4 sm:p-5 flex flex-col justify-between select-none relative overflow-hidden text-[#3a2217] ${
+          isLeft ? 'rounded-l-xs' : 'rounded-r-xs'
         }`}
         style={{
+          background: 'radial-gradient(circle at center, #faf4e6 0%, #f4ebd7 65%, #e8dcc4 100%)',
           boxShadow: isLeft
-            ? 'inset -14px 0 20px -10px rgba(50,22,8,0.1)'
-            : 'inset 14px 0 20px -10px rgba(50,22,8,0.1)',
+            ? 'inset -12px 0 18px -8px rgba(50,20,6,0.15), inset 0 0 4px rgba(0,0,0,0.03)'
+            : 'inset 12px 0 18px -8px rgba(50,20,6,0.15), inset 0 0 4px rgba(0,0,0,0.03)',
         }}
       >
-        <CornerOrnament isLeft={isLeft} isTop={true} />
-        <CornerOrnament isLeft={isLeft} isTop={false} />
+        {/* Cherry Blossom Branch Corner Filigrees (4 corners) */}
+        <CherryBranchCorner isLeft={true} isTop={true} />
+        <CherryBranchCorner isLeft={false} isTop={true} />
+        <CherryBranchCorner isLeft={true} isTop={false} />
+        <CherryBranchCorner isLeft={false} isTop={false} />
 
-        <div className="absolute inset-2 border border-[#ebd8c1]/60 rounded-xs pointer-events-none" />
+        {/* Double Hairline Vintage Inner Border */}
+        <div className="absolute inset-2.5 border border-[#cfb291]/80 rounded-[2px] pointer-events-none" />
+        <div className="absolute inset-3 border border-[#cfb291]/35 rounded-[2px] pointer-events-none" />
 
-        <div>
-          <div className="text-center pt-1 pb-1">
-            <h2 className="book-serif text-[13px] sm:text-[14px] font-semibold text-[#321d12] tracking-wide leading-snug select-none">
+        {/* Top Header Section */}
+        <div className="z-10 pt-1">
+          <CherryCrest />
+          <div className="text-center px-2">
+            <h1 className="book-serif text-[13px] sm:text-[16px] font-bold text-[#44121a] tracking-wide leading-tight select-none">
               {page.title}
-            </h2>
+            </h1>
             {page.subtitle && (
-              <p className="book-sans text-[9.5px] text-[#825e47] italic mt-0.5 font-light select-none">
+              <p className="book-sans text-[9px] sm:text-[9.5px] text-[#784f37] italic mt-0.5 font-normal select-none">
                 {page.subtitle}
               </p>
             )}
-            <CherryDivider />
           </div>
+          <SmallFlowerDivider />
+        </div>
 
-          <div className="space-y-2 mt-1">
-            {page.paragraphs?.map((para, idx) => (
-              <div key={idx}>
-                {renderParagraphWithDropCap(para, idx === 0)}
-              </div>
-            ))}
-          </div>
+        {/* Middle Body Paragraphs */}
+        <div className="z-10 space-y-1.5 my-auto px-1 sm:px-2">
+          {page.paragraphs?.map((para, idx) => (
+            <div key={idx}>{renderParagraphWithDropCap(para, idx === 0 && !isCover)}</div>
+          ))}
 
+          {/* Quote Cartouche Box (Matching Image 1) */}
           {page.quote && (
-            <div className="mt-3 px-3.5 py-2 bg-[#f4ece0] border-l-2 border-[#b57a54] rounded-r text-[9.5px] italic text-[#59331d] book-serif leading-relaxed select-none">
-              {page.quote}
-            </div>
-          )}
+            <div
+              className="mt-2.5 px-3 py-1.5 rounded-[3px] relative select-none"
+              style={{
+                backgroundColor: 'rgba(255, 252, 246, 0.65)',
+                border: '1px solid #b89368',
+                boxShadow: 'inset 0 0 6px rgba(184, 147, 104, 0.12)',
+              }}
+            >
+              <span className="absolute top-0.5 left-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
+              <span className="absolute top-0.5 right-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
+              <span className="absolute bottom-0.5 left-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
+              <span className="absolute bottom-0.5 right-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
 
-          {page.signature && (
-            <p className="book-serif text-[9.5px] text-[#78432a] italic text-right mt-2.5 mr-1 font-medium select-none">
-              {page.signature}
-            </p>
+              <p className="book-serif text-[9.5px] sm:text-[10.5px] text-[#46151f] italic text-center font-normal leading-relaxed px-2 select-none">
+                {page.quote}
+              </p>
+            </div>
           )}
         </div>
 
-        <div className="pt-2 border-t border-[#ebd8c1]/60 flex items-center justify-center text-[9px] book-sans text-[#997960] tracking-widest select-none">
-          {page.pageNumber ? `— ❧ ${page.pageNumber} ❧ —` : ''}
+        {/* Bottom Signature / Page Number Section */}
+        <div className="z-10 pb-1">
+          {page.signature ? (
+            <div className="flex items-center justify-center gap-2 select-none">
+              <div className="w-6 h-[0.75px] bg-gradient-to-r from-transparent to-[#966d43]" />
+              <span className="text-[6.5px] text-[#966d43]">◇</span>
+              <span className="book-serif text-[9px] sm:text-[9.5px] text-[#5c242c] font-semibold tracking-widest uppercase">
+                {page.signature}
+              </span>
+              <span className="text-[6.5px] text-[#966d43]">◇</span>
+              <div className="w-6 h-[0.75px] bg-gradient-to-l from-transparent to-[#966d43]" />
+            </div>
+          ) : page.pageNumber ? (
+            <div className="flex items-center justify-center text-[8px] book-sans text-[#8f6d50] tracking-widest select-none">
+              — ❧ {page.pageNumber} ❧ —
+            </div>
+          ) : isBackCover ? (
+            <div className="text-center text-[8px] book-sans text-[#8f6d50] tracking-wider select-none">
+              Met — A Tiny Love Story
+            </div>
+          ) : null}
         </div>
       </div>
     );
   };
 
-  // Descriptive label for the current spread
-  const getSpreadLabel = () => {
-    if (flippedCount === 0) return 'Bìa Trước';
-    if (flippedCount === 1) return 'Trang 1 — 2';
-    if (flippedCount === 2) return 'Trang 3 — 4';
-    if (flippedCount === 3) return 'Trang 5 — 6';
-    return 'Bìa Sau';
-  };
-
   const bookDOM = (
     <div
-      className={`${
+      className={`fixed inset-0 z-[99999] flex items-center justify-center select-none transition-all duration-300 ${
         isExpanded
-          ? 'fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4'
-          : 'absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-[2px] select-none p-1.5'
-      } transition-all duration-300`}
+          ? 'bg-black/85 backdrop-blur-md p-3 sm:p-6'
+          : 'bg-black/75 backdrop-blur-[2px] p-2 sm:p-4'
+      }`}
     >
-      {/* Top Floating Control Buttons */}
-      <div className="absolute top-2 right-2.5 z-60 flex items-center gap-1.5">
+      {/* Top Floating Control Buttons (Clean Retro Pixel Art) */}
+      <div className="absolute top-3 right-3 z-60 flex items-center gap-1.5 select-none">
         <button
           onClick={() => {
             SFX.click();
             setIsExpanded((prev) => !prev);
           }}
-          className="w-6 h-6 rounded-full bg-black/60 hover:bg-black/90 text-amber-200/80 hover:text-white flex items-center justify-center text-xs transition border border-white/15 cursor-pointer shadow-md backdrop-blur-xs"
+          className="px-2.5 py-1 rounded-xs transition-transform hover:scale-105 cursor-pointer shadow-md flex items-center gap-1"
+          style={{
+            backgroundColor: 'rgba(15, 10, 24, 0.92)',
+            border: '1px solid #e2b77a',
+            color: '#fbbf24',
+            fontFamily: "'VT323', monospace",
+            fontSize: '16px',
+            textShadow: '1px 1px 0 #000',
+          }}
           title={isExpanded ? 'Thu nhỏ lại [Esc]' : 'Mở rộng toàn màn hình'}
         >
-          {isExpanded ? '⊡' : '⛶'}
+          <span>{isExpanded ? '⊡' : '⛶'}</span>
+          <span>{isExpanded ? 'Thu nhỏ' : 'Toàn màn hình'}</span>
         </button>
 
         <button
@@ -506,240 +511,152 @@ export default function EasterEggBook({
             SFX.click();
             onClose();
           }}
-          className="w-6 h-6 rounded-full bg-black/60 hover:bg-black/90 text-rose-200/80 hover:text-white flex items-center justify-center text-xs transition border border-white/15 cursor-pointer shadow-md backdrop-blur-xs"
+          className="w-7 h-7 flex items-center justify-center rounded-xs transition-transform hover:scale-105 cursor-pointer shadow-md"
+          style={{
+            backgroundColor: 'rgba(38, 12, 18, 0.92)',
+            border: '1px solid #f472b6',
+            color: '#fecdd3',
+            fontFamily: "'VT323', monospace",
+            fontSize: '17px',
+            textShadow: '1px 1px 0 #000',
+          }}
           title="Đóng sách [Esc]"
         >
           ✕
         </button>
       </div>
 
-      {/* Book Outer Container */}
-      <div className="relative flex flex-col items-center justify-center select-none">
-        {/* Left Floating Turn Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            SFX.click();
-            flipBackward();
-          }}
-          disabled={flippedCount <= 0 || isAnimating}
-          className={`absolute -left-8 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all border border-white/20 z-50 ${
-            flippedCount <= 0
-              ? 'opacity-0 pointer-events-none'
-              : 'bg-black/60 hover:bg-black/90 text-amber-200 cursor-pointer shadow-lg hover:scale-110 active:scale-95'
-          }`}
-          title="Trang trước [←]"
-        >
-          ❮
-        </button>
-
-        {/* Right Floating Turn Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            SFX.click();
-            flipForward();
-          }}
-          disabled={flippedCount >= sheets.length || isAnimating}
-          className={`absolute -right-8 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all border border-white/20 z-50 ${
-            flippedCount >= sheets.length
-              ? 'opacity-0 pointer-events-none'
-              : 'bg-black/60 hover:bg-black/90 text-amber-200 cursor-pointer shadow-lg hover:scale-110 active:scale-95'
-          }`}
-          title="Trang sau [→]"
-        >
-          ❯
-        </button>
-
-        <div
-          ref={bookContainerRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          className="relative transition-all duration-300 select-none cursor-grab active:cursor-grabbing"
-          style={{
-            width: `${pageWidth * 2}px`,
-            height: `${pageHeight}px`,
-            perspective: '1800px',
-            touchAction: 'none',
-          }}
-        >
-          {/* Deep Ambient Drop Shadow Behind Book */}
-          <div className="absolute -inset-2 bg-black/60 rounded-2xl blur-lg -z-20 transform translate-y-3 pointer-events-none" />
-
-          {/* Hardcover Leather Casing Backing */}
-          <div className="absolute inset-0 rounded-xl bg-[#230c0e] border-2 border-[#45191d] -z-10 shadow-[0_16px_40px_rgba(0,0,0,0.85)] overflow-hidden flex">
-            {/* Inside Front Cover (shown on left when cover is closed) */}
-            <div className="w-1/2 h-full p-6 flex flex-col justify-between items-center text-center select-none bg-[#230c0e] text-[#f7e8ce] relative border-r border-[#3a1417]">
-              <div className="absolute inset-3 border border-[#d4af37]/20 rounded-sm pointer-events-none" />
-              <div className="pt-2 text-xl opacity-60">🌸</div>
-              <div className="my-auto">
-                <h3 className="book-serif text-sm font-semibold text-[#fedca2]/90 tracking-wider">
-                  Met — A Tiny Love Story
-                </h3>
-                <p className="book-sans text-[9px] text-[#dfbe95]/70 italic mt-1">
-                  Món quà kỷ niệm cho người thương
-                </p>
-                <div className="w-8 h-[0.5px] bg-[#d4af37]/30 mx-auto my-2" />
-                <p className="book-sans text-[8.5px] text-[#dfbe95]/50">
-                  Nhấp hoặc kéo trang để lật mở ❯
-                </p>
-              </div>
-              <div className="pb-1 text-[8.5px] book-sans text-[#d4af37]/40 tracking-widest">
-                — KỶ NIỆM 2026 —
-              </div>
+      {/* Hidden React-Rendered Templates Container (untouched by PageFlip DOM mutations) */}
+      <div
+        ref={templatesRef}
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: '-9999px',
+          width: `${pageWidth}px`,
+          height: `${pageHeight}px`,
+          visibility: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        {allPages.map((page, idx) => {
+          const isCover = page.type === 'cover' || page.type === 'back-cover';
+          return (
+            <div
+              key={page.id}
+              className="st-page-template w-full h-full overflow-hidden"
+              data-density={isCover ? 'hard' : 'soft'}
+              style={{
+                width: `${pageWidth}px`,
+                height: `${pageHeight}px`,
+                backgroundColor: '#f4ebd7',
+              }}
+            >
+              {renderPageContent(page, idx % 2 === 1)}
             </div>
+          );
+        })}
+      </div>
 
-            {/* Inside Back Cover (shown on right when book is finished) */}
-            <div className="w-1/2 h-full p-6 flex flex-col justify-between items-center text-center select-none bg-[#230c0e] text-[#f7e8ce] relative border-l border-[#3a1417]">
-              <div className="absolute inset-3 border border-[#d4af37]/20 rounded-sm pointer-events-none" />
-              <div className="pt-2 text-xl opacity-60">🕊️</div>
-              <div className="my-auto">
-                <h3 className="book-serif text-sm font-semibold text-[#fedca2]/90 tracking-wider">
-                  Forever & Always
-                </h3>
-                <p className="book-sans text-[9px] text-[#dfbe95]/70 italic mt-1">
-                  Hành trình yêu thương vẫn còn tiếp diễn
-                </p>
-                <div className="w-8 h-[0.5px] bg-[#d4af37]/30 mx-auto my-2" />
-                <p className="book-sans text-[8.5px] text-[#dfbe95]/50">
-                  ❮ Nhấp hoặc kéo để lật lại
-                </p>
-              </div>
-              <div className="pb-1 text-[8.5px] book-sans text-[#d4af37]/40 tracking-widest">
-                — THE END —
-              </div>
+      {/* Book Outer Physical Casing (Burgundy Leather + Brass Corners + Stacked Paper Edges) */}
+      <div
+        className="relative flex items-center justify-center transition-all duration-300 select-none"
+        style={{
+          width: `${pageWidth * 2}px`,
+          height: `${pageHeight}px`,
+          maxWidth: '96vw',
+          maxHeight: '94vh',
+        }}
+      >
+        {/* Deep Ambient Drop Shadow Behind Book */}
+        <div className="absolute -inset-3 bg-black/70 rounded-2xl blur-xl -z-30 transform translate-y-3 pointer-events-none" />
+
+        {/* Hardcover Burgundy Leather Casing Backing */}
+        <div
+          className="absolute inset-0 rounded-xl -z-10 overflow-hidden"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, #350e15 0%, #24090e 65%, #160406 100%)',
+            border: '2px solid #4a1820',
+            boxShadow: '0 18px 45px rgba(0,0,0,0.88), inset 0 0 10px rgba(0,0,0,0.9)',
+          }}
+        />
+
+        {/* 4 Authentic Ornamental Brass Corner Protectors */}
+        <BrassCorner position="top-left" />
+        <BrassCorner position="top-right" />
+        <BrassCorner position="bottom-left" />
+        <BrassCorner position="bottom-right" />
+
+        {/* Stacked Paper Block Edge Thickness at Bottom & Sides */}
+        <div
+          className="absolute inset-x-2 bottom-0 h-2 -z-10 rounded-b pointer-events-none"
+          style={{
+            background:
+              'repeating-linear-gradient(to bottom, #ded0b6 0px, #baa78e 1px, #ded0b6 2px)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+          }}
+        />
+
+        {/* Satin Bookmark Ribbon with Gold Blossom Crest (Hidden on outer front & back covers) */}
+        {!isOuterCover && (
+          <div
+            className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-16 pointer-events-none z-45 transition-opacity duration-300"
+            style={{
+              background: 'linear-gradient(to bottom, #721624 0%, #a62b3f 65%, #721624 100%)',
+              boxShadow: '0 3px 8px rgba(0,0,0,0.5)',
+              clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 50% 86%, 0% 100%)',
+            }}
+          >
+            {/* Small 4-petal Gold Flower Crest on Top of Ribbon */}
+            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 flex items-center justify-center">
+              <svg viewBox="0 0 12 12" className="w-full h-full">
+                <circle cx="6" cy="6" r="1.4" fill="#fef08a" />
+                <circle cx="6" cy="2.5" r="1.4" fill="#e5b869" />
+                <circle cx="6" cy="9.5" r="1.4" fill="#e5b869" />
+                <circle cx="2.5" cy="6" r="1.4" fill="#e5b869" />
+                <circle cx="9.5" cy="6" r="1.4" fill="#e5b869" />
+              </svg>
             </div>
           </div>
+        )}
 
-          {/* Satin Bookmark Ribbon */}
+        {/* Center Leather Spine Seam with Gold Diamond Studs (Hidden on outer covers) */}
+        {!isOuterCover && (
           <div
-            className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-14 pointer-events-none z-45"
-            style={{
-              background: 'linear-gradient(to bottom, #8a2434 0%, #b8384e 65%, #8a2434 100%)',
-              boxShadow: '0 3px 6px rgba(0,0,0,0.4)',
-              clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 50% 84%, 0% 100%)',
-            }}
-          />
-
-          {/* Center Spine Crease */}
-          <div
-            className="absolute top-0 bottom-0 left-1/2 w-8 -translate-x-1/2 z-40 pointer-events-none"
+            className="absolute top-0 bottom-0 left-1/2 w-5 -translate-x-1/2 z-40 pointer-events-none flex flex-col justify-around items-center py-6"
             style={{
               background:
-                'linear-gradient(to right, transparent 0%, rgba(45,18,8,0.08) 30%, rgba(20,6,3,0.3) 50%, rgba(45,18,8,0.08) 70%, transparent 100%)',
+                'linear-gradient(to right, rgba(20,5,8,0.7) 0%, rgba(46,12,18,0.95) 20%, #42121b 50%, rgba(46,12,18,0.95) 80%, rgba(20,5,8,0.7) 100%)',
+              boxShadow: 'inset 0 0 3px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)',
             }}
-          />
-          <div className="absolute top-0 bottom-0 left-1/2 w-[1px] -translate-x-1/2 z-40 pointer-events-none bg-black/40" />
-
-          {/* Interactive Dual-Sided 3D Sheets */}
-          {sheets.map((sheet, idx) => {
-            return (
+          >
+            {[...Array(6)].map((_, i) => (
               <div
-                key={sheet.id}
-                ref={(el) => {
-                  sheetRefs.current[idx] = el;
-                }}
-                className="absolute top-0 right-0 w-1/2 h-full select-none"
+                key={i}
+                className="w-1.5 h-1.5 rotate-45 border border-[#855523] rounded-2xs"
                 style={{
-                  transformOrigin: 'left center',
-                  transformStyle: 'preserve-3d',
-                  WebkitTransformStyle: 'preserve-3d',
-                  willChange: 'transform',
+                  backgroundColor: '#d8ab60',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.6), inset 0 0 1px #fff',
                 }}
-              >
-                {/* Front Face (Faces user when unflipped at 0deg on the right side) */}
-                <div
-                  className="absolute inset-0 w-full h-full overflow-hidden select-none"
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    transform: 'rotateY(0deg)',
-                    backgroundColor: sheet.front.type === 'cover' ? '#240c0f' : '#faf5eb',
-                  }}
-                >
-                  {renderPageContent(sheet.front, false)}
-                </div>
-
-                {/* Back Face (Faces user when flipped at -180deg on the left side) */}
-                <div
-                  className="absolute inset-0 w-full h-full overflow-hidden select-none"
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)',
-                    backgroundColor: sheet.back.type === 'back-cover' ? '#240c0f' : '#faf5eb',
-                  }}
-                >
-                  {renderPageContent(sheet.back, true)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Bottom Navigation Controls & Spread Indicator */}
-        <div className="mt-2.5 flex items-center justify-between w-full max-w-[320px] px-2 text-xs text-amber-100/80 select-none">
-          <button
-            onClick={() => {
-              SFX.click();
-              flipBackward();
-            }}
-            disabled={flippedCount <= 0 || isAnimating}
-            className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] transition border border-white/10 ${
-              flippedCount <= 0
-                ? 'opacity-30 cursor-not-allowed bg-black/20'
-                : 'hover:bg-black/60 bg-black/40 text-amber-200 cursor-pointer shadow-xs'
-            }`}
-            title="Trang trước [←]"
-          >
-            <span>❮</span>
-            <span>Trước</span>
-          </button>
-
-          <div className="flex flex-col items-center">
-            <span className="book-sans font-medium text-[10.5px] text-amber-200/90 tracking-wide">
-              {getSpreadLabel()}
-            </span>
-            <div className="flex gap-1 mt-0.5">
-              {Array.from({ length: sheets.length + 1 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                    i === flippedCount
-                      ? 'bg-amber-300 scale-125 shadow-[0_0_4px_rgba(251,191,36,0.8)]'
-                      : 'bg-white/25'
-                  }`}
-                />
-              ))}
-            </div>
+              />
+            ))}
           </div>
+        )}
 
-          <button
-            onClick={() => {
-              SFX.click();
-              flipForward();
-            }}
-            disabled={flippedCount >= sheets.length || isAnimating}
-            className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] transition border border-white/10 ${
-              flippedCount >= sheets.length
-                ? 'opacity-30 cursor-not-allowed bg-black/20'
-                : 'hover:bg-black/60 bg-black/40 text-amber-200 cursor-pointer shadow-xs'
-            }`}
-            title="Trang sau [→]"
-          >
-            <span>Sau</span>
-            <span>❯</span>
-          </button>
-        </div>
+        {/* Dynamic PageFlip Mount Element */}
+        <div
+          ref={bookContainerRef}
+          className="st-page-flip-container relative w-full h-full cursor-grab active:cursor-grabbing"
+          style={{ width: `${pageWidth * 2}px`, height: `${pageHeight}px` }}
+        />
       </div>
     </div>
   );
 
-  if (isExpanded && isMounted && typeof document !== 'undefined') {
-    return createPortal(bookDOM, document.body);
+  if (!isMounted || typeof document === 'undefined') {
+    return null;
   }
 
-  return bookDOM;
+  return createPortal(bookDOM, document.body);
 }
