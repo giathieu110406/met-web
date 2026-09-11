@@ -40,8 +40,15 @@ const FPV_SPOTS: FPVSpot[] = [
 
 export default function Game() {
   const [gameState, setGameState] = useState<GameState>('title');
+  // Fade-to-black overlay for seamless intro → gameplay transition
+  // 'none' = hidden, 'in' = fading to black, 'hold' = fully black, 'out' = fading to clear
+  const [fadeOverlay, setFadeOverlay] = useState<'none' | 'in' | 'hold' | 'out'>('none');
   const [cameraX, setCameraX] = useState(0);
   const [heroX, setHeroX] = useState(LEVEL.heroSpawn.x);
+  // Dev teleport: override spawnX/Y fed directly into Hero's useEffect
+  const [heroSpawnOverride, setHeroSpawnOverride] = useState<{ x: number; y: number; rev: number } | null>(null);
+  // Increments on each teleport to force-remount Hero with new spawnX/Y
+  const [teleportKey, setTeleportKey] = useState(0);
   const [collectedIds, setCollectedIds] = useState<Set<number>>(new Set());
   const [currentStory, setCurrentStory] = useState<StoryMilestone | null>(null);
 
@@ -554,6 +561,57 @@ export default function Game() {
     BGM.stop();
   }, []);
 
+  // Dev tool: teleport hero to any position on any map
+  const handleTeleport = useCallback((x: number, map: 'valley' | 'hill') => {
+    // Ensure we're in playing state
+    if (gameState !== 'playing') setGameState('playing');
+    // Switch map if needed
+    setCurrentMap(map);
+    // Reset cinematic/interaction locks
+    setFpvScene(null);
+    setIsSitting(false);
+    setIsSwinging(false);
+    setIsCraftingLetter(false);
+    setIsAutoWalkingBack(false);
+    setIsAutoRunningToHill(false);
+    setMapFadePhase(null);
+    // Clamp x to map bounds
+    const effectiveWidth = map === 'hill' ? HILL_LEVEL.mapWidth : LEVEL.mapWidth;
+    const clampedX = Math.max(0, Math.min(x, effectiveWidth - LEVEL.heroWidth));
+    // Update camera
+    let camX = clampedX - CANVAS_WIDTH / 3;
+    camX = Math.max(0, Math.min(camX, effectiveWidth - CANVAS_WIDTH));
+    setCameraX(camX);
+    setHeroX(clampedX);
+    // *** Key fix: feed spawnX/Y into Hero so its internal posRef updates ***
+    // Increment teleportKey to force-remount Hero → posRef init'd at new position
+    const groundY = map === 'hill' ? 200 : 256;
+    setHeroSpawnOverride((prev) => ({ x: clampedX, y: groundY, rev: (prev?.rev ?? 0) + 1 }));
+    setTeleportKey((k) => k + 1);
+  }, [gameState]);
+
+  // Dev tool: unlock all game flags so any feature can be tested freely
+  const handleUnlockAll = useCallback(() => {
+    if (gameState !== 'playing') setGameState('playing');
+    setHasOpenedMailbox(true);
+    setHasLostLetter(true);
+    setIsChasingLetter(false);
+    setCollectedFragments([true, true, true]);
+    setIsLetterCrafted(true);
+    setCatPetted(true);
+    setLampOn(true);
+    setCollectedIds(new Set(LEVEL.collectibles.map((c) => c.id)));
+    hasSeenRainRef.current = true;
+    hasSeenLampRef.current = true;
+    hasSeenBridgeRef.current = true;
+    hasContemplatedOnSwingRef.current = true;
+    hasContemplatedEmptyBenchRef.current = true;
+    hasTriggeredCherryEntranceRef.current = true;
+    setFpvScene(null);
+    setIsCraftingLetter(false);
+    setCurrentStory(null);
+  }, [gameState]);
+
   const isCinematic = gameState === 'dialogue' || gameState === 'ending';
   const isMapFading = mapFadePhase !== null;
   const shouldLockHero = isCinematic || fpvScene !== null || isCraftingLetter || isSitting || isSwinging || isMapFading;
@@ -571,6 +629,10 @@ export default function Game() {
         onReset={handleReset}
         collectedCount={collectedIds.size}
         totalCollectibles={LEVEL.collectibles.length}
+        currentMap={currentMap}
+        heroX={heroX}
+        onTeleport={handleTeleport}
+        onUnlockAll={handleUnlockAll}
       />
 
       <Canvas>
@@ -581,7 +643,36 @@ export default function Game() {
 
         {/* Intro Text */}
         {gameState === 'intro' && (
-          <IntroText onComplete={() => setGameState('playing')} />
+          <IntroText onComplete={() => {
+            // Immediately show black overlay to cover the unmount/mount gap
+            setFadeOverlay('hold');
+            // Switch game state synchronously on next tick
+            // (IntroText unmounts, gameplay mounts — all hidden under black overlay)
+            setTimeout(() => {
+              setGameState('playing');
+              // After gameplay is mounted and painted, fade the overlay out
+              requestAnimationFrame(() => requestAnimationFrame(() => {
+                setFadeOverlay('out');
+                setTimeout(() => setFadeOverlay('none'), 700);
+              }));
+            }, 16);
+          }} />
+        )}
+
+        {/* Fade-to-black overlay for scene transitions */}
+        {fadeOverlay !== 'none' && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: '#000',
+              zIndex: 9999,
+              pointerEvents: 'none',
+              // Always keep transition so browser interpolates opacity changes correctly
+              transition: 'opacity 600ms ease-out',
+              opacity: fadeOverlay === 'out' ? 0 : 1,
+            }}
+          />
         )}
 
         {/* Gameplay world (rendered for playing, dialogue, and ending) */}
@@ -675,7 +766,7 @@ export default function Game() {
 
             {/* 8. Hero */}
             <Hero
-              key={currentMap}
+              key={`${currentMap}-${teleportKey}`}
               active={gameState === 'playing'}
               cameraX={cameraX}
               onPositionUpdate={handlePositionUpdate}
@@ -700,8 +791,8 @@ export default function Game() {
               onAutoWalkBackComplete={handleAutoWalkBackComplete}
               isAutoRunningRight={isAutoRunningToHill}
               onRunOffScreen={handleRunOffScreen}
-              spawnX={currentMap === 'hill' ? 40 : undefined}
-              spawnY={currentMap === 'hill' ? 272 : undefined}
+              spawnX={heroSpawnOverride?.x ?? (currentMap === 'hill' ? 40 : undefined)}
+              spawnY={heroSpawnOverride?.y ?? (currentMap === 'hill' ? 272 : undefined)}
             />
 
             {/* Cinematic 2-Phase Map Transition Screen Fade */}

@@ -11,11 +11,14 @@ interface EasterEggBookProps {
   sheets?: BookSheet[];
 }
 
+// Fullscreen-only dimensions: single page 440px × 580px (open spread 880px × 580px)
+const PAGE_WIDTH = 440;
+const PAGE_HEIGHT = 580;
+
 export default function EasterEggBook({
   onClose,
   sheets = DEFAULT_BOOK_SHEETS,
 }: EasterEggBookProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
@@ -28,7 +31,7 @@ export default function EasterEggBook({
   }, []);
 
   // Sequential single pages list:
-  // [Sheet0.front (Cover), Sheet0.back (p1), Sheet1.front (p2), Sheet1.back (p3), Sheet2.front (p4), Sheet2.back (p5), Sheet3.front (p6), Sheet3.back (Back Cover)]
+  // [Sheet0.front (Cover), Sheet0.back (p1), Sheet1.front (p2), … Sheet3.back (Back Cover)]
   const allPages = useMemo(() => {
     const list: BookPageSide[] = [];
     sheets.forEach((sheet) => {
@@ -38,32 +41,22 @@ export default function EasterEggBook({
     return list;
   }, [sheets]);
 
-  // Dimensions:
-  // Windowed mode: single page 290px x 380px (open spread 580px x 380px)
-  // Fullscreen mode: single page 440px x 580px (open spread 880px x 580px)
-  const pageWidth = isExpanded ? 440 : 290;
-  const pageHeight = isExpanded ? 580 : 380;
-
-  // Outer covers: Page 0 (Front Cover) and Page 7 / last page (Back Cover)
+  // Outer covers: Page 0 (Front Cover) and last page (Back Cover)
   const isOuterCover = currentPageIndex === 0 || currentPageIndex >= allPages.length - 1;
 
-  // Initialize and update PageFlip instance with robust cloned template strategy
+  // Initialize PageFlip instance with robust cloned-template strategy
   useEffect(() => {
     if (!isMounted || !bookContainerRef.current || !templatesRef.current) return;
     if (templatesRef.current.children.length === 0) return;
 
     // Destroy existing instance cleanly before creating a new one
     if (pageFlipInstanceRef.current) {
-      try {
-        pageFlipInstanceRef.current.destroy();
-      } catch {
-        // ignore
-      }
+      try { pageFlipInstanceRef.current.destroy(); } catch { /* ignore */ }
       pageFlipInstanceRef.current = null;
     }
 
     const container = bookContainerRef.current;
-    container.innerHTML = ''; // Reset container cleanly to prevent any DOM collisions
+    container.innerHTML = '';
 
     // Clone fresh copies of the pages from the template container
     const clonedPageNodes = Array.from(templatesRef.current.children).map((child) =>
@@ -74,18 +67,18 @@ export default function EasterEggBook({
 
     try {
       const pageFlip = new PageFlip(container, {
-        width: pageWidth,
-        height: pageHeight,
+        width: PAGE_WIDTH,
+        height: PAGE_HEIGHT,
         size: 'fixed',
-        minWidth: pageWidth,
-        maxWidth: pageWidth,
-        minHeight: pageHeight,
-        maxHeight: pageHeight,
-        showCover: true, // Page 0 is Front Cover, last page is Back Cover
+        minWidth: PAGE_WIDTH,
+        maxWidth: PAGE_WIDTH,
+        minHeight: PAGE_HEIGHT,
+        maxHeight: PAGE_HEIGHT,
+        showCover: true,
         drawShadow: true,
         maxShadowOpacity: 0.5,
-        flippingTime: 750, // silky smooth transition
-        usePortrait: false, // keep 2-page spread
+        flippingTime: 700,
+        usePortrait: false,
         startPage: currentPageIndex,
         autoSize: false,
         showPageCorners: true,
@@ -98,14 +91,12 @@ export default function EasterEggBook({
       pageFlipInstanceRef.current = pageFlip;
       pageFlip.loadFromHTML(clonedPageNodes);
 
-      // Track initial page index
       pageFlip.on('init', (e) => {
         if (e && typeof e.data?.page === 'number') {
           setCurrentPageIndex(e.data.page);
         }
       });
 
-      // Audio on page curl & page tracking
       pageFlip.on('flip', (e) => {
         SFX.pageFlip();
         if (typeof e.data === 'number') {
@@ -115,11 +106,7 @@ export default function EasterEggBook({
 
       // Recalculate layout after DOM mounting
       initTimer = setTimeout(() => {
-        try {
-          pageFlip.update();
-        } catch {
-          // ignore
-        }
+        try { pageFlip.update(); } catch { /* ignore */ }
       }, 50);
     } catch (err) {
       console.error('Failed to initialize PageFlip:', err);
@@ -128,15 +115,12 @@ export default function EasterEggBook({
     return () => {
       if (initTimer) clearTimeout(initTimer);
       if (pageFlipInstanceRef.current) {
-        try {
-          pageFlipInstanceRef.current.destroy();
-        } catch {
-          // ignore
-        }
+        try { pageFlipInstanceRef.current.destroy(); } catch { /* ignore */ }
         pageFlipInstanceRef.current = null;
       }
     };
-  }, [isMounted, pageWidth, pageHeight, isExpanded, allPages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMounted, allPages]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -150,20 +134,16 @@ export default function EasterEggBook({
         pf?.flipPrev();
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        if (isExpanded) {
-          setIsExpanded(false);
-        } else {
-          SFX.click();
-          onClose();
-        }
+        SFX.click();
+        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExpanded, onClose]);
+  }, [onClose]);
 
   // ============================================================================
-  // PURE VECTOR ARTISAN GRAPHICS (MATCHING IMAGE 1 - NO EMOJIS)
+  // PURE VECTOR ARTISAN GRAPHICS (NO EMOJIS)
   // ============================================================================
 
   // 1. Brass Corner Protectors on Outer Book Casing
@@ -196,21 +176,18 @@ export default function EasterEggBook({
         style={{ transform: rotation }}
       >
         <svg viewBox="0 0 32 32" className="w-full h-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
-          {/* Outer Brass Bracket */}
           <path
             d="M 2 2 L 25 2 C 25 7 21 9 19 11 C 17 13 15 17 13 21 C 11 23 7 25 2 25 Z"
             fill="#caa059"
             stroke="#6e451b"
             strokeWidth="1.2"
           />
-          {/* Inner Highlight Layer */}
           <path
             d="M 4 4 L 19 4 C 19 7 16 9 14 11 C 12 13 10 16 8 19 L 4 19 Z"
             fill="#eacb88"
             stroke="#916327"
             strokeWidth="0.8"
           />
-          {/* Rivet Stud */}
           <circle cx="8.5" cy="8.5" r="1.8" fill="#52310f" stroke="#e8c784" strokeWidth="0.6" />
           <path d="M 13 5 Q 12 9 8 12" fill="none" stroke="#7e4c20" strokeWidth="0.8" />
         </svg>
@@ -218,7 +195,7 @@ export default function EasterEggBook({
     );
   };
 
-  // 2. Cherry Blossom Branch Filigree on Page Corners (Vector SVG)
+  // 2. Cherry Blossom Branch Filigree on Page Corners
   const CherryBranchCorner = ({
     isLeft,
     isTop,
@@ -235,7 +212,6 @@ export default function EasterEggBook({
         style={{ transform, transformOrigin: 'center center' }}
       >
         <svg viewBox="0 0 60 60" className="w-full h-full">
-          {/* Delicate tree branch in warm brown */}
           <path
             d="M 5 55 C 13 42 19 30 38 18 C 45 14 52 10 56 6"
             fill="none"
@@ -257,13 +233,9 @@ export default function EasterEggBook({
             strokeWidth="1.1"
             strokeLinecap="round"
           />
-
-          {/* Tiny olive leaves */}
           <path d="M 28 22 Q 33 19 31 16 Q 26 19 28 22 Z" fill="#757c46" opacity="0.85" />
           <path d="M 44 14 Q 48 10 46 8 Q 42 12 44 14 Z" fill="#757c46" opacity="0.85" />
           <path d="M 18 19 Q 14 17 14 13 Q 19 15 18 19 Z" fill="#757c46" opacity="0.85" />
-
-          {/* Center 5-petal Blossom */}
           <g transform="translate(36, 20)">
             <path d="M 0 -7 C 2 -11 6 -11 6 -7 C 6 -3 2 -1 0 0 Z" fill="#de7d92" />
             <path d="M 0 -7 C -2 -11 -6 -11 -6 -7 C -6 -3 -2 -1 0 0 Z" fill="#ea94a7" />
@@ -274,15 +246,11 @@ export default function EasterEggBook({
             <circle cx="0" cy="0" r="1.8" fill="#c0752d" />
             <circle cx="0" cy="0" r="0.7" fill="#fef08a" />
           </g>
-
-          {/* Secondary bud */}
           <g transform="translate(19, 8)">
             <path d="M 0 -4 C 3 -6 5 -3 2 0 C 0 1 0 0 0 0 Z" fill="#de7d92" />
             <path d="M 0 -4 C -3 -6 -5 -3 -2 0 C 0 1 0 0 0 0 Z" fill="#ea94a7" />
             <circle cx="0" cy="0" r="1" fill="#c0752d" />
           </g>
-
-          {/* Tertiary bud */}
           <g transform="translate(49, 7)">
             <path d="M 0 -3 C 2 -5 4 -2 2 0 Z" fill="#de7d92" />
             <path d="M 0 -3 C -2 -5 -4 -2 -2 0 Z" fill="#ea94a7" />
@@ -379,10 +347,284 @@ export default function EasterEggBook({
     );
   };
 
-  // Render a Single Page Side (Both Left & Right use authentic Aged Parchment from Image 1)
+  // ── Cover Page (Bìa Trước) — Leather Book Cover Design ──
+  const renderCoverPage = () => (
+    <div
+      className="w-full h-full flex flex-col items-center justify-between select-none relative overflow-hidden rounded-r-xs"
+      style={{
+        background: 'radial-gradient(ellipse at 40% 35%, #5a1a22 0%, #3a0d13 55%, #220709 100%)',
+      }}
+    >
+      {/* Subtle leather texture grain overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.07]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+          backgroundSize: '200px 200px',
+        }}
+      />
+
+      {/* Outer gold frame border */}
+      <div
+        className="absolute inset-3 pointer-events-none"
+        style={{ border: '1.5px solid rgba(212,175,75,0.55)', borderRadius: '3px' }}
+      />
+      <div
+        className="absolute inset-[18px] pointer-events-none"
+        style={{ border: '0.75px solid rgba(212,175,75,0.25)', borderRadius: '2px' }}
+      />
+
+      {/* Top ornament — large SVG filigree crown */}
+      <div className="z-10 flex flex-col items-center pt-8 gap-1.5">
+        {/* Crown / top filigree */}
+        <svg viewBox="0 0 180 50" className="w-44 opacity-80">
+          {/* Central arch */}
+          <path d="M 90 45 C 60 35 30 20 20 5" fill="none" stroke="#c9a84c" strokeWidth="1.2" strokeLinecap="round"/>
+          <path d="M 90 45 C 120 35 150 20 160 5" fill="none" stroke="#c9a84c" strokeWidth="1.2" strokeLinecap="round"/>
+          {/* Symmetrical side scrolls */}
+          <path d="M 20 5 C 18 10 25 15 22 22" fill="none" stroke="#c9a84c" strokeWidth="0.9"/>
+          <path d="M 160 5 C 162 10 155 15 158 22" fill="none" stroke="#c9a84c" strokeWidth="0.9"/>
+          {/* Diamond chain */}
+          {[40, 65, 90, 115, 140].map((x, i) => (
+            <g key={i} transform={`translate(${x}, ${i === 2 ? 14 : i === 1 || i === 3 ? 22 : 30})`}>
+              <rect x="-3" y="-3" width="6" height="6" transform="rotate(45)" fill="#c9a84c" opacity="0.9"/>
+            </g>
+          ))}
+          {/* Center crown peak */}
+          <path d="M 75 14 L 90 2 L 105 14" fill="none" stroke="#e8c96e" strokeWidth="1.4" strokeLinejoin="round"/>
+          <circle cx="90" cy="2" r="2.5" fill="#f0d68a"/>
+          <circle cx="90" cy="2" r="1" fill="#fff8dc"/>
+        </svg>
+
+        {/* Series tag */}
+        <div
+          className="px-4 py-0.5 select-none"
+          style={{ border: '0.75px solid rgba(200,160,60,0.45)', borderRadius: '1px' }}
+        >
+          <p className="book-sans text-[8px] tracking-[0.35em] uppercase text-center select-none"
+             style={{ color: '#c9a84c', letterSpacing: '0.35em' }}>
+            Kỷ Niệm Của Chúng Mình
+          </p>
+        </div>
+      </div>
+
+      {/* Center — Main title block */}
+      <div className="z-10 flex flex-col items-center gap-3 px-8">
+        {/* Horizontal rule top */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, #c9a84c88)' }}/>
+          <svg viewBox="0 0 20 20" className="w-3.5 h-3.5 shrink-0">
+            <g transform="translate(10,10)">
+              {[0,72,144,216,288].map((a,i) => (
+                <path key={i} d="M0 0 C-1.5-3 -2.5-6 -1-7 C0-8 1-8 1.5-6.5 C2-8 3-8 3.5-6.5 C4-5 2.5-2 0 0Z"
+                  fill={i%2===0?'#c9a84c':'#e8c96e'} transform={`rotate(${a})`}/>
+              ))}
+              <circle cx="0" cy="0" r="1.5" fill="#f0d68a"/>
+            </g>
+          </svg>
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, #c9a84c88)' }}/>
+        </div>
+
+        {/* Main title — embossed look */}
+        <div className="text-center">
+          <h1
+            className="book-serif select-none leading-snug"
+            style={{
+              fontSize: '22px',
+              fontWeight: 700,
+              color: '#f5e6b8',
+              textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 20px rgba(212,175,75,0.25)',
+              letterSpacing: '0.03em',
+            }}
+          >
+            Kỷ Niệm
+          </h1>
+          <h1
+            className="book-serif select-none leading-snug"
+            style={{
+              fontSize: '22px',
+              fontWeight: 700,
+              color: '#f5e6b8',
+              textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 20px rgba(212,175,75,0.25)',
+              letterSpacing: '0.03em',
+            }}
+          >
+            Của Chúng Mình
+          </h1>
+        </div>
+
+        {/* Subtitle */}
+        <p className="book-sans text-center select-none"
+           style={{ fontSize: '9px', color: '#c9a84c', opacity: 0.85, letterSpacing: '0.12em', fontStyle: 'italic' }}>
+          Món quà mang theo suốt chuyến hành trình
+        </p>
+
+        {/* Horizontal rule bottom */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, #c9a84c88)' }}/>
+          <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 shrink-0">
+            <rect x="1" y="1" width="10" height="10" transform="rotate(45 6 6)" fill="none" stroke="#c9a84c" strokeWidth="1.2"/>
+            <circle cx="6" cy="6" r="1.5" fill="#c9a84c"/>
+          </svg>
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, #c9a84c88)' }}/>
+        </div>
+
+        {/* Quote cartouche */}
+        <div
+          className="px-4 py-2.5 relative"
+          style={{
+            border: '0.75px solid rgba(200,160,60,0.40)',
+            background: 'rgba(0,0,0,0.25)',
+            borderRadius: '2px',
+          }}
+        >
+          <span className="absolute top-0.5 left-1 text-[6px] select-none" style={{ color: '#c9a84c' }}>◇</span>
+          <span className="absolute top-0.5 right-1 text-[6px] select-none" style={{ color: '#c9a84c' }}>◇</span>
+          <span className="absolute bottom-0.5 left-1 text-[6px] select-none" style={{ color: '#c9a84c' }}>◇</span>
+          <span className="absolute bottom-0.5 right-1 text-[6px] select-none" style={{ color: '#c9a84c' }}>◇</span>
+          <p className="book-serif text-center select-none"
+             style={{ fontSize: '9.5px', color: '#f0dda0', fontStyle: 'italic', lineHeight: 1.6 }}>
+            "Gặp được người mình thương,<br/>mọi bước chân đều hóa dịu dàng."
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom — signature & bottom ornament */}
+      <div className="z-10 flex flex-col items-center gap-2 pb-7">
+        {/* Signature */}
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-px" style={{ background: 'linear-gradient(to right, transparent, #c9a84c)' }}/>
+          <span className="book-serif select-none" style={{ fontSize: '9px', color: '#e8c96e', letterSpacing: '0.3em' }}>GỬI EM</span>
+          <div className="w-6 h-px" style={{ background: 'linear-gradient(to left, transparent, #c9a84c)' }}/>
+        </div>
+
+        {/* Bottom filigree mirror */}
+        <svg viewBox="0 0 180 50" className="w-44 opacity-70" style={{ transform: 'scaleY(-1)' }}>
+          <path d="M 90 45 C 60 35 30 20 20 5" fill="none" stroke="#c9a84c" strokeWidth="1.2" strokeLinecap="round"/>
+          <path d="M 90 45 C 120 35 150 20 160 5" fill="none" stroke="#c9a84c" strokeWidth="1.2" strokeLinecap="round"/>
+          <path d="M 20 5 C 18 10 25 15 22 22" fill="none" stroke="#c9a84c" strokeWidth="0.9"/>
+          <path d="M 160 5 C 162 10 155 15 158 22" fill="none" stroke="#c9a84c" strokeWidth="0.9"/>
+          {[40, 65, 90, 115, 140].map((x, i) => (
+            <g key={i} transform={`translate(${x}, ${i === 2 ? 14 : i === 1 || i === 3 ? 22 : 30})`}>
+              <rect x="-3" y="-3" width="6" height="6" transform="rotate(45)" fill="#c9a84c" opacity="0.9"/>
+            </g>
+          ))}
+        </svg>
+
+        {/* Book title at bottom spine */}
+        <p className="book-sans select-none text-center"
+           style={{ fontSize: '7.5px', color: 'rgba(200,160,60,0.5)', letterSpacing: '0.2em' }}>
+          MET — A TINY LOVE STORY
+        </p>
+      </div>
+    </div>
+  );
+
+  // ── Back Cover ──
+  const renderBackCoverPage = () => (
+    <div
+      className="w-full h-full flex flex-col items-center justify-between select-none relative overflow-hidden rounded-l-xs"
+      style={{
+        background: 'radial-gradient(ellipse at 60% 60%, #42100f 0%, #2a0608 55%, #180304 100%)',
+      }}
+    >
+      {/* Leather grain */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.06]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+          backgroundSize: '200px 200px',
+        }}
+      />
+
+      {/* Border frames */}
+      <div className="absolute inset-3 pointer-events-none" style={{ border: '1.5px solid rgba(180,140,55,0.45)', borderRadius: '3px' }} />
+      <div className="absolute inset-[18px] pointer-events-none" style={{ border: '0.75px solid rgba(180,140,55,0.2)', borderRadius: '2px' }} />
+
+      {/* Center content */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-10">
+        {/* Central emblem */}
+        <svg viewBox="0 0 80 80" className="w-20 h-20 opacity-75">
+          {/* Outer circle */}
+          <circle cx="40" cy="40" r="36" fill="none" stroke="#c9a84c" strokeWidth="0.8" strokeDasharray="3,2"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#c9a84c" strokeWidth="0.5" opacity="0.5"/>
+          {/* Cherry blossom center */}
+          <g transform="translate(40,40)">
+            {[0,72,144,216,288].map((a,i) => (
+              <path key={i}
+                d="M0 0 C-3-7 -5-13 -2-15 C0-17 3-17 4-14 C5-17 7-17 8-14 C10-11 7-5 0 0Z"
+                fill={i%2===0?'#c9a84c':'#e8c96e'}
+                opacity="0.9"
+                transform={`rotate(${a})`}/>
+            ))}
+            <circle cx="0" cy="0" r="4" fill="#2a0608"/>
+            <circle cx="0" cy="0" r="2.5" fill="#f0d68a"/>
+            <circle cx="0" cy="0" r="1" fill="#fff"/>
+          </g>
+          {/* Corner dots */}
+          {[0,90,180,270].map((a,i) => (
+            <g key={i} transform={`rotate(${a} 40 40) translate(40 6)`}>
+              <circle cx="0" cy="0" r="1.5" fill="#c9a84c" opacity="0.7"/>
+            </g>
+          ))}
+        </svg>
+
+        {/* Title */}
+        <div className="text-center">
+          <p className="book-serif select-none" style={{ fontSize: '13px', color: '#f0dda0', fontWeight: 700, letterSpacing: '0.05em', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+            Met — A Tiny Love Story
+          </p>
+          <p className="book-sans select-none mt-0.5" style={{ fontSize: '8px', color: '#c9a84c', letterSpacing: '0.15em', opacity: 0.8 }}>
+            Kỷ Niệm Của Chúng Mình
+          </p>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(200,160,60,0.5))' }}/>
+          <span style={{ color: '#c9a84c', fontSize: '8px' }}>◇</span>
+          <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(200,160,60,0.5))' }}/>
+        </div>
+
+        {/* Quote */}
+        <p className="book-serif text-center select-none"
+           style={{ fontSize: '9px', color: '#d4b87a', fontStyle: 'italic', lineHeight: 1.65, opacity: 0.9 }}>
+          "Cuộc gặp gỡ đẹp nhất là khi<br/>hai trái tim cùng chung một nhịp đập."
+        </p>
+
+        {/* Credits */}
+        <div className="flex flex-col items-center gap-0.5 mt-1">
+          <p className="book-sans select-none" style={{ fontSize: '7.5px', color: 'rgba(200,160,60,0.55)', letterSpacing: '0.15em' }}>
+            Made with love, care
+          </p>
+          <p className="book-sans select-none" style={{ fontSize: '7.5px', color: 'rgba(200,160,60,0.4)', letterSpacing: '0.1em' }}>
+            and pixel nostalgia
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom barcode-style ornament */}
+      <div className="pb-6 flex flex-col items-center gap-1.5">
+        <div className="flex gap-0.5">
+          {[3,1,2,1,3,1,2,1,3,1,2,3,1,2,1,3].map((w, i) => (
+            <div key={i} className="h-6" style={{ width: `${w}px`, backgroundColor: `rgba(200,160,60,${0.15 + (i%3)*0.08})` }}/>
+          ))}
+        </div>
+        <p className="book-sans select-none" style={{ fontSize: '6.5px', color: 'rgba(200,160,60,0.35)', letterSpacing: '0.25em' }}>
+          MET · 2025 · EASTER EGG
+        </p>
+      </div>
+    </div>
+  );
+
+  // Render a Single Page Side
   const renderPageContent = (page: BookPageSide, isLeft: boolean) => {
     const isCover = page.type === 'cover';
     const isBackCover = page.type === 'back-cover';
+
+    // Special full-design renders for cover pages
+    if (isCover) return renderCoverPage();
+    if (isBackCover) return renderBackCoverPage();
 
     return (
       <div
@@ -396,17 +638,14 @@ export default function EasterEggBook({
             : 'inset 12px 0 18px -8px rgba(50,20,6,0.15), inset 0 0 4px rgba(0,0,0,0.03)',
         }}
       >
-        {/* Cherry Blossom Branch Corner Filigrees (4 corners) */}
         <CherryBranchCorner isLeft={true} isTop={true} />
         <CherryBranchCorner isLeft={false} isTop={true} />
         <CherryBranchCorner isLeft={true} isTop={false} />
         <CherryBranchCorner isLeft={false} isTop={false} />
 
-        {/* Double Hairline Vintage Inner Border */}
         <div className="absolute inset-2.5 border border-[#cfb291]/80 rounded-[2px] pointer-events-none" />
         <div className="absolute inset-3 border border-[#cfb291]/35 rounded-[2px] pointer-events-none" />
 
-        {/* Top Header Section */}
         <div className="z-10 pt-1">
           <CherryCrest />
           <div className="text-center px-2">
@@ -422,13 +661,11 @@ export default function EasterEggBook({
           <SmallFlowerDivider />
         </div>
 
-        {/* Middle Body Paragraphs */}
         <div className="z-10 space-y-1.5 my-auto px-1 sm:px-2">
           {page.paragraphs?.map((para, idx) => (
             <div key={idx}>{renderParagraphWithDropCap(para, idx === 0 && !isCover)}</div>
           ))}
 
-          {/* Quote Cartouche Box (Matching Image 1) */}
           {page.quote && (
             <div
               className="mt-2.5 px-3 py-1.5 rounded-[3px] relative select-none"
@@ -442,7 +679,6 @@ export default function EasterEggBook({
               <span className="absolute top-0.5 right-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
               <span className="absolute bottom-0.5 left-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
               <span className="absolute bottom-0.5 right-1 text-[6.5px] text-[#966d43] leading-none">◇</span>
-
               <p className="book-serif text-[9.5px] sm:text-[10.5px] text-[#46151f] italic text-center font-normal leading-relaxed px-2 select-none">
                 {page.quote}
               </p>
@@ -450,7 +686,6 @@ export default function EasterEggBook({
           )}
         </div>
 
-        {/* Bottom Signature / Page Number Section */}
         <div className="z-10 pb-1">
           {page.signature ? (
             <div className="flex items-center justify-center gap-2 select-none">
@@ -477,35 +712,10 @@ export default function EasterEggBook({
   };
 
   const bookDOM = (
-    <div
-      className={`fixed inset-0 z-[99999] flex items-center justify-center select-none transition-all duration-300 ${
-        isExpanded
-          ? 'bg-black/85 backdrop-blur-md p-3 sm:p-6'
-          : 'bg-black/75 backdrop-blur-[2px] p-2 sm:p-4'
-      }`}
-    >
-      {/* Top Floating Control Buttons (Clean Retro Pixel Art) */}
-      <div className="absolute top-3 right-3 z-60 flex items-center gap-1.5 select-none">
-        <button
-          onClick={() => {
-            SFX.click();
-            setIsExpanded((prev) => !prev);
-          }}
-          className="px-2.5 py-1 rounded-xs transition-transform hover:scale-105 cursor-pointer shadow-md flex items-center gap-1"
-          style={{
-            backgroundColor: 'rgba(15, 10, 24, 0.92)',
-            border: '1px solid #e2b77a',
-            color: '#fbbf24',
-            fontFamily: "'VT323', monospace",
-            fontSize: '16px',
-            textShadow: '1px 1px 0 #000',
-          }}
-          title={isExpanded ? 'Thu nhỏ lại [Esc]' : 'Mở rộng toàn màn hình'}
-        >
-          <span>{isExpanded ? '⊡' : '⛶'}</span>
-          <span>{isExpanded ? 'Thu nhỏ' : 'Toàn màn hình'}</span>
-        </button>
 
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center select-none bg-black/85 backdrop-blur-md p-3 sm:p-6">
+      {/* Close Button */}
+      <div className="absolute top-3 right-3 z-60 select-none">
         <button
           onClick={() => {
             SFX.click();
@@ -533,8 +743,8 @@ export default function EasterEggBook({
           position: 'absolute',
           left: '-9999px',
           top: '-9999px',
-          width: `${pageWidth}px`,
-          height: `${pageHeight}px`,
+          width: `${PAGE_WIDTH}px`,
+          height: `${PAGE_HEIGHT}px`,
           visibility: 'hidden',
           pointerEvents: 'none',
         }}
@@ -547,8 +757,8 @@ export default function EasterEggBook({
               className="st-page-template w-full h-full overflow-hidden"
               data-density={isCover ? 'hard' : 'soft'}
               style={{
-                width: `${pageWidth}px`,
-                height: `${pageHeight}px`,
+                width: `${PAGE_WIDTH}px`,
+                height: `${PAGE_HEIGHT}px`,
                 backgroundColor: '#f4ebd7',
               }}
             >
@@ -558,14 +768,15 @@ export default function EasterEggBook({
         })}
       </div>
 
-      {/* Book Outer Physical Casing (Burgundy Leather + Brass Corners + Stacked Paper Edges) */}
+      {/* Book Outer Physical Casing */}
       <div
-        className="relative flex items-center justify-center transition-all duration-300 select-none"
+        className="relative flex items-center justify-center select-none"
         style={{
-          width: `${pageWidth * 2}px`,
-          height: `${pageHeight}px`,
+          width: `${PAGE_WIDTH * 2}px`,
+          height: `${PAGE_HEIGHT}px`,
           maxWidth: '96vw',
           maxHeight: '94vh',
+          willChange: 'transform',
         }}
       >
         {/* Deep Ambient Drop Shadow Behind Book */}
@@ -582,13 +793,13 @@ export default function EasterEggBook({
           }}
         />
 
-        {/* 4 Authentic Ornamental Brass Corner Protectors */}
+        {/* 4 Ornamental Brass Corner Protectors */}
         <BrassCorner position="top-left" />
         <BrassCorner position="top-right" />
         <BrassCorner position="bottom-left" />
         <BrassCorner position="bottom-right" />
 
-        {/* Stacked Paper Block Edge Thickness at Bottom & Sides */}
+        {/* Stacked Paper Block Edge Thickness at Bottom */}
         <div
           className="absolute inset-x-2 bottom-0 h-2 -z-10 rounded-b pointer-events-none"
           style={{
@@ -598,7 +809,7 @@ export default function EasterEggBook({
           }}
         />
 
-        {/* Satin Bookmark Ribbon with Gold Blossom Crest (Hidden on outer front & back covers) */}
+        {/* Satin Bookmark Ribbon (Hidden on outer covers) */}
         {!isOuterCover && (
           <div
             className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-16 pointer-events-none z-45 transition-opacity duration-300"
@@ -608,7 +819,6 @@ export default function EasterEggBook({
               clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 50% 86%, 0% 100%)',
             }}
           >
-            {/* Small 4-petal Gold Flower Crest on Top of Ribbon */}
             <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 flex items-center justify-center">
               <svg viewBox="0 0 12 12" className="w-full h-full">
                 <circle cx="6" cy="6" r="1.4" fill="#fef08a" />
@@ -648,7 +858,11 @@ export default function EasterEggBook({
         <div
           ref={bookContainerRef}
           className="st-page-flip-container relative w-full h-full cursor-grab active:cursor-grabbing"
-          style={{ width: `${pageWidth * 2}px`, height: `${pageHeight}px` }}
+          style={{
+            width: `${PAGE_WIDTH * 2}px`,
+            height: `${PAGE_HEIGHT}px`,
+            willChange: 'transform',
+          }}
         />
       </div>
     </div>
