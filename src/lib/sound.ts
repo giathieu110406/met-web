@@ -227,6 +227,38 @@ export const SFX = {
   click: () => {
     playTone(600, 0.05, 'square', 0.09);
   },
+
+  pageFlip: () => {
+    const ctx = getAudioContext();
+    const duration = 0.26;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      // Swell and soft taper envelope
+      const progress = i / bufferSize;
+      const envelope = Math.sin(progress * Math.PI) * Math.exp(-progress * 1.5);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1100, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + duration);
+    filter.Q.setValueAtTime(1.8, ctx.currentTime);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+    noise.connect(filter).connect(gain).connect(ctx.destination);
+    noise.start();
+
+    // Subtle gentle whoosh of page air displacement
+    playSweep(260, 140, 0.2, 'sine', 0.08);
+  },
 };
 
 /**

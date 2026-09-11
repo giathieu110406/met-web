@@ -242,5 +242,45 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
 ### 2.4. Chuẩn bị nền tảng cho phần tiếp theo
 - Hệ thống FPV đa tầng với cơ chế cross-fade 2 lớp và quản lý typewriter ổn định này là mẫu kiến trúc chuẩn (gold standard) sẵn sàng để mở rộng cho các chương tiếp theo, các màn thoại phân nhánh (branching dialogue) hoặc các mini-game tương tác chạm mới.
 
+---
+
+## 3. Bài Học & Kinh Nghiệm Đúc Kết: Hệ Thống Cuốn Sách 3D Flipbook & Tích Hợp Coding Agent Plugins (Playwright CLI, Ponytail)
+
+### 3.1. Các lỗi sai phổ biến & Cách khắc phục
+1. **Lỗi Trang Sách Trong Suốt & Chữ Bị Đè Lên Nhau (See-through Ghosting)**:
+   - *Nguyên nhân*: Các thư viện lật sách giả lập 2D (như soft mode của `page-flip`) dùng kỹ thuật sao chép DOM `cloneNode` kết hợp `clip-path` nhưng không có khái niệm hai mặt giấy độc lập. Kết quả là mặt trước bị xoay ngược nằm đè lên mặt sau, tạo cảm giác trang giấy bị trong suốt nhìn xuyên thấu.
+   - *Kinh nghiệm khắc phục*: Chuyển sang kiến trúc **Dual-Sided Solid 3D Sheet Engine**:
+     - Mặt trước (Front Face): Nền giấy ngà đục 100% (`#faf5eb` / `#240c0f`), `backface-visibility: hidden`.
+     - Mặt sau (Back Face): Nền giấy ngà đục 100%, xoay $180^\circ$, `backface-visibility: hidden`.
+     - Khi lật dở chừng ở bất kỳ góc độ nào ($45^\circ$, $90^\circ$, $135^\circ$), GPU sẽ tự động loại bỏ mặt khuất, đảm bảo giấy đục 100%, tách biệt hoàn toàn hai mặt và che phủ hoàn toàn các trang nằm dưới.
+2. **Lỗi Vệt Sáng Phản Quang Chạy Dọc Trang (Specular Highlight Streak)**:
+   - *Nguyên nhân*: Sử dụng gradient dải sáng màu trắng (`rgba(255, 255, 255, 0.25)`) hoặc hiệu ứng tương phản sáng-tối giả lập bóng cong khiến trang sách xuất hiện một vệt sáng bóng loáng chạy dọc nếp gấp gây khó chịu cho thị giác.
+   - *Kinh nghiệm khắc phục*: Loại bỏ triệt để toàn bộ dải màu trắng phản quang. Giữ nguyên chất giấy mỹ thuật mờ tự nhiên (Matte Ivory Parchment), chỉ đổ bóng tối nhẹ ở rãnh gáy sách (`rgba(50, 22, 8, 0.1)`).
+3. **Lỗi Mép Giấy Bị Xiên Lệch & Nhô Khỏi Khung Bìa (Diagonal Corner Protrusion)**:
+   - *Nguyên nhân*: Áp dụng góc xoay trục $Z$ (`rotateZ`) khi kéo góc trang sách khiến toàn bộ hình chữ nhật bị xiên chéo và nhô các góc trên/dưới ra ngoài khung viền bìa da.
+   - *Kinh nghiệm khắc phục*: Khóa cứng `rotateZ = 0`, chỉ cho phép trang xoay quanh trục gáy sách $Y$ (`transform-origin: left center`). Các mép giấy luôn song song phẳng phiu tuyệt đối trong khung bìa sách.
+4. **Lỗi Che Khuất Thanh Điều Khiển Chân Trang (Canvas Viewport Clipping)**:
+   - *Nguyên nhân*: Trong khung game $600\text{px} \times 400\text{px}$, nếu chiều cao sách quá lớn ($386\text{px}$) thì thanh điều hướng chân trang sẽ bị đẩy ra ngoài rìa dưới màn hình.
+   - *Kinh nghiệm khắc phục*: Tinh chỉnh kích thước trang sách về $265\text{px} \times 336\text{px}$ ở chế độ Canvas, chừa khoảng trống $28\text{px}$ cho thanh điều hướng chân trang và bổ sung hai phím lật nổi `❮` và `❯` ở hai bên rìa ngoài.
+
+### 3.2. Lưu ý về mặt tư duy thiết kế
+1. **Triết Lý "Ponytail" — Tối Giản Hóa Kiến Trúc (YAGNI & Native Platform First)**:
+   - Trước khi tích hợp bất kỳ thư viện bên ngoài nào, hãy tự hỏi: *Nền tảng chuẩn (CSS 3D Transforms, Web Audio API) có tự giải quyết được không?*
+   - Việc tự xây dựng engine 3D mỏng nhẹ bằng CSS thuần giúp giảm thiểu phụ thuộc bên ngoài, đạt hiệu năng 120fps mượt mà và kiểm soát 100% hành vi giao diện người dùng.
+2. **Cân Bằng Giữa Tự Động Hóa & Trải Nghiệm Cảm Xúc (Illuminated Storybook Aesthetics)**:
+   - Một cuốn sách kỷ niệm mang tính cá nhân cao cần sự trau chuốt tỉ mỉ từng chi tiết: Illuminated Drop Cap kiểu kinh thánh cổ điển, dải ruy băng sa-tin đỏ bordeaux, hoa văn góc filigree, chữ viết tay nghiêng và hoa đào phân cách tạo chiều sâu tình cảm.
+
+### 3.3. Mẹo tính toán & Kỹ thuật lập trình
+1. **Hàm Gia Tốc Đàn Hồi Trượt Lụa (Silky Spring Release)**:
+   - Sử dụng đường cong cubic bezier `cubic-bezier(0.16, 1, 0.3, 1)` cho thời gian lướt $500\text{ms} - 600\text{ms}$, giúp trang giấy khi buông chuột lướt nhẹ nhàng vào vị trí đích mà không bị giật khựng.
+2. **Tổng Hợp Âm Thanh Giấy Sột Soạt Bằng Web Audio API**:
+   - Dùng White Noise Buffer kết hợp Bandpass Filter (tần số trung tâm $1200\text{Hz}$, Q = 1.2) và Gain Envelope dạng Exponential Decay ($0.001 \to 0.08 \to 0.0001$) trong $280\text{ms}$ để tạo tiếng xào xạc tự nhiên của giấy thật mà không cần tải file âm thanh mp3/wav ngoài.
+
+### 3.4. Chuẩn bị nền tảng cho phần tiếp theo
+- **Tích hợp bộ đôi công cụ Playwright CLI & Ponytail**:
+  - `Playwright CLI` cung cấp công cụ tự động hóa trình duyệt qua Accessibility Snapshot cho agent, sẵn sàng cho việc viết test E2E tự động cho toàn bộ cốt truyện và các mini-game tương tác.
+  - `Ponytail` cung cấp quy chuẩn kiểm duyệt code tinh gọn (YAGNI, stdlib first, code tối giản), làm kim chỉ nam vững chắc cho các bản cập nhật tính năng tiếp theo.
+
+
 
 

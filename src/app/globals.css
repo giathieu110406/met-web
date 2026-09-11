@@ -1,4 +1,12 @@
 @import 'tailwindcss';
+ 
+.book-serif {
+  font-family: var(--font-lora), 'Georgia', serif;
+}
+
+.book-sans {
+  font-family: var(--font-be-vietnam), 'Segoe UI', sans-serif;
+}
 
 :root {
   --background: #ffffff;

@@ -39,7 +39,12 @@ const FPV_SPOTS: FPVSpot[] = [
 ];
 
 export default function Game() {
-  const [gameState, setGameState] = useState<GameState>('title');
+  const [gameState, setGameState] = useState<GameState>(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('scene') === 'ending') {
+      return 'ending';
+    }
+    return 'title';
+  });
   const [cameraX, setCameraX] = useState(0);
   const [heroX, setHeroX] = useState(LEVEL.heroSpawn.x);
   const [collectedIds, setCollectedIds] = useState<Set<number>>(new Set());

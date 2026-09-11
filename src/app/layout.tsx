@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import { Press_Start_2P, VT323 } from 'next/font/google';
+import { Geist, Geist_Mono, Press_Start_2P, VT323, Lora, Be_Vietnam_Pro } from 'next/font/google';
 import './globals.css';
 
 const geistSans = Geist({
@@ -27,6 +26,20 @@ const vt323 = VT323({
   display: 'swap',
 });
 
+const lora = Lora({
+  weight: ['400', '500', '600'],
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-lora',
+  display: 'swap',
+});
+
+const beVietnamPro = Be_Vietnam_Pro({
+  weight: ['400', '500', '600'],
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-be-vietnam',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Met — A Tiny Love Story',
   description: 'A cozy 2D pixel-art love story game',
@@ -43,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pressStart.variable} ${vt323.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${pressStart.variable} ${vt323.variable} ${lora.variable} ${beVietnamPro.variable} antialiased`}
       >
         {children}
       </body>

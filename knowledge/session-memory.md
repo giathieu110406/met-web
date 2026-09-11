@@ -500,6 +500,24 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
 - **Nâng cấp hình nền Web Pixel Art (`public/web-bg.jpg`)**:
   - Cập nhật ảnh nền bối cảnh thành phố pixel lãng mạn dưới ánh hoàng hôn và màn đêm dịu nhẹ.
 
+### 6. Cuốn Sách Kỷ Niệm 3D (Easter Egg Storybook) & Kết Nối Bộ Plugin Agent (Playwright CLI, Ponytail) (Session Update: 2026-09-11)
+- **Xây dựng Cuốn Sách Kỷ Niệm 3D (`src/components/easter-egg-book.tsx`)**:
+  - Gồm 4 tờ giấy kép (8 mặt trang) do `DEFAULT_BOOK_SHEETS` định nghĩa (`src/lib/book-content.ts`), tái hiện câu chuyện từ chiếc hòm thư nơi thung lũng mưa lạnh đến đỉnh đồi hoa anh đào.
+  - **Kiến trúc Solid 3D Dual-Sided Sheet**: Khắc phục triệt để hiện tượng trang giấy bị trong suốt nhìn xuyên thấu khi dừng lật giữa chừng. Cả mặt trước và mặt sau đều đục 100% (`#faf5eb` / `#240c0f`) với `backface-visibility: hidden`.
+  - **Xóa vệt sáng phản quang**: Loại bỏ toàn bộ lớp phủ highlight màu trắng nhân tạo, giữ nguyên chất giấy mỹ thuật mờ tự nhiên (Matte Ivory Parchment) với bóng tối êm dịu ở gáy sách.
+  - **Khóa trục quay hình học**: Khóa `rotateZ = 0`, chỉ xoay quanh trục gáy $Y$ (`transform-origin: left center`), triệt tiêu hoàn toàn góc xiên lệch hay nhô mép ra ngoài khung bìa da.
+  - **Bổ sung phím lật nổi hai bên (`❮` và `❯`)**: Hỗ trợ lật trang linh hoạt bằng nút bấm nổi rìa sách, kéo chuột tự do (drag-anywhere), bấm phím mũi tên `[←] [→]`, và thanh điều hướng chân trang với chấm sáng tiến trình.
+  - **Âm thanh Web Audio API (`src/lib/sound.ts`)**: Bổ sung `SFX.pageFlip()` tổng hợp âm thanh sột soạt giấy tự nhiên qua White Noise và Bandpass Filter 0ms latency.
+  - **Font chữ Việt hóa cao cấp (`src/app/layout.tsx`, `src/app/globals.css`)**: Tích hợp Google Fonts `Lora` (Drop Cap chữ cái đầu chương và tiêu đề thơ mộng) và `Be Vietnam Pro` (nội dung tâm tình).
+- **Kết nối Plugin & Skill Hỗ trợ Coding Agent**:
+  - **Microsoft Playwright CLI (`microsoft/playwright-cli`)**:
+    - Cài đặt binary `@playwright/cli@latest` toàn cục (`v0.1.19`).
+    - Cài đặt skill vào `.agents/skills/playwright-cli/` và `~/.gemini/config/skills/playwright-cli/`.
+  - **Ponytail (`DietrichGebert/ponytail`)**:
+    - Cài đặt plugin toàn cục vào `~/.gemini/config/plugins/ponytail/` và quy tắc vào `.agents/rules/ponytail.md`.
+    - Cài đặt 6 skill chuyên sâu vào `.agents/skills/` và `~/.gemini/config/skills/` (`ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`).
+
+
 
 
 
