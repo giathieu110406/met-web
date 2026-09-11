@@ -132,5 +132,39 @@ graph TD
   - Tương tác sưởi tay: Bấm giữ sưởi ấm dưới bóng đèn, bốc khói ấm và làm đóa hoa hồng phát sáng.
 - **`Collectible` (`src/components/collectible.tsx`)**:
   - 7 cơ chế xuất hiện và tương tác hoa hồng riêng biệt: Nở khi đến gần, Mèo trao tặng, Rơi trong mưa, Đèn soi sáng, Đom đóm vây quanh trên cầu, Nhảy lên tảng đá cao, Vòng hào quang bình minh.
+- **`EasterEggBook` (`src/components/easter-egg-book.tsx`)**:
+  - Cuốn sách kỷ niệm lật trang 3D mở bằng phím `[E]` hoặc click tại đoạn kết thúc.
+  - Tích hợp thư viện `page-flip` (StPageFlip) với hiệu ứng lật trang vật lý chân thực từ mọi cạnh và góc.
+  - Sử dụng `createPortal(bookDOM, document.body)` để đảm bảo modal thoát khỏi ranh giới khung Canvas $600 \times 400\text{px}$ và không bị cắt bởi `overflow: hidden`.
+  - Quản lý vòng đời React hydration chặt chẽ: khai báo cờ `isMounted` trong dependency array của `useEffect` để tránh lỗi bailing-out khi refs chưa được gắn vào DOM.
+  - Kết hợp bộ phát âm thanh `SFX.pageFlip()` cho tiếng sột soạt lật giấy chân thực.
+
+---
+
+## 7. Kiến Trúc Cuốn Sách Kỷ Niệm 3D (Easter Egg Storybook Architecture)
+
+```
+src/
+├── components/
+│   ├── easter-egg-book.tsx    # Component modal cuốn sách, render StPageFlip qua createPortal
+│   └── ending-cutscene.tsx    # Hộp thoại mở sách tại bưu kiện hòm thư, xử lý phím [E]
+├── lib/
+│   ├── book-content.ts        # Dữ liệu nội dung 8 trang sách (bìa, ảnh, tâm sự, chữ ký)
+│   └── sound.ts               # SFX.pageFlip() phát tiếng lật trang qua Web Audio API
+└── types/
+    └── page-flip.d.ts         # Khai báo TypeScript definitions cho thư viện page-flip
+```
+
+### 7.1. Cấu trúc trang (Page Hierarchy)
+- **Trang 0 (Front Cover)**: Bìa trước da mận thẫm (`Burgundy Leather`), đính 4 góc bọc đồng `BrassCorner`, dập chìm nhũ vàng tựa đề *"Câu Chuyện Của Chúng Ta"*.
+- **Trang 1 - 6 (Inside Spreads)**: 3 cặp trang đôi (spreads) giấy ngà (`Ivory Paper`), 4 góc uốn lượn cành hoa anh đào `CherryBranchCorner`, huy hiệu đỉnh `CherryCrest`, trích dẫn tình yêu `QuoteBox` đính hạt kim cương `◇`.
+  - Bên trái: Khung tranh kỷ niệm viền nổi kèm trích dẫn ý nghĩa.
+  - Bên phải: Lời tâm sự sâu sắc và lời nhắn gửi chân thành.
+- **Trang 7 (Back Cover)**: Bìa sau da mận thẫm với huy hiệu hoa đào vàng và dòng chữ kết nối tương lai.
+
+### 7.2. Quản lý trạng thái và ruy băng vật lý
+- Biến trạng thái `currentPageIndex` được cập nhật liên tục thông qua sự kiện `pageFlip.on('flip', ...)`.
+- Cờ `isOuterCover = currentPageIndex === 0 || currentPageIndex >= allPages.length - 1`. Khi ở 2 bìa ngoài cùng, rãnh gáy và dải ruy băng nhung đỏ tự động ẩn đi để bảo đảm tính chân thực như một cuốn sách thật khi đang đóng bìa.
+
 
 

@@ -520,6 +520,16 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
   - Luôn sử dụng `createPortal(bookDOM, document.body)` để modal không bao giờ bị cắt cụt bởi Canvas $600 \times 400\text{px}` và `overflow: hidden`.
   - Bổ sung đầy đủ luật CSS cốt lõi của `stPageFlip` vào `globals.css` (`.stf__block`, `.stf__wrapper`, `.stf__parent`).
   - Hỗ trợ tham số URL `?scene=ending` và `?scene=ending&book=1` cho việc kiểm thử và mở sách trực tiếp.
+- **Xác thực và Kiểm thử (Verification & Testing)**:
+  - TypeScript build (`npx tsc --noEmit`): Đạt 0 lỗi hoàn toàn.
+  - Trải nghiệm thực tế với Playwright subagent & trình duyệt:
+    - Sách mở thành công mượt mà ngay trên cửa sổ mặc định (1418x752) bằng phím `[E]` và click chuột.
+    - Lật trang mượt mà qua các trang đôi, hiển thị đầy đủ hình ảnh, trích dẫn hoa văn vector sắc nét.
+    - Chuyển đổi qua lại giữa chế độ Cửa sổ và Toàn màn hình trơn tru, không bị giật lag hay mất layout.
+    - Bìa trước và Bìa sau ẩn ruy băng chính xác như thiết kế.
+  - Đồng bộ và cập nhật hệ thống KI toàn diện (`architecture.md`, `visual-assets.md`, `troubleshooting-and-learnings.md`, `met-web-master-guide.md`).
+- **Trạng thái hiện tại**: Toàn bộ codebase sạch sẽ, không có lỗi runtime/compile, đã commit và đồng bộ lên remote GitHub `origin/main`.
+- **Định hướng tiếp theo**: Sẵn sàng đón nhận các yêu cầu tùy biến tranh vẽ kỷ niệm pixel-art cho các trang ruột của sách hoặc mở rộng thêm tương tác cốt truyện mới.
 
 
 

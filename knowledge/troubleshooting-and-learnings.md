@@ -279,5 +279,43 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
   3. **Logic ruy băng đánh dấu trang vật lý**:
      - Khi sách đóng (ở Bìa trước hoặc Bìa sau), dải ruy băng nhung đỏ và rãnh gáy phải được **ẩn hoàn toàn** (`!isOuterCover`). Ruy băng chỉ thả xuống khi sách được lật mở vào các trang ruột bên trong.
 
+### 3.3. 🎓 Bài Học & Kinh Nghiệm Đúc Kết (Study Experience Extractor)
 
+#### 1. Tổng hợp các lỗi sai phổ biến
+1. **Lỗi Dependency Array trong Khởi Tạo Thư Viện DOM Ngoài (Third-party Canvas/DOM Engine Initialization)**:
+   - Khi tích hợp các thư viện bên ngoài phụ thuộc trực tiếp vào DOM (như `PageFlip`, `Three.js`, `Pixi.js`, `Chart.js`), nếu component có điều kiện hydration (`if (!isMounted) return null`), biến cờ `isMounted` **bắt buộc** phải có mặt trong dependency array của `useEffect`. Nếu thiếu, effect chỉ chạy ở lần render đầu (khi ref còn `null`) và vĩnh viễn không chạy lại khi DOM thực tế đã xuất hiện.
+2. **Lỗi Quên Import CSS Cơ Sở của Thư Viện Hiệu Ứng 3D**:
+   - Nhiều thư viện JavaScript tạo cấu trúc phân cấp thẻ wrapper và tính toán kích thước động bằng JavaScript (`offsetHeight`, `offsetWidth`). Nếu thiếu các luật CSS như `position: absolute`, `perspective`, `width: 100%`, layout tính ra kích thước 0 hoặc tọa độ âm làm nội dung biến mất khỏi màn hình.
+3. **Lỗi Lạm Dụng Icon/Emoji Unicode Trong Trò Chơi Cổ Điển**:
+   - Dùng icon hệ thống (`🌸`, `✦`, `📖`) tiết kiệm thời gian code nhưng gây cảm giác nghiệp dư, hiện đại và thiếu sự trau chuốt. Đối với các tác phẩm đậm tính nghệ thuật, đồ họa Vector SVG tùy biến theo bảng màu là lựa chọn số một.
+4. **Lỗi Modal Bị Giam Cầm Trong Khung Game Cố Định (Fixed Viewport Trap)**:
+   - Một modal thông tin lớn khi render con trong Canvas bị giới hạn kích thước ($600 \times 400\text{px}$) hoặc `overflow: hidden` sẽ bị xén mép hoặc co rúm lại. Luôn sử dụng `createPortal` để đưa modal ra `document.body`.
 
+#### 2. Các lưu ý về mặt tư duy thiết kế
+1. **Tư Duy Về Vật Thể Thực (Physical Realism)**:
+   - Khi mô phỏng một cuốn sách thật, các chi tiết như dải ruy băng và rãnh gáy chỉ xuất hiện khi các trang sách mở ra. Khi sách đóng (ở Bìa trước hoặc Bìa sau), mặt ngoài của sách phải phẳng và sạch sẽ.
+2. **Tư Duy Responsive Theo Tỉ Lệ Tương Đối**:
+   - Ở chế độ cửa sổ mặc định, kích thước trang sách được tính toán cân đối ($340 \times 460\text{px}$) vừa vặn với tầm mắt người chơi; khi bật toàn màn hình, mở rộng lên $400 \times 540\text{px}$ để tận dụng tối đa không gian hiển thị mà không bị vỡ bố cục.
+
+#### 3. Mẹo tính toán & Kỹ thuật lập trình
+1. **Mẹo Kích Hoạt Layout Recalculation Sau Khi Mount**:
+   ```typescript
+   // Ép PageFlip tính toán lại kích thước sau khi DOM ổn định
+   const timer = setTimeout(() => {
+     try {
+       pageFlip.update();
+     } catch (e) {
+       console.warn('PageFlip update:', e);
+     }
+   }, 50);
+   ```
+2. **Mẹo Kiểm Tra Trang Ngoài Cùng (Outer Cover Detection)**:
+   ```typescript
+   const isOuterCover = currentPageIndex === 0 || currentPageIndex >= allPages.length - 1;
+   ```
+
+#### 4. Chuẩn bị nền tảng cho phần tiếp theo
+- Khung sườn cuốn sách 3D StPageFlip với hệ thống SVG vector và portal này cung cấp nền tảng vững chắc để mở rộng:
+  - Tích hợp thêm các trang ảnh kỷ niệm vẽ bằng phong cách pixel-art hoặc cel-shaded matching `message.png`.
+  - Bổ sung hiệu ứng âm thanh lật nhanh nhiều trang hoặc chế độ tự động lật (autoplay mode).
+  - Tích hợp tính năng ký tên hoặc viết lời chúc trực tiếp bằng bút vẽ vào trang cuối cùng.

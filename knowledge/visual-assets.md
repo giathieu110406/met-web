@@ -114,3 +114,35 @@ $$\text{top} = 320 - \text{height}$$
 - **Tệp**: [src/components/letter-fragment.tsx](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/letter-fragment.tsx)
 - **Hào quang tỏa sáng**: Sử dụng lớp filter `drop-shadow(0 0 10px rgba(251, 191, 36, 0.9))` kết hợp pulse scaling nhẹ nhàng.
 - **Bảng tên nổi**: Thẻ badge màu vàng kim hổ phách `✨ Mảnh Thư #3 [E]` nổi bật phía trên giúp người chơi dễ dàng nhận diện từ xa giữa cảnh đêm tối bìa rừng.
+
+---
+
+## 7. Mỹ Thuật Cuốn Sách Kỷ Niệm Cổ Điển & Quy Chuẩn Không Emoji (Vintage Vector Art)
+
+### 7.1. Triết lý thiết kế: Tinh xảo - Cổ kính - Không Icon / Emoji nhân tạo
+- **Vấn đề đã giải quyết**: Việc sử dụng các emoji unicode hệ thống (như `🌸`, `✦`, `📖`, `🕊️`, đặc biệt là biểu tượng ngôi sao 4 cánh Gemini `✦`) khiến UI trông giống ứng dụng chat hiện đại, phá vỡ bầu không khí cổ tích hoài niệm retro của game.
+- **Quy tắc nghiêm ngặt**:
+  1. Tuyệt đối không dùng Unicode emoji trong giao diện game, các đoạn cutscene và cuốn sách kỷ niệm.
+  2. Toàn bộ hoa văn trang trí sử dụng đồ họa **Vector SVG** được thiết kế thủ công, đồng bộ hoàn hảo với bảng màu DB32 và phong cách sách da cổ điển.
+
+### 7.2. Bộ họa tiết Vector SVG độc quyền
+| Họa tiết | Tọa độ / Vị trí | Mô tả mỹ thuật |
+| :--- | :--- | :--- |
+| **`BrassCorner`** | 4 góc bìa ngoài (Trang 0 & 7) | Miếng bọc góc đồng thau đúc chạm khắc hoa văn Baroque/Victorian màu vàng kim (`#d4af37`), đinh tán tròn nổi khối và bóng đổ chìm (`#453208`). |
+| **`CherryBranchCorner`** | 4 góc các trang giấy ngà (Trang 1 - 6) | Cành hoa anh đào uốn lượn mềm mại (`stroke="#9c734b"`), 5 cánh hoa đào hồng phớt nở rộ (`fill="#fda4af"`) kèm chồi lá non xanh dịu (`#86efac`). |
+| **`CherryCrest`** | Đỉnh đầu trang giấy | Huy hiệu hoa anh đào 5 cánh nở rộ ở chính giữa, tỏa ra 2 nhánh chỉ vàng đối xứng và các hạt nhụy hoa vàng kim lấp lánh. |
+| **`SmallFlowerDivider`** | Giữa các đoạn văn | Dấu phân cách hoa đào nhỏ với 2 đường chỉ vàng thuôn nhọn về hai phía, tạo nhịp nghỉ thanh thoát cho người đọc. |
+| **`QuoteBox`** | Khung trích dẫn trang trái | Khung viền chỉ đôi cách điệu bo góc tròn, 4 góc đính 4 hạt kim cương hình học `◇` sang trọng thay cho ngoặc kép hay icon thông thường. |
+
+### 7.3. Bảng màu chất liệu sách (Book Material Palette)
+- **Vỏ bìa da mận thẫm (`Burgundy Leather`)**:
+  - Gradient nền: `linear-gradient(145deg, #3d0c15 0%, #29060c 50%, #1a0307 100%)`.
+  - Mép gập da may chỉ đôi: viền vàng mờ `rgba(212, 175, 55, 0.45)`.
+- **Giấy ngà cổ ngả vàng (`Aged Ivory Paper`)**:
+  - Nền trang ruột: `linear-gradient(135deg, #fcf9f2 0%, #f6f0df 50%, #eee4cd 100%)`.
+  - Hiệu ứng ố thời gian (vignette): `box-shadow: inset 0 0 25px rgba(120, 80, 40, 0.12)`.
+  - Mép giấy xếp lớp dày dặn (deckled edge / page edge layers).
+- **Ruy băng nhung đỏ đánh dấu trang (`Velvet Bookmark Ribbon`)**:
+  - Đỏ thẫm nhung `#b91c1c` kết hợp bóng đổ mềm `drop-shadow`. Đuôi ruy băng cắt chữ V (`clip-path: polygon(...)`).
+  - Tự động ẩn khi sách đóng (ở Bìa trước hoặc Bìa sau) qua điều kiện `!isOuterCover`.
+
