@@ -286,6 +286,9 @@ class BGMController {
   private currentMap: 'valley' | 'hill' = 'valley';
 
   private masterGain: GainNode | null = null;
+  private compressor: DynamicsCompressorNode | null = null;
+  private pianoFilter: BiquadFilterNode | null = null;
+  private celloFilter: BiquadFilterNode | null = null;
   private ambientGain: GainNode | null = null;
   private rainGain: GainNode | null = null;
   private pianoGain: GainNode | null = null;
@@ -327,99 +330,106 @@ class BGMController {
     48: 523.25, 52: 587.33, 56: 659.25, 60: 783.99,
   };
 
-  // ==========================================
-  // MAP 2 (Cherry Blossom Hill): 128-step Cinematic Confession Ballad
-  // Chords: Cadd9 -> Em7/B -> Fmaj7 -> Fm6 (Bittersweet IV -> iv)
-  //         -> Em7 -> Am9 -> Dm9 -> G7sus4 -> C
-  // ==========================================
-  // Lyrical piano arpeggios that breathe (0 = pause/ring out)
+  // ============================================================================
+  // MAP 2 (Cherry Blossom Hill): 128-step Studio Ghibli Romantic Anime Ballad
+  // Chords: Fmaj9 -> G6 -> Em9 -> Am9 -> Dm9 -> E7(b9) -> Am9/G -> F/G -> C(add9)
+  // Continuous lyrical arpeggiation & expressive singing bells
+  // ============================================================================
   private readonly hillPianoArp: number[] = [
-    // Bar 1: Cadd9 (steps 0..15) - Warm & gentle
-    130.81, 0, 196.0, 0, 293.66, 0, 329.63, 0,
-    392.0, 0, 293.66, 0, 329.63, 0, 196.0, 0,
-    // Bar 2: Em7/B (steps 16..31) - Quiet longing
-    123.47, 0, 164.81, 0, 196.0, 0, 293.66, 0,
-    329.63, 0, 293.66, 0, 246.94, 0, 196.0, 0,
-    // Bar 3: Fmaj7 (steps 32..47) - Reaching out with affection
-    174.61, 0, 261.63, 0, 329.63, 0, 440.0, 0,
-    523.25, 0, 440.0, 0, 329.63, 0, 261.63, 0,
-    // Bar 4: Fm6 (steps 48..63) - THE HEART-MELTING CONFESSION CHORD (G#4/Ab4 415.30Hz)
-    174.61, 0, 261.63, 0, 293.66, 0, 415.30, 0,
-    523.25, 0, 415.30, 0, 293.66, 0, 261.63, 0,
-    // Bar 5: Em7 (steps 64..79) - Tender walking together
-    164.81, 0, 246.94, 0, 293.66, 0, 392.0, 0,
-    493.88, 0, 392.0, 0, 293.66, 0, 246.94, 0,
-    // Bar 6: Am9 (steps 80..95) - Deep eternal devotion
-    110.0, 0, 164.81, 0, 246.94, 0, 261.63, 0,
-    329.63, 0, 246.94, 0, 261.63, 0, 164.81, 0,
-    // Bar 7: Dm9 (steps 96..111) - Sincere confession
-    146.83, 0, 220.0, 0, 261.63, 0, 329.63, 0,
-    349.23, 0, 329.63, 0, 261.63, 0, 220.0, 0,
-    // Bar 8: G7sus4 -> G7 -> C (steps 112..127) - Loving resolution
-    98.0, 0, 146.83, 0, 174.61, 0, 261.63, 0,
-    246.94, 0, 293.66, 0, 196.0, 0, 261.63, 0,
+    // Bar 1: Fmaj9 (steps 0..15) - Sweet blossoming longing
+    174.61, 261.63, 329.63, 392.00, 440.00, 392.00, 329.63, 261.63,
+    174.61, 261.63, 329.63, 392.00, 440.00, 523.25, 440.00, 329.63,
+
+    // Bar 2: G6 / G(add9) (steps 16..31) - Reaching out into the breeze
+    196.00, 293.66, 392.00, 440.00, 493.88, 440.00, 392.00, 293.66,
+    196.00, 293.66, 392.00, 493.88, 587.33, 493.88, 440.00, 293.66,
+
+    // Bar 3: Em9 (steps 32..47) - Deep tenderness, walking side by side
+    164.81, 246.94, 329.63, 392.00, 369.99, 392.00, 329.63, 246.94,
+    164.81, 246.94, 329.63, 392.00, 493.88, 392.00, 329.63, 246.94,
+
+    // Bar 4: Am9 (steps 48..63) - Petals swirling, radiant heart-flutter
+    220.00, 329.63, 440.00, 493.88, 523.25, 493.88, 392.00, 329.63,
+    220.00, 329.63, 392.00, 523.25, 659.25, 523.25, 493.88, 329.63,
+
+    // Bar 5: Dm9 (steps 64..79) - Pure sincerity, holding hands softly
+    146.83, 220.00, 293.66, 349.23, 440.00, 523.25, 440.00, 349.23,
+    146.83, 220.00, 349.23, 523.25, 659.25, 587.33, 440.00, 349.23,
+
+    // Bar 6: E7(b9) / G#dim (steps 80..95) - THE ICONIC GHIBLI CLIMAX (G#4 415.3Hz & F5 698.5Hz)
+    164.81, 246.94, 329.63, 415.30, 493.88, 587.33, 698.46, 659.25,
+    164.81, 246.94, 415.30, 587.33, 698.46, 659.25, 587.33, 493.88,
+
+    // Bar 7: Am9 -> Am/G (steps 96..111) - Tears of sweet relief & eternal love
+    220.00, 329.63, 440.00, 523.25, 659.25, 587.33, 523.25, 440.00,
+    196.00, 293.66, 392.00, 493.88, 587.33, 523.25, 493.88, 392.00,
+
+    // Bar 8: G7sus4 -> C(add9) (steps 112..127) - Peaceful forever promise under master sakura
+    196.00, 293.66, 349.23, 440.00, 523.25, 440.00, 349.23, 293.66,
+    130.81, 196.00, 329.63, 392.00, 587.33, 523.25, 392.00, 329.63,
   ];
 
-  // Deep resonant bass notes for 8 bars
+  // Deep resonant singing cello bass notes for 8 bars
   private readonly hillBassNotes = [
-    65.41,  // Bar 1: C2
-    61.74,  // Bar 2: B1
-    87.31,  // Bar 3: F2
-    87.31,  // Bar 4: F2 (Fm6)
-    82.41,  // Bar 5: E2
-    110.0,  // Bar 6: A2
-    73.42,  // Bar 7: D2
-    98.0,   // Bar 8: G2
+    87.31,  // Bar 1: F2 (Fmaj9)
+    98.00,  // Bar 2: G2 (G6)
+    82.41,  // Bar 3: E2 (Em9)
+    110.00, // Bar 4: A2 (Am9)
+    73.42,  // Bar 5: D2 (Dm9)
+    82.41,  // Bar 6: E2 (E7b9 - Passionate romantic climax)
+    110.00, // Bar 7: A2 (Am9)
+    65.41,  // Bar 8: C2 (Cadd9 - Deep peaceful resolution)
   ];
 
-  // Glockenspiel & Celeste Confession Melody (Romantic story arc)
+  // Glockenspiel, Celeste & Music Box Singing Melody (Heartfelt anime romance theme)
   private readonly hillGlockMelody: { [step: number]: number } = {
-    // Bar 1 (Cadd9): Gentle opening question
-    0: 659.25,   // E5
-    4: 783.99,   // G5
-    8: 587.33,   // D5
-    12: 523.25,  // C5
+    // Bar 1 (Fmaj9): Awakening love, sweet beginning
+    0: 523.25,   // C5
+    4: 659.25,   // E5
+    8: 783.99,   // G5
+    10: 880.00,  // A5
+    12: 1046.50, // C6
 
-    // Bar 2 (Em7/B): Tender flutter
-    16: 493.88,  // B4
-    20: 587.33,  // D5
-    24: 783.99,  // G5
-    28: 739.99,  // F#5 (gentle passing tone)
+    // Bar 2 (G6): Soaring into the petal wind
+    16: 987.77,  // B5
+    20: 783.99,  // G5
+    24: 880.00,  // A5
+    28: 1174.66, // D6
 
-    // Bar 3 (Fmaj7): Soaring passion
-    32: 880.0,   // A5
+    // Bar 3 (Em9): Tender glance, fond warmth
+    32: 987.77,  // B5
     36: 783.99,  // G5
     40: 659.25,  // E5
-    44: 523.25,  // C5
+    44: 739.99,  // F#5 (Em9 magic color)
 
-    // Bar 4 (Fm6): THE VULNERABLE CONFESSION MOMENT (Ab5 / 830.61Hz - poignant tearjerker)
-    48: 830.61,  // Ab5 (emotional heart-flutter)
-    52: 783.99,  // G5
-    56: 698.46,  // F5
-    60: 587.33,  // D5
+    // Bar 4 (Am9): Radiance & joy
+    48: 783.99,  // G5
+    52: 880.00,  // A5
+    56: 987.77,  // B5
+    60: 1046.50, // C6
 
-    // Bar 5 (Em7): Fondness & relief
-    64: 659.25,  // E5
-    68: 783.99,  // G5
-    72: 987.77,  // B5
-    76: 783.99,  // G5
+    // Bar 5 (Dm9): Sincerity & devotion
+    64: 880.00,  // A5
+    68: 1046.50, // C6
+    72: 1318.51, // E6 (High crystalline sparkle!)
+    76: 1174.66, // D6
 
-    // Bar 6 (Am9): THE SUMMIT REUNION PEAK UNDER CHERRY BLOSSOMS
-    80: 1046.5,  // C6 (The highest, purest note of love!)
-    84: 987.77,  // B5
-    88: 880.0,   // A5
-    92: 659.25,  // E5
+    // Bar 6 (E7b9): THE HEART-MELTING CONFESSION (G#5 / 830.6Hz & F6 / 1396.9Hz)
+    80: 987.77,  // B5
+    84: 830.61,  // G#5 (Bittersweet heart flutter)
+    88: 1174.66, // D6
+    92: 1396.91, // F6 (Supreme romantic peak!)
 
-    // Bar 7 (Dm9): "I promise to stay with you"
-    96: 698.46,  // F5
-    100: 880.0,  // A5
-    104: 1046.5, // C6
-    108: 659.25, // E5
+    // Bar 7 (Am9): Sweet relief & emotional embrace
+    96: 1318.51, // E6
+    100: 1046.50,// C6
+    104: 987.77, // B5
+    108: 880.00, // A5
 
-    // Bar 8 (G7sus4 -> C): Sweet peace & happiness
-    112: 587.33, // D5
+    // Bar 8 (F/G -> C): Eternal warmth & quiet peace
+    112: 783.99, // G5
     116: 698.46, // F5
-    120: 493.88, // B4
+    120: 587.33, // D5
     124: 523.25, // C5
   };
 
@@ -427,30 +437,49 @@ class BGMController {
     if (this.masterGain) return;
     const ctx = getAudioContext();
 
-    // Master volume
-    this.masterGain = ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.82, ctx.currentTime);
-    this.masterGain.connect(ctx.destination);
+    // Master Dynamics Limiter (prevents digital clipping / audio crackling 100%)
+    this.compressor = ctx.createDynamicsCompressor();
+    this.compressor.threshold.setValueAtTime(-3.0, ctx.currentTime);
+    this.compressor.knee.setValueAtTime(6.0, ctx.currentTime);
+    this.compressor.ratio.setValueAtTime(12.0, ctx.currentTime);
+    this.compressor.attack.setValueAtTime(0.003, ctx.currentTime);
+    this.compressor.release.setValueAtTime(0.12, ctx.currentTime);
+    this.compressor.connect(ctx.destination);
 
-    // Layer 1: Ambient wind (restored back to subtle original quiet level)
+    // Master volume (headroom calibrated to prevent overload)
+    this.masterGain = ctx.createGain();
+    this.masterGain.gain.setValueAtTime(0.65, ctx.currentTime);
+    this.masterGain.connect(this.compressor);
+
+    // Layer 1: Ambient wind
     this.ambientGain = ctx.createGain();
-    this.ambientGain.gain.setValueAtTime(0.22, ctx.currentTime);
+    this.ambientGain.gain.setValueAtTime(0.14, ctx.currentTime);
     this.ambientGain.connect(this.masterGain);
 
-    // Layer 1.5: Rain sound (subtle, soft drizzle)
+    // Layer 1.5: Rain sound
     this.rainGain = ctx.createGain();
     this.rainGain.gain.setValueAtTime(0.0, ctx.currentTime);
     this.rainGain.connect(this.masterGain);
 
-    // Layer 2: Piano arpeggio
+    // Layer 2: Piano arpeggio with shared permanent felt filter
     this.pianoGain = ctx.createGain();
     this.pianoGain.gain.setValueAtTime(0.0, ctx.currentTime);
     this.pianoGain.connect(this.masterGain);
 
-    // Layer 3: Cello bass & warm strings
+    this.pianoFilter = ctx.createBiquadFilter();
+    this.pianoFilter.type = 'lowpass';
+    this.pianoFilter.frequency.setValueAtTime(900, ctx.currentTime);
+    this.pianoFilter.connect(this.pianoGain);
+
+    // Layer 3: Cello bass & warm strings with shared permanent filter
     this.celloGain = ctx.createGain();
     this.celloGain.gain.setValueAtTime(0.0, ctx.currentTime);
     this.celloGain.connect(this.masterGain);
+
+    this.celloFilter = ctx.createBiquadFilter();
+    this.celloFilter.type = 'lowpass';
+    this.celloFilter.frequency.setValueAtTime(300, ctx.currentTime);
+    this.celloFilter.connect(this.celloGain);
 
     // Layer 4: Glockenspiel music box chimes
     this.glockGain = ctx.createGain();
@@ -542,7 +571,7 @@ class BGMController {
     this.nextStepTime = ctx.currentTime + 0.1;
     this.currentStep = 0;
 
-    this.timerId = window.setInterval(() => this.schedule(), 25);
+    this.timerId = window.setInterval(() => this.schedule(), 35);
   }
 
   private schedule(): void {
@@ -550,7 +579,7 @@ class BGMController {
     const ctx = getAudioContext();
     const maxSteps = this.currentMap === 'hill' ? 128 : 64;
 
-    while (this.nextStepTime < ctx.currentTime + 0.15) {
+    while (this.nextStepTime < ctx.currentTime + 0.12) {
       this.playStep(this.currentStep, this.nextStepTime);
       this.currentStep = (this.currentStep + 1) % maxSteps;
       this.nextStepTime += this.stepDuration;
@@ -561,84 +590,81 @@ class BGMController {
     const ctx = getAudioContext();
     const isHill = this.currentMap === 'hill';
 
-    // 1. Piano Arpeggio note
-    if (this.pianoGain && this.pianoGain.gain.value > 0.01) {
+    // 1. Piano Arpeggio note (reuses permanent lowpass filter)
+    if (this.pianoGain && this.pianoGain.gain.value > 0.01 && this.pianoFilter) {
       const arpList = isHill ? this.hillPianoArp : this.valleyPianoArp;
       const freq = arpList[step % arpList.length];
 
-      // If note > 0, play piano note (0 = rest/sustain)
       if (freq > 0) {
+        this.pianoFilter.frequency.setValueAtTime(isHill ? 900 : 820, time);
+
         const osc = ctx.createOscillator();
         const noteGain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-
-        // Warm felt piano filter
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(isHill ? 720 : 850, time);
 
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, time);
 
         const decay = isHill ? 0.65 : 0.45;
-        noteGain.gain.setValueAtTime(isHill ? 0.28 : 0.24, time);
+        noteGain.gain.setValueAtTime(isHill ? 0.20 : 0.18, time);
         noteGain.gain.exponentialRampToValueAtTime(0.001, time + decay);
 
-        osc.connect(filter).connect(noteGain).connect(this.pianoGain);
+        osc.connect(noteGain).connect(this.pianoFilter);
         osc.start(time);
         osc.stop(time + decay + 0.05);
 
-        // Subtle warm overtone for Map 2 (felt piano resonance)
+        // Acoustic chorus unison for Map 2 (gentle +3.5 cents detune)
         if (isHill) {
-          const osc2 = ctx.createOscillator();
-          const gain2 = ctx.createGain();
-          osc2.type = 'sine';
-          osc2.frequency.setValueAtTime(freq * 2, time);
-          gain2.gain.setValueAtTime(0.08, time);
-          gain2.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
-          osc2.connect(gain2).connect(this.pianoGain);
-          osc2.start(time);
-          osc2.stop(time + 0.45);
+          const oscChorus = ctx.createOscillator();
+          const gainChorus = ctx.createGain();
+          oscChorus.type = 'triangle';
+          oscChorus.frequency.setValueAtTime(freq * 1.002, time);
+          gainChorus.gain.setValueAtTime(0.08, time);
+          gainChorus.gain.exponentialRampToValueAtTime(0.001, time + decay);
+          oscChorus.connect(gainChorus).connect(this.pianoFilter);
+          oscChorus.start(time);
+          oscChorus.stop(time + decay + 0.05);
         }
       }
     }
 
-    // 2. Cello / String Bass note on downbeats (every 16 steps)
-    if (step % 16 === 0 && this.celloGain && this.celloGain.gain.value > 0.01) {
+    // 2. Cello / String Bass note on downbeats (every 16 steps, reuses permanent lowpass filter)
+    if (step % 16 === 0 && this.celloGain && this.celloGain.gain.value > 0.01 && this.celloFilter) {
       const chordIndex = Math.floor(step / 16);
       const bassList = isHill ? this.hillBassNotes : this.valleyBassNotes;
       const freq = bassList[chordIndex % bassList.length];
 
+      this.celloFilter.frequency.setValueAtTime(isHill ? 300 : 250, time);
+
       const osc = ctx.createOscillator();
       const bassGain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(isHill ? 280 : 260, time);
 
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, time);
 
-      // Deep, rich sustain for romantic string presence
-      const duration = isHill ? 3.5 : 3.2;
-      bassGain.gain.setValueAtTime(isHill ? 0.36 : 0.32, time);
-      bassGain.gain.linearRampToValueAtTime(0.22, time + 1.2);
+      const duration = isHill ? 3.2 : 2.8;
+      bassGain.gain.setValueAtTime(0.001, time);
+      bassGain.gain.linearRampToValueAtTime(isHill ? 0.24 : 0.20, time + 0.25);
       bassGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
 
-      osc.connect(filter).connect(bassGain).connect(this.celloGain);
+      osc.connect(bassGain).connect(this.celloFilter);
       osc.start(time);
-      osc.stop(time + duration + 0.1);
+      osc.stop(time + duration + 0.05);
 
-      // String fifth harmony on beat for rich cinema strings in Map 2
+      // String harmony for cinematic emotional resonance on Map 2
       if (isHill) {
-        const oscFifth = ctx.createOscillator();
-        const gainFifth = ctx.createGain();
-        oscFifth.type = 'sine';
-        oscFifth.frequency.setValueAtTime(freq * 1.5, time);
-        gainFifth.gain.setValueAtTime(0.12, time);
-        gainFifth.gain.exponentialRampToValueAtTime(0.001, time + 2.8);
-        oscFifth.connect(gainFifth).connect(this.celloGain);
-        oscFifth.start(time);
-        oscFifth.stop(time + 3.0);
+        const isBar6 = chordIndex === 5;
+        const harmonyMultiplier = isBar6 ? 1.2599 : 1.5;
+        const oscHarmony = ctx.createOscillator();
+        const gainHarmony = ctx.createGain();
+
+        oscHarmony.type = 'triangle';
+        oscHarmony.frequency.setValueAtTime(freq * harmonyMultiplier, time);
+        gainHarmony.gain.setValueAtTime(0.001, time);
+        gainHarmony.gain.linearRampToValueAtTime(0.10, time + 0.35);
+        gainHarmony.gain.exponentialRampToValueAtTime(0.001, time + 3.0);
+        oscHarmony.connect(gainHarmony).connect(this.celloFilter);
+        oscHarmony.start(time);
+        oscHarmony.stop(time + 3.1);
       }
     }
 
@@ -652,27 +678,13 @@ class BGMController {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, time);
 
-      // Long, shimmering bell ring for romantic atmosphere
       const ringTime = isHill ? 0.85 : 0.65;
-      bellGain.gain.setValueAtTime(isHill ? 0.28 : 0.22, time);
+      bellGain.gain.setValueAtTime(isHill ? 0.22 : 0.18, time);
       bellGain.gain.exponentialRampToValueAtTime(0.001, time + ringTime);
 
       osc.connect(bellGain).connect(this.glockGain);
       osc.start(time);
       osc.stop(time + ringTime + 0.05);
-
-      // Delicate sparkling high harmonic for music box magic
-      if (isHill) {
-        const sparkle = ctx.createOscillator();
-        const sparkleGain = ctx.createGain();
-        sparkle.type = 'sine';
-        sparkle.frequency.setValueAtTime(freq * 2, time);
-        sparkleGain.gain.setValueAtTime(0.06, time);
-        sparkleGain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-        sparkle.connect(sparkleGain).connect(this.glockGain);
-        sparkle.start(time);
-        sparkle.stop(time + 0.35);
-      }
     }
   }
 
@@ -691,24 +703,29 @@ class BGMController {
 
     const isHill = this.currentMap === 'hill';
 
-    // 1. Ambient wind: restored back to original subtle quiet level
+    // 1. Ambient wind
     if (this.ambientGain) {
-      const target = state.isCinematic ? 0.1 : 0.22;
+      const target = state.isCinematic ? 0.08 : 0.14;
       this.ambientGain.gain.linearRampToValueAtTime(target, now + fade);
     }
 
-    // 1.5. Realistic Rain: very gentle, soothing background drizzle as before
+    // 1.5. Realistic Rain: completely muted on Hill, gentle drizzle on Valley rain zone
     if (this.rainGain) {
-      const rainTarget = (!isHill && state.inRain) ? (state.isCinematic ? 0.08 : 0.15) : 0.0;
-      this.rainGain.gain.linearRampToValueAtTime(rainTarget, now + fade);
+      if (isHill) {
+        this.rainGain.gain.cancelScheduledValues(now);
+        this.rainGain.gain.setValueAtTime(0.0, now);
+      } else {
+        const rainTarget = state.inRain ? (state.isCinematic ? 0.08 : 0.14) : 0.0;
+        this.rainGain.gain.linearRampToValueAtTime(rainTarget, now + fade);
+      }
     }
 
     // 2. Layer 2 Piano: Activated after Flower #1 on Valley, or fully active on Hill
     if (this.pianoGain) {
       const target = isHill
-        ? (state.isCinematic ? 0.52 : 0.68)
+        ? (state.isCinematic ? 0.38 : 0.48)
         : state.flowerCount >= 1
-          ? (state.isCinematic ? 0.45 : 0.6)
+          ? (state.isCinematic ? 0.35 : 0.44)
           : 0.0;
       this.pianoGain.gain.linearRampToValueAtTime(target, now + fade);
     }
@@ -717,9 +734,9 @@ class BGMController {
     if (this.celloGain) {
       const inDeepZone = state.inRain || state.flowerCount >= 3;
       const target = isHill
-        ? (state.isCinematic ? 0.42 : 0.56)
+        ? (state.isCinematic ? 0.30 : 0.40)
         : inDeepZone
-          ? (state.isCinematic ? 0.32 : 0.48)
+          ? (state.isCinematic ? 0.26 : 0.34)
           : 0.0;
       this.celloGain.gain.linearRampToValueAtTime(target, now + fade);
     }
@@ -727,9 +744,9 @@ class BGMController {
     // 4. Layer 4 Glockenspiel Chimes: Activated when reaching 6-7 flowers, fully active romantic melody on Hill
     if (this.glockGain) {
       const target = isHill
-        ? (state.isCinematic ? 0.38 : 0.50)
+        ? (state.isCinematic ? 0.28 : 0.36)
         : state.flowerCount >= 6
-          ? (state.isCinematic ? 0.32 : 0.42)
+          ? (state.isCinematic ? 0.24 : 0.32)
           : 0.0;
       this.glockGain.gain.linearRampToValueAtTime(target, now + fade);
     }
@@ -749,7 +766,7 @@ class BGMController {
     const ctx = getAudioContext();
     this.isMuted = !this.isMuted;
     if (this.masterGain) {
-      const target = this.isMuted ? 0.0 : 0.82;
+      const target = this.isMuted ? 0.0 : 0.65;
       this.masterGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.2);
     }
     return this.isMuted;

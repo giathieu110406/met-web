@@ -793,6 +793,7 @@ export default function Game() {
               onRunOffScreen={handleRunOffScreen}
               spawnX={heroSpawnOverride?.x ?? (currentMap === 'hill' ? 40 : undefined)}
               spawnY={heroSpawnOverride?.y ?? (currentMap === 'hill' ? 272 : undefined)}
+              isHillMap={currentMap === 'hill'}
             />
 
             {/* Cinematic 2-Phase Map Transition Screen Fade */}
@@ -831,6 +832,7 @@ export default function Game() {
               isNearStreetlampFragment ||
               isNearPaperBoat ||
               isNearForestCat ||
+              isNearHillBench ||
               (isNearCraftingTable && collectedFragments.every(Boolean) && !isLetterCrafted) ||
               nearbyFPVSpot
             ) && (

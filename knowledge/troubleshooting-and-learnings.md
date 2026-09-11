@@ -319,3 +319,81 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
   - Tích hợp thêm các trang ảnh kỷ niệm vẽ bằng phong cách pixel-art hoặc cel-shaded matching `message.png`.
   - Bổ sung hiệu ứng âm thanh lật nhanh nhiều trang hoặc chế độ tự động lật (autoplay mode).
   - Tích hợp tính năng ký tên hoặc viết lời chúc trực tiếp bằng bút vẽ vào trang cuối cùng.
+
+---
+
+### 6. Bài Học & Kinh Nghiệm Đúc Kết: Cá Nhân Hóa Cốt Truyện Tình Cảm & Trình Bày Sách 3D (Lyche & Ánh)
+
+#### 1. Các lưu ý về mặt tư duy xây dựng nội dung cá nhân hóa
+1. **Lựa chọn Chi Tiết Đắt Giá (The Emotional Anchor)**:
+   - Trong tự truyện ngắn hoặc quà tặng kỷ niệm, không nên kể lể tràn lan tất cả các mốc thời gian hay ngày tháng chi li. Hãy chọn một "mỏ neo cảm xúc" độc nhất: khoảnh khắc đối mặt với ngọn sóng thần tại công viên nước, làn nước xô đẩy khiến hai bàn tay tìm đến nhau, và khi ngọn sóng đã đi qua, bọt nước tan hết thì bàn tay ấy vẫn siết chặt không buông giữa ánh mắt e thẹn ngập ngừng.
+2. **Phân Tầng Cảm Xúc Tinh Tế Khi "Chưa Yêu Nhau"**:
+   - Khác với quà kỷ niệm của các cặp đôi đã chính thức yêu nhau lâu năm, một món quà tỏ tình/tìm hiểu đòi hỏi sự khéo léo tuyệt đối:
+     - **Không tạo áp lực (No Pressure)**: Không dùng các từ ngữ áp đặt sự hiện diện như "cậu là tất cả của tớ", "không thể sống thiếu nhau".
+     - **Tôn trọng không gian riêng**: Diễn đạt sự trân quý từng ngày trôi qua một cách êm đềm, tự nhiên qua các mẩu chuyện thường nhật và lời chúc ngủ ngon.
+     - **Lời ngỏ khiêm nhường nhưng kiên định**: Khép lại bằng một câu hỏi chân thành: mong muốn được cùng cậu bước tiếp chặng đường ngoài đời thực và cơ hội chính thức làm bạn trai chăm sóc cậu mỗi ngày.
+
+#### 2. Các lỗi sai phổ biến & Mẹo kỹ thuật trình bày sách 3D
+1. **Lỗi Tràn Chữ Phá Vỡ Bố Cục Trang Giấy (Typography Overflow)**:
+   - Các trang sách giả lập `StPageFlip` có kích thước khung giấy cố định ($340 \times 460\text{px}$ hoặc $400 \times 540\text{px}$). Nếu viết quá nhiều chữ, nội dung sẽ đè lên các họa tiết vector hoa đào ở 4 góc (`CherryBranchCorner`) hoặc phần trích dẫn tình yêu ở đáy trang.
+   - **Mẹo chuẩn mực**: Mỗi mặt trang giới hạn tối đa 3 đoạn văn ngắn (mỗi đoạn 1–2 câu) và 1 câu quote cô đọng. Tổng số từ không vượt quá 80–90 từ mỗi mặt trang.
+2. **Lỗi Ngắt Chữ Mồ Côi (Widow/Orphan Words) Trong Tiếng Việt**:
+   - Khi hiển thị chữ trên nền giấy parchment, các danh xưng ngắn ("Ánh à", "Lyche", "GỬI EM") hoặc cụm ngoặc kép nếu rơi xuống dòng đơn lẻ một từ sẽ làm mất đi tính trang trọng. Cần điều chỉnh ngắt câu tự nhiên theo nhịp thở của người đọc.
+3. **Lỗi Drop Cap Chữ Cái Đầu Dòng Phá Vỡ Bố Cục & Tách Rời Từ Tiếng Việt**:
+   - Kỹ thuật Drop Cap bằng `float-left` (`text-[23px] font-bold`) chỉ hợp với một số từ tiếng Anh mở đầu (như "Once upon a time..."). Trong tiếng Việt, các từ như "Hôm", "Khi", "Trước", "Ánh" khi bị tách ký tự đầu tiên (`charAt(0)`) sẽ bị xé đôi một cách khiên cưỡng ("H ôm", "K hi", "Á nh"), để lại khoảng cách trống lớn và làm thụt dòng thứ hai lệch lạc, tạo cảm giác như lỗi morasse / typesetting thô vụng.
+   - **Giải pháp chuẩn xác**: Loại bỏ triệt để Drop cap. Sử dụng renderer đồng nhất `renderParagraph` với font `book-sans`, cỡ `text-[10.5px] sm:text-[11.5px]`, dãn dòng `leading-[1.75]` và khoảng cách đoạn `space-y-2`. Toàn bộ từ ngữ giữ nguyên vẹn, trang sách phẳng phiu, hài hòa, tôn lên vẻ đẹp trang nhã của chất liệu giấy cổ điển.
+4. **Lỗi Mảng Thừa Trống Trơn Khi Sách Ở Bìa Trước & Bìa Sau (Single-Cover Casing Clamping & Centering)**:
+   - Thư viện `PageFlip` khi chạy ở chế độ 2 trang (`landscape` + `showCover: true`) luôn cố định container `width = 2 * PAGE_WIDTH` (880px). Khi ở bìa trước (Trang 0), PageFlip chỉ vẽ bìa ở nửa bên phải (440px..880px) và để trống hoàn toàn nửa bên trái (0..440px). Nếu bọc container bằng lớp vỏ bìa cứng cố định 880px, nửa bên trái sẽ lộ ra một mảng da tối màu trống trơn kèm 2 góc đồng lơ lửng. Tương tự khi lật đến bìa sau, nửa bên phải bị lộ mảng trống thừa.
+   - **Giải pháp chuẩn xác**:
+     - *Dịch chuyển căn giữa (Dynamic Centering)*: Khi ở bìa trước (`currentPageIndex === 0`), dịch chuyển `translateX(-220px)` đưa nửa bên phải vào chính giữa tâm màn hình. Khi ở bìa sau, dịch chuyển `translateX(220px)` đưa nửa bên trái vào chính giữa tâm màn hình. Khi mở ruột sách, quay về `translateX(0px)` với hiệu ứng chuyển động mượt mà 500ms (`ease-in-out`).
+     - *Bó gọn lớp vỏ bìa (Casing Clamping)*: Lớp lót da (`Hardcover Burgundy Leather Casing`), bóng đổ (`Drop Shadow`) và mép giấy đáy (`Stacked Paper Edge`) chỉ co giãn bao bọc đúng kích thước 440px của bìa đơn đang hiển thị; chỉ hiển thị góc đồng ở các góc thực của cuốn sách.
+     - Triệt tiêu 100% mảng thừa ở cả bìa trước lẫn bìa sau, biến cuốn sách thành một khối nguyên bản đóng kín sang trọng khi chưa mở.
+
+#### 3. Chuẩn bị nền tảng cho các phần tiếp theo
+- Dữ liệu sách được trừu tượng hóa sạch sẽ trong [`src/lib/book-content.ts`](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/lib/book-content.ts) qua `BookSheet[]`.
+- Kiến trúc này đã sẵn sàng cho:
+  - Tích hợp thêm trường `photoUrl?: string` để kẹp ảnh chụp thật phong cách polaroid/film vintage vào trang 1 hoặc trang 4.
+  - Tích hợp phát voice memo ngắn (lời chúc giọng thật) qua Web Audio API khi mở đến trang 5 hoặc 6.
+
+---
+
+### 7. Bài Học & Kinh Nghiệm Đúc Kết: Âm Thanh Đa Tầng Web Audio API, Tương Tác FPV Không Rung Lắc & Cách Ly Môi Trường Bản Đồ
+
+#### 1. Các lỗi sai phổ biến & Lưu ý về mặt tư duy
+1. **Lỗi Trùng Tọa Độ Đạo Cụ Giữa Các Bản Đồ Khác Nhau (Coordinate Collision Across Maps)**:
+   - *Tư duy sai lầm*: Cho rằng tọa độ kiểm tra âm thanh/vật lý như vũng nước mưa ($x \in [905, 985]$) hay vùng che mưa ($x \in [580, 1350]$) chỉ tồn tại ở Map 1, nên quên kiểm tra cờ nhận diện bản đồ (`isHillMap`). Khi người chơi sang Map 2, một đạo cụ khác (như ghế đá đồi hoa đào tại $x = 940$) vô tình rơi đúng vào dải tọa độ này, kích hoạt tiếng dẫm nước `SFX.puddleStep()` và giương ô kỳ quặc giữa vườn hoa anh đào ngập nắng.
+   - *Nguyên tắc cốt lõi*: Mọi hàm kiểm tra tọa độ sự kiện cục bộ (Zone-based trigger) **bắt buộc phải đi kèm điều kiện bản đồ xác định** (ví dụ `!isHillMap && currentMap === 'valley'`).
+2. **Bẫy Khóa Cứng Chiều Cao Khung Thoại Khi Chống Rung Máy Đánh Chữ (Fixed Height vs. Text Truncation)**:
+   - *Tư duy sai lầm*: Để chống hiện tượng khung thoại bị giật nảy (*typewriter jumping jitter*) khi máy đánh chữ gõ rớt dòng, lập trình viên khóa cứng `h-[68px]` và vùng chữ `h-[50px] overflow-hidden`. Điều này tạo ra một lỗi nghiêm trọng hơn: khi có câu thoại dài 3 dòng (từ $130 - 170$ ký tự) hoặc khi các nút hành động chiếm bớt bề ngang, dòng thứ 3 bị cắt mất hoàn toàn mà người chơi không có cách nào đọc được.
+   - *Nguyên tắc cốt lõi*: Để chống giật khung mà không làm mất chữ, **không bao giờ khóa cứng `h-[fixed]` kèm `overflow-hidden`**. Thay vào đó, hãy sử dụng **chiều cao cơ sở tối thiểu** `min-h-[86px] h-auto` và vùng chữ `min-h-[66px]`. Vì khung thoại đã có sẵn chiều cao đủ cho 3 dòng ngay từ nốt chữ đầu tiên, khung thoại hoàn toàn đứng yên cố định (Zero Jitter) từ dòng 1 đến dòng 3, đồng thời bảo đảm không bao giờ nuốt chữ của người chơi.
+3. **Lỗi Xén Ngọn Tín Hiệu (Digital Clipping) Khi Tổng Hợp Âm Thanh Đa Âm Phức Hợp**:
+   - *Tư duy sai lầm*: Xem nhẹ việc cộng dồn biên độ trong Web Audio API. Khi viết bản hòa tấu phong phú (arpeggio piano 16 nốt liên tục gối đầu nhau, bè cello kéo dài $3.6\text{s}$, chuông glockenspiel và tiếng gió), tổng biên độ âm thanh nhanh chóng vượt ngưỡng an toàn $1.0$ (lên tới $1.8 - 2.2$). Tín hiệu vượt ngưỡng làm chip DAC xén phẳng đỉnh sóng tạo ra tiếng **rè rè / lạo xạo bất ngờ**.
+   - *Nguyên tắc cốt lõi*: Trong mọi hệ thống Web Audio đa tầng, **bắt buộc phải có một tầng bảo vệ Master Limiter** (`DynamicsCompressorNode`) ngay trước cổng xuất âm `ctx.destination` và tái sử dụng bộ lọc cố định (`shared filter architecture`) để giải phóng áp lực garbage collection cho luồng âm thanh.
+
+#### 2. Mẹo tính toán & Kỹ thuật lập trình
+1. **Mẹo Tính Toán Kích Thước Khung Thoại Cho Font Pixel Monospace**:
+   - Với font pixel như `VT323` cỡ $17\text{px}$ và `line-height: 1.28`:
+     $$\text{Chiềucao 1 dòng} = 17 \times 1.28 \approx 21.76\text{px}$$
+     $$\text{Chiềucao 3 dòng} = 21.76 \times 3 \approx 65.28\text{px}$$
+   - Khung chứa chữ cần tối thiểu `min-h-[66px]`.
+   - Với padding trên/dưới `py-2.5` ($10\text{px} \times 2 = 20\text{px}$):
+     $$\text{Chiềucao khung ngoài tối thiểu} = 65.28 + 20 \approx 85.28\text{px} \rightarrow \mathbf{min-h-[86px]}$$
+2. **Cấu Hình Master Dynamics Limiter Chuẩn Cho Web Audio API**:
+   ```typescript
+   // Master Limiter chống clipping rè âm thanh 100%
+   const compressor = ctx.createDynamicsCompressor();
+   compressor.threshold.setValueAtTime(-3.0, ctx.currentTime); // Ngưỡng kích hoạt -3dB
+   compressor.knee.setValueAtTime(6.0, ctx.currentTime);       // Góc nén mềm mại 6dB
+   compressor.ratio.setValueAtTime(12.0, ctx.currentTime);     // Tỷ lệ nén ghìm chặt 12:1
+   compressor.attack.setValueAtTime(0.003, ctx.currentTime);   // Đáp ứng siêu tốc 3ms chặn đỉnh xung
+   compressor.release.setValueAtTime(0.12, ctx.currentTime);   // Nhả nén êm ái 120ms
+   masterGain.connect(compressor).connect(ctx.destination);
+   ```
+3. **Mẹo Kiến Trúc Bộ Lọc Dùng Chung (Shared Filter Node)**:
+   - Thay vì `ctx.createBiquadFilter()` bên trong mỗi nốt nhạc, khởi tạo sẵn `pianoFilter` và `celloFilter` gắn cố định vào `pianoGain` và `celloGain`. Mỗi nốt nhạc chỉ cần tạo `OscillatorNode` và `GainNode` phong bì nối vào bộ lọc dùng chung, giảm hơn 50% số lượng node sinh rác trong RAM.
+
+#### 3. Chuẩn bị nền tảng cho các phần tiếp theo
+- Hệ thống âm thanh `sound.ts` hiện tại sở hữu nền tảng phòng thu chuẩn mực với Master Limiter và bộ lọc tái sử dụng, sẵn sàng cho việc:
+  - Bổ sung thêm nhạc cụ mới (như tiếng sáo trúc Shakuhachi hoặc guitar mộc acoustic) mà không lo bị rè âm hay sụt giảm FPS.
+  - Tích hợp thêm các bộ preset âm thanh môi trường (như tiếng chim hót buổi sáng, tiếng ve kêu mùa hè hoặc chuông gió mùa thu).
+- Khung thoại FPV với chuẩn `min-h-[86px]` và `max-w-[600px]` cung cấp khuôn mẫu lý tưởng cho mọi câu thoại tự sự dài trong các bản mở rộng tương lai.

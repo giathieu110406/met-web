@@ -128,6 +128,26 @@ function PropsLayerComponent({
             alt="Mountain Bench"
             style={{ imageRendering: 'pixelated' }}
           />
+
+          {/* Floating ground indicator above the hill bench */}
+          {!isSitting && Math.abs(heroX - 940) < 55 && (
+            <div
+              className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full shadow-lg border pointer-events-none animate-bounce"
+              style={{
+                backgroundColor: 'rgba(26, 11, 22, 0.92)',
+                borderColor: 'rgba(244, 114, 182, 0.7)',
+                boxShadow: '0 0 10px rgba(244, 114, 182, 0.4)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span
+                className="text-pink-200 font-bold"
+                style={{ fontFamily: "'VT323', monospace", fontSize: '15px' }}
+              >
+                🌸 [S] Ngồi nghỉ chân
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Layer 3: Main Foreground Sakura Trees along the walking trail */}

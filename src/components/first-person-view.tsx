@@ -985,10 +985,10 @@ export default function FirstPersonView({
 
         return (
           <div
-            className="absolute bottom-2.5 left-0 right-0 mx-auto w-[96%] max-w-[570px] z-40 select-none pointer-events-auto"
+            className="absolute bottom-2 left-0 right-0 mx-auto w-[96%] max-w-[600px] z-40 select-none pointer-events-auto"
           >
             <div
-              className="relative px-3.5 py-2 shadow-2xl backdrop-blur-md h-[68px] flex items-start justify-between gap-3 box-border"
+              className="relative px-3.5 py-2.5 shadow-2xl backdrop-blur-md min-h-[86px] h-auto flex items-start justify-between gap-3 box-border"
               style={{
                 backgroundColor: 'rgba(9, 7, 18, 0.95)',
                 border: '2px solid #e2b77a',
@@ -996,14 +996,15 @@ export default function FirstPersonView({
                 imageRendering: 'pixelated',
               }}
             >
-              {/* Dialogue text box with strictly constant height so it NEVER jumps or twitches */}
-              <div className="flex-1 h-[50px] flex items-start overflow-hidden">
+              {/* Dialogue text box with stable min-height to eliminate typewriter jitter while never cutting off text */}
+              <div className="flex-1 min-h-[66px] flex items-start">
                 <p
                   className="leading-snug flex-1"
                   style={{
                     color: '#fef3c7',
                     fontFamily: "'VT323', monospace",
                     fontSize: '17px',
+                    lineHeight: '1.28',
                     letterSpacing: '0.02em',
                     textShadow: '1px 1px 0px #000',
                     margin: 0,

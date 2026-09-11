@@ -489,12 +489,29 @@ Toàn bộ âm thanh được lập trình bằng Web Audio API Synthesizer tron
 | **12.3** | Reunion | Gặp bạn gái dòng 3 ($x=2050$ Map 2) | Anh | *"Gió bão dọc đường đã xé rách bức thư anh viết... Nhưng anh đã nhặt lại từng mảnh, dán lại phẳng phiu cùng 7 đóa hoa này gửi trao em."* |
 | **12.4** | Reunion | Gặp bạn gái dòng 4 ($x=2050$ Map 2) | Em | *"Từng vết dán hoa đào này... thật đẹp và ấm áp. Cảm ơn anh vì đã không bỏ cuộc để mang trọn vẹn chân thành đến đây cùng em!"* |
 | **13** | Ending | Thiệp trượt từ dưới lên | Thiệp tỏ tình | **"I LOVE U"** (Bức thư viết tay kèm hào quang trái tim dạ quang) |
+| **14** | Easter Egg | Kích hoạt sau bức thư "I LOVE U" | Cuốn Sách Kỷ Niệm 3D | Cuốn sách lật trang 3D (*StPageFlip*) gồm 8 mặt trang kể câu chuyện thật của **Lyche & Ánh** (kỷ niệm công viên nước, cái nắm tay đón sóng không buông, những tin nhắn khuya thường nhật, nụ cười và lời ngỏ chân thành). |
 
 ---
 
-## 📜 8. Quy Tắc Duy Trì & Cập Nhật (Maintenance Directive)
+## 📖 8. Cuốn Sách Kỷ Niệm 3D (Easter Egg Storybook — Lyche & Ánh)
+
+- **Vị trí & Ý nghĩa**: Phần thưởng bí mật sau màn kết "I LOVE U", khép lại chuyến phiêu lưu trong game và mở ra chương mới ngoài đời thực cho **Lyche (tớ)** và **Ánh (cậu)**.
+- **Quy cách**: 4 tờ (Sheets) — 8 mặt trang mô phỏng giấy da cừu (vintage parchment) và bìa da mận thẫm ép nhũ hoàng gia.
+- **Tóm tắt 8 mặt trang**:
+  1. **Bìa Trước**: *Kỷ Niệm Của Chúng Mình* — Lời đề tặng dành riêng cho Ánh, chữ ký *LYCHE GỬI ÁNH*.
+  2. **Trang 1**: *Ngày Nắng Mưa & Công Viên Nước (Nơi Vịnh Kỳ Diệu)* — Ngày vừa nắng vừa mưa cùng nhóm bạn, khởi đầu cho những rung động êm đềm.
+  3. **Trang 2**: *Ngọn Sóng & Cái Nắm Tay (Khoảnh khắc ngưng đọng)* — Cùng nhau đón đầu ngọn sóng thần, sóng tan nhưng bàn tay vẫn siết chặt không buông, ánh mắt e thẹn ngập ngừng.
+  4. **Trang 3**: *Những Câu Chuyện Thường Nhật (Dịu dàng từng ngày trôi qua)* — Những tin nhắn vu vơ từ sáng đến khuya, lời chúc ngủ ngon dịu dàng đưa vào giấc ngủ.
+  5. **Trang 4**: *Nụ Cười & Sự Thấu Hiểu (Những điều tớ trân quý ở Ánh)* — Nụ cười và đôi mắt biết cười mang lại bình yên lạ kỳ; trân trọng sự lắng nghe và thấu hiểu.
+  6. **Trang 5**: *Tâm Tình Gửi Cậu (Chân thành từ đáy lòng)* — Thổ lộ chân thành không áp lực, trân quý từng khoảnh khắc và mong ước đồng hành qua mọi ngày nắng mưa.
+  7. **Trang 6**: *Lời Ngỏ Chân Thành (Cùng nhau bước sang trang mới)* — Lời tỏ tình ngọt ngào: mong muốn được chăm sóc Ánh mỗi ngày và chính thức làm bạn trai của cậu.
+  8. **Trang 7 (Bìa Sau)**: *Met — A Tiny Love Story* — Lời bạt kết cuốn: *“Gặp được nhau giữa vạn người là duyên số, nắm chặt tay nhau là sự lựa chọn của trái tim.”*
+
+---
+
+## 📜 9. Quy Tắc Duy Trì & Cập Nhật (Maintenance Directive)
 
 1. Khi người dùng yêu cầu chỉnh sửa, thêm bớt bất kỳ chi tiết nào về cốt truyện, lời thoại, góc nhìn hay mỹ thuật.
 2. **Hành động bắt buộc**:
-   - Cập nhật mã nguồn tương ứng (`src/lib/level-data.ts`, `src/components/first-person-view.tsx`, `src/lib/sound.ts`, ...).
+   - Cập nhật mã nguồn tương ứng (`src/lib/level-data.ts`, `src/components/first-person-view.tsx`, `src/lib/sound.ts`, `src/lib/book-content.ts`, ...).
    - **Lập tức mở và cập nhật tệp này (`knowledge/storyline-and-atmosphere.md`)** để đảm bảo tính nhất quán của cuốn kịch bản gốc.

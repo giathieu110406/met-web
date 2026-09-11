@@ -42,7 +42,9 @@ export default function EasterEggBook({
   }, [sheets]);
 
   // Outer covers: Page 0 (Front Cover) and last page (Back Cover)
-  const isOuterCover = currentPageIndex === 0 || currentPageIndex >= allPages.length - 1;
+  const isFrontCover = currentPageIndex === 0;
+  const isBackCover = currentPageIndex >= allPages.length - 1;
+  const isOuterCover = isFrontCover || isBackCover;
 
   // Initialize PageFlip instance with robust cloned-template strategy
   useEffect(() => {
@@ -327,22 +329,10 @@ export default function EasterEggBook({
     </div>
   );
 
-  const renderParagraphWithDropCap = (para: string, isFirst: boolean) => {
-    if (!isFirst || !para || para.length < 2) {
-      return (
-        <p className="book-sans text-[10px] sm:text-[11px] leading-[1.68] text-[#3e271c] text-justify font-normal tracking-normal select-none">
-          {para}
-        </p>
-      );
-    }
-    const firstLetter = para.charAt(0);
-    const rest = para.slice(1);
+  const renderParagraph = (para: string) => {
     return (
-      <p className="book-sans text-[10px] sm:text-[11px] leading-[1.68] text-[#3e271c] text-justify font-normal tracking-normal select-none">
-        <span className="book-serif float-left text-[23px] leading-[0.8] font-bold text-[#882b3a] mr-1.5 pt-0.5 select-none">
-          {firstLetter}
-        </span>
-        {rest}
+      <p className="book-sans text-[10.5px] sm:text-[11.5px] leading-[1.75] text-[#3e271c] text-justify font-normal tracking-normal select-none">
+        {para}
       </p>
     );
   };
@@ -610,8 +600,8 @@ export default function EasterEggBook({
             <div key={i} className="h-6" style={{ width: `${w}px`, backgroundColor: `rgba(200,160,60,${0.15 + (i%3)*0.08})` }}/>
           ))}
         </div>
-        <p className="book-sans select-none" style={{ fontSize: '6.5px', color: 'rgba(200,160,60,0.35)', letterSpacing: '0.25em' }}>
-          MET · 2025 · EASTER EGG
+        <p className="book-sans select-none text-center" style={{ fontSize: '6.5px', color: 'rgba(200,160,60,0.4)', letterSpacing: '0.2em' }}>
+          MET · 2025 · EASTER EGG · FOR NGỌC ÁNH
         </p>
       </div>
     </div>
@@ -661,9 +651,9 @@ export default function EasterEggBook({
           <SmallFlowerDivider />
         </div>
 
-        <div className="z-10 space-y-1.5 my-auto px-1 sm:px-2">
+        <div className="z-10 space-y-2 my-auto px-1 sm:px-2">
           {page.paragraphs?.map((para, idx) => (
-            <div key={idx}>{renderParagraphWithDropCap(para, idx === 0 && !isCover)}</div>
+            <div key={idx}>{renderParagraph(para)}</div>
           ))}
 
           {page.quote && (
@@ -770,22 +760,44 @@ export default function EasterEggBook({
 
       {/* Book Outer Physical Casing */}
       <div
-        className="relative flex items-center justify-center select-none"
+        className="relative flex items-center justify-center select-none transition-transform duration-500 ease-in-out"
         style={{
           width: `${PAGE_WIDTH * 2}px`,
           height: `${PAGE_HEIGHT}px`,
           maxWidth: '96vw',
           maxHeight: '94vh',
+          transform: isFrontCover
+            ? `translateX(-${PAGE_WIDTH / 2}px)`
+            : isBackCover
+            ? `translateX(${PAGE_WIDTH / 2}px)`
+            : 'translateX(0px)',
           willChange: 'transform',
         }}
       >
-        {/* Deep Ambient Drop Shadow Behind Book */}
-        <div className="absolute -inset-3 bg-black/70 rounded-2xl blur-xl -z-30 transform translate-y-3 pointer-events-none" />
-
-        {/* Hardcover Burgundy Leather Casing Backing */}
+        {/* Deep Ambient Drop Shadow Behind Book (Only behind active book pages) */}
         <div
-          className="absolute inset-0 rounded-xl -z-10 overflow-hidden"
+          className="absolute -z-30 bg-black/70 rounded-2xl blur-xl transform translate-y-3 pointer-events-none transition-all duration-500 ease-in-out"
           style={{
+            top: '-12px',
+            bottom: '-12px',
+            left: isFrontCover ? `${PAGE_WIDTH - 12}px` : '-12px',
+            right: isBackCover ? `${PAGE_WIDTH - 12}px` : '-12px',
+          }}
+        />
+
+        {/* Hardcover Burgundy Leather Casing Backing (Only behind active book pages) */}
+        <div
+          className="absolute -z-10 overflow-hidden transition-all duration-500 ease-in-out"
+          style={{
+            top: 0,
+            bottom: 0,
+            left: isFrontCover ? `${PAGE_WIDTH}px` : '0px',
+            right: isBackCover ? `${PAGE_WIDTH}px` : '0px',
+            borderRadius: isFrontCover
+              ? '0 12px 12px 0'
+              : isBackCover
+              ? '12px 0 0 12px'
+              : '12px',
             background:
               'radial-gradient(ellipse at center, #350e15 0%, #24090e 65%, #160406 100%)',
             border: '2px solid #4a1820',
@@ -793,16 +805,18 @@ export default function EasterEggBook({
           }}
         />
 
-        {/* 4 Ornamental Brass Corner Protectors */}
-        <BrassCorner position="top-left" />
-        <BrassCorner position="top-right" />
-        <BrassCorner position="bottom-left" />
-        <BrassCorner position="bottom-right" />
+        {/* 4 Ornamental Brass Corner Protectors (Only on active book corners) */}
+        {!isFrontCover && <BrassCorner position="top-left" />}
+        {!isBackCover && <BrassCorner position="top-right" />}
+        {!isFrontCover && <BrassCorner position="bottom-left" />}
+        {!isBackCover && <BrassCorner position="bottom-right" />}
 
-        {/* Stacked Paper Block Edge Thickness at Bottom */}
+        {/* Stacked Paper Block Edge Thickness at Bottom (Only behind active book pages) */}
         <div
-          className="absolute inset-x-2 bottom-0 h-2 -z-10 rounded-b pointer-events-none"
+          className="absolute bottom-0 h-2 -z-10 rounded-b pointer-events-none transition-all duration-500 ease-in-out"
           style={{
+            left: isFrontCover ? `${PAGE_WIDTH + 6}px` : '8px',
+            right: isBackCover ? `${PAGE_WIDTH + 6}px` : '8px',
             background:
               'repeating-linear-gradient(to bottom, #ded0b6 0px, #baa78e 1px, #ded0b6 2px)',
             boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
@@ -864,6 +878,62 @@ export default function EasterEggBook({
             willChange: 'transform',
           }}
         />
+      </div>
+
+      {/* Floating Navigation Arrow Buttons */}
+      {!isFrontCover && (
+        <button
+          onClick={() => {
+            pageFlipInstanceRef.current?.flipPrev();
+          }}
+          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-60 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 shadow-lg select-none"
+          style={{
+            backgroundColor: 'rgba(38, 12, 18, 0.9)',
+            border: '1px solid #d4af37',
+            color: '#f5e6b8',
+            backdropFilter: 'blur(4px)',
+          }}
+          title="Trang trước [←]"
+        >
+          <span className="text-xl leading-none select-none">‹</span>
+        </button>
+      )}
+
+      {!isBackCover && (
+        <button
+          onClick={() => {
+            pageFlipInstanceRef.current?.flipNext();
+          }}
+          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-60 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 shadow-lg select-none"
+          style={{
+            backgroundColor: 'rgba(38, 12, 18, 0.9)',
+            border: '1px solid #d4af37',
+            color: '#f5e6b8',
+            backdropFilter: 'blur(4px)',
+          }}
+          title="Trang tiếp [→]"
+        >
+          <span className="text-xl leading-none select-none">›</span>
+        </button>
+      )}
+
+      {/* Bottom Navigation Hint */}
+      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-60 pointer-events-none select-none text-center">
+        <p
+          className="text-xs tracking-wider"
+          style={{
+            fontFamily: "'VT323', monospace",
+            color: '#d4af37',
+            fontSize: '15px',
+            textShadow: '0 1px 2px #000',
+          }}
+        >
+          {isFrontCover
+            ? '[ Click bìa sách hoặc nhấn phím → để mở sách ]'
+            : isBackCover
+            ? '[ Nhấn phím ← để xem lại · Esc để đóng ]'
+            : `[ Trang ${currentPageIndex} / ${allPages.length - 2} · Dùng phím ← / → để lật ]`}
+        </p>
       </div>
     </div>
   );

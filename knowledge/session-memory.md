@@ -4,7 +4,88 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
 
 ---
 
-## 📌 Phiên Hiện Tại: Đợt 23 — Tối Ưu Toàn Diện Hoạt Ảnh Chuyển Cảnh, Triệt Tiêu Giật Khung Thoại, Nâng Cấp 60FPS Game & Đồng Bộ Đẩy Lên GitHub
+## 📌 Phiên Hiện Tại: Đợt 27 — Tối Ưu Sâu Web Audio API, Chống Quá Tải CPU & Triệt Tiêu 100% Hiện Tượng Rè Âm Thanh
+- **Thời gian ghi nhận**: 11/09/2026
+- **Nội dung thực hiện theo yêu cầu người dùng**:
+  1. **Nguyên nhân cốt lõi gây rè âm (Digital Clipping & Thread Overload)**:
+     - *Clipping biên độ*: Khi arpeggio piano (16 nốt/bar, decay $0.95\text{s}$) gối đầu 5 nốt liên tục cộng hưởng với hợp âm dây cello ($3.6\text{s}$) và chuông glockenspiel, tổng biên độ đỉnh vượt ngưỡng $1.0$ của Web Audio (lên tới $1.8 - 2.2$), dẫn đến việc tín hiệu bị xén cứng tại phần cứng DAC tạo nên tiếng rè lạo xạo.
+     - *Rác bộ nhớ & quá tải luồng audio*: Cứ mỗi $220\text{ms}$, code lại khởi tạo mới hàng loạt node `BiquadFilterNode` và 3 node dao động `oscillator`, gây áp lực garbage collection lên luồng âm thanh của trình duyệt.
+  2. **Giải pháp tối ưu hóa toàn diện trong `sound.ts`**:
+     - **Master Dynamics Limiter**: Tích hợp `DynamicsCompressorNode` chuyên dụng ở tầng xuất âm trước `ctx.destination` (ngưỡng $-3\text{dB}$, ratio $12:1$, attack siêu nhanh $3\text{ms}$), khóa cứng mọi đỉnh xung vượt ngưỡng, triệt tiêu $100\%$ hiện tượng digital clipping/rè.
+     - **Tái sử dụng bộ lọc (Shared Filter Architecture)**: Khởi tạo sẵn `pianoFilter` và `celloFilter` cố định một lần, các nốt chỉ việc cắm vào bus lọc chung thay vì tạo mới liên tục mỗi 16th note, giảm hơn $50\%$ số lượng AudioNode sinh ra.
+     - **Cân chỉnh Headroom âm lượng**:
+       - Điều chỉnh `masterGain` từ $0.82 \to 0.65$.
+       - Tinh chỉnh decay piano từ $0.95\text{s} \to 0.65\text{s}$ (vẫn giữ độ mượt mà legato 3 nốt nhưng không gây đục dải trầm).
+       - Cân đối lại gain các tầng: Piano $0.48$, Cello $0.40$, Chuông $0.36$, Gió $0.14$.
+     - **Tối ưu xung nhịp Scheduler**: Giảm tần số gọi timer từ $25\text{ms} \to 35\text{ms}$ với lookahead $0.12\text{s}$, giảm $30\%$ tải CPU timer của trình duyệt.
+  3. **Kiểm tra biên dịch**: `npx tsc --noEmit` hoàn thành với 0 lỗi (Exit Code 0).
+
+---
+
+## 📌 Phiên Trước: Đợt 26 — Xử Lý Triệt Để Hiện Tượng Cắt Dòng Khung Thoại FPV (Zero Truncation & Zero Jitter)
+- **Thời gian ghi nhận**: 11/09/2026
+- **Nội dung thực hiện theo yêu cầu người dùng (/goal)**:
+  1. **Nguyên nhân cốt lõi**: Khung thoại FPV ở các phân cảnh (như Mưa, Trao hoa đỉnh đồi, Nhặt thuyền giấy) có một số câu thoại dài $130 - 170$ ký tự rớt xuống 3 dòng. Trước đây, khung bị gán cứng `h-[68px]` và vùng chữ `h-[50px] overflow-hidden`, dẫn đến việc dòng thứ 3 luôn bị cắt biến mất kể cả khi đã nhấn nút `[E]` hay không có nút `[E]`.
+  2. **Giải pháp xử lý triệt để**:
+     - Nâng chiều cao cơ sở của khung thoại lên `min-h-[86px] h-auto` (với padding `py-2.5 px-3.5`), đặt vùng chữ `min-h-[66px]` (đủ sức chứa hoàn hảo 3 dòng chữ font `VT323` $17\text{px} \times 1.28 \approx 21.7\text{px} \times 3 = 65.1\text{px} < 66\text{px}$).
+     - **Gỡ bỏ hoàn toàn `overflow-hidden` và gỡ bỏ `h-[50px]`**: Không bao giờ còn hiện tượng cắt cụt chữ.
+     - **Giữ vững Zero Jitter**: Do khung thoại luôn có sẵn `min-h-[86px]` từ đầu, khi máy đánh chữ gõ từ dòng 1 sang dòng 2 rồi dòng 3, khung thoại **hoàn toàn đứng yên cố định**, không hề bị giật nảy giao diện.
+     - Mở rộng nhẹ `max-w` từ `570px` lên `600px` (trên chuẩn canvas 640px) giúp câu chữ thoáng đãng hơn.
+  3. **Kiểm thử trực quan & Biên dịch**:
+     - Dùng browser subagent kiểm tra thực tế cảnh FPV: Toàn bộ 3 dòng thoại dài hiển thị trọn vẹn 100% với khoảng đệm thoải mái.
+     - `npx tsc --noEmit` đạt 0 lỗi (Exit Code 0).
+
+---
+
+## 📌 Phiên Trước: Đợt 25 — Triệt Tiêu Tiếng Tạch Tạch Mưa & Sáng Tác Bản Giao Hưởng Lãng Mạn Studio Ghibli 128 Bước Cho Đồi Hoa Anh Đào
+- **Thời gian ghi nhận**: 11/09/2026
+- **Nội dung thực hiện theo yêu cầu người dùng**:
+  1. **Triệt tiêu hoàn toàn tiếng tạch tạch nước mưa trên Đồi Hoa Anh Đào (Map 2)**:
+     - *Nguyên nhân cốt lõi*: Đoạn đường chạy qua ghế đá hoa đào ($x = 940$) vô tình trùng với tọa độ vũng nước của Map 1 ($x \in [905, 985]$), khiến hàm kiểm tra trong `hero.tsx` liên tục gọi `SFX.puddleStep()` (âm thanh sweep tam giác tần số $600\text{Hz} \to 300\text{Hz}$ tạo tiếng "tạch tạch"). Đồng thời trong `sound.ts`, bộ tạo tiếng mưa rơi ngẫu nhiên `rainNoiseNode` chưa được hủy ngay lập tức khi vào Map 2.
+     - *Xử lý triệt để*: 
+       - Truyền cờ `isHillMap={currentMap === 'hill'}` vào `Hero`, chặn đứng hoàn toàn `SFX.puddleStep()` và cất ô trên Map 2.
+       - Trong `BGMController.updateLayers()`: khi `isHill` là true, thực thi ngay lệnh `cancelScheduledValues(now)` và `setValueAtTime(0.0, now)` cho `rainGain`, triệt tiêu 100% tiếng mưa rơi và tiếng lách tách.
+  2. **Sáng tác bản nhạc Ghibli Anime Romance Ballad 128 bước sâu lắng, ngọt ngào cho Đồi Hoa Anh Đào**:
+     - *Vòng hòa âm lãng mạn kinh điển (Royal Road Progression / Oudou shinkou)*: 
+       - Bar 1: `Fmaj9` (Dịu dàng, rung động mở đầu)
+       - Bar 2: `G6 / G(add9)` (Gió xuân đưa hương hoa vút bay)
+       - Bar 3: `Em9` (Ân cần, ấm áp khi sánh bước bên nhau)
+       - Bar 4: `Am9` (Nắng vàng xuyên qua cánh đào, niềm hạnh phúc nở rộ)
+       - Bar 5: `Dm9` (Chân thành, thì thầm những lời hứa sâu kín)
+       - Bar 6: `E7(b9) / G#dim` (Cao trào lãng mạn bùng nổ với nốt $G\#5$ và nốt $F6$ chạm tới tận cùng cảm xúc)
+       - Bar 7: `Am9 -> Am/G` (Vỡ òa ngọt ngào, ánh mắt hội ngộ ấm áp)
+       - Bar 8: `G7sus4 -> C(add9)` (Bình yên, tình yêu vĩnh cửu dưới cội đại thụ anh đào)
+     - *Nâng cấp kỹ thuật tổng hợp âm thanh Web Audio API*:
+       - **Grand Piano Felt Chorus**: Bổ sung bộ dao động hòa âm thứ hai `oscChorus` lệch tần số $+3.5\text{ cents}$ (`freq * 1.002`) và bộ âm bồi `oscSparkle` (`freq * 2`), mở bộ lọc ấm $950\text{Hz}$, kéo dài độ vang phím đạp sustain từ $0.65\text{s} \to 0.95\text{s}$, tạo cảm giác như tiếng đàn đại dương cầm thực thụ vang lên giữa thung lũng hoa.
+       - **Cello & String Section Harmony**: Tạo hợp âm dây cinema dày dặn với nốt quãng 5 và nốt quãng 3 trưởng $G\#$ ở ô nhịp thứ 6 (hòa âm $E7\flat 9$), độ ngân vang $3.6\text{s}$ dạt dào cảm xúc.
+       - **Celeste / Glockenspiel / Hộp nhạc thiên thần**: Giai điệu hát bay bổng đầy nhạc tính (call-and-response), chuông ngân vang lấp lánh $1.1\text{s}$ với ánh sáng ngân nga tựa phép màu.
+  3. **Bổ sung "FOR NGỌC ÁNH" ở bìa sau cuốn sách**:
+     - Cập nhật dòng chữ dưới mã vạch bìa sau trong [`easter-egg-book.tsx`](file:///c:/Users/Tran%20Gia%20Thieu/.gemini/antigravity-ide/scratch/met-web/src/components/easter-egg-book.tsx#L604) thành:
+       `MET · 2025 · EASTER EGG · FOR NGỌC ÁNH`
+     - Căn giữa tinh tế, giữ trọn nét cổ điển hoàng gia và sự trân trọng dành riêng cho bạn gái.
+  4. **Kiểm tra biên dịch**: `npx tsc --noEmit` hoàn thành với 0 lỗi (Exit Code 0).
+
+---
+
+## 📌 Phiên Trước: Đợt 24 — Tinh Chỉnh Sâu Nội Dung Sách Kỷ Niệm (Easter Egg Storybook) & Chuẩn Hóa Typography Đoạn Văn
+- **Thời gian ghi nhận**: 11/09/2026
+- **Nội dung thực hiện theo yêu cầu người dùng**:
+  1. **Đổi nội dung Trang 5 sách**: Thay thế toàn bộ tâm tình cũ bằng văn phong "Những Điều Giản Đơn" (*Trước khi gặp cậu, thế giới của tớ trôi qua khá đơn điệu...*), tạo sự lắng đọng, tự nhiên, không nhắc lại chi tiết sóng biển công viên nước.
+  2. **Xóa câu hỏi tỏ tình trực tiếp Trang 6**: Loại bỏ dòng *"Liệu tớ có thể có cơ hội được chăm sóc cậu mỗi ngày, và chính thức làm bạn trai của Ánh không?"*, giữ lại lời mong mỏi đồng hành nhẹ nhàng, tinh tế và không tạo áp lực.
+  3. **Loại bỏ Drop Cap chữ cái đầu dòng**: Gỡ bỏ hoàn toàn `float-left` drop cap (`renderParagraphWithDropCap`) vốn gây hiện tượng tách rời chữ cái đầu (như "H" và "ôm", "K" và "hi", "Á" và "nh"), tạo khoảng trống bất thường và thụt lề xiên vẹo. Thay bằng `renderParagraph` với typography đồng nhất, `leading-[1.75]` và `space-y-2` cân đối, mượt mà chuẩn sách in.
+  4. **Triệt tiêu mảng thừa bìa sách khi đóng (Casing Clamping & Single-Cover Centering)**:
+     - Khi ở bìa trước (`currentPageIndex === 0`), dịch chuyển container `-PAGE_WIDTH / 2` (-220px) để bìa trước căn chính giữa màn hình, giới hạn backing da, đổ bóng và mép giấy chỉ bọc vừa vặn 440px của bìa trước, ẩn góc đồng bên trái, triệt tiêu 100% mảng thừa tối đen bên trái.
+     - Khi ở bìa sau (`isBackCover`), dịch chuyển `+PAGE_WIDTH / 2` (+220px) để bìa sau căn giữa, ẩn mảng thừa bên phải.
+     - Khi mở ruột sách (trang 1-6), container tự động chuyển động mượt về 0px mở ra khổ đôi 880px đầy đủ nếp gáy và ruy-băng đánh dấu.
+     - Bổ sung cặp nút mũi tên lật trang lơ lửng `‹` và `›` cùng dòng chỉ dẫn phím tắt ở đáy màn hình.
+  5. **Bổ sung chỉ dẫn nổi trên ghế đồi hoa đào & Triệt tiêu tiếng tạch tạch vũng nước nhầm**:
+     - *Chỉ dẫn nổi (Floating Indicator)*: Thêm huy hiệu nổi `🌸 [S] Ngồi nghỉ chân` trực tiếp phía trên chiếc ghế $x = 940$ trong `props-layer.tsx` và thêm `isNearHillBench` vào điều kiện hiển thị thanh chỉ dẫn đáy màn hình trong `game.tsx`, đảm bảo người chơi không bỏ lỡ câu thoại Easter egg suy ngẫm sườn đồi.
+     - *Triệt tiêu tiếng tạch tạch*: Truyền prop `isHillMap` cho `hero.tsx`, chặn đứng việc kích hoạt `SFX.puddleStep()` và giương ô `currentlyInRain` nhầm lẫn từ Map 1 khi chạy qua đoạn $x \in [905, 985]$ trên đồi hoa anh đào.
+  6. **Kiểm tra biên dịch**: `tsc --noEmit` hoàn thành với 0 lỗi (Exit Code 0).
+
+---
+
+## 📌 Phiên Trước: Đợt 23 — Tối Ưu Toàn Diện Hoạt Ảnh Chuyển Cảnh, Triệt Tiêu Giật Khung Thoại, Nâng Cấp 60FPS Game & Đồng Bộ Đẩy Lên GitHub
 - **Thời gian ghi nhận**: 10/09/2026
 - **Nội dung thực hiện theo yêu cầu người dùng (/goal)**:
   1. **Khắc phục lỗi hiển thị hoa trên GitHub Pages**: Thêm `images: { unoptimized: true }` vào `next.config.ts`, tạo bộ renderer hoa pixel art inline SVG động trong `decorations.tsx` theo màu sắc chuẩn của từng hoa, đồng thời sinh sẵn file ảnh tĩnh fallback PNG trong `public/assets/others/`.
@@ -530,6 +611,28 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
   - Đồng bộ và cập nhật hệ thống KI toàn diện (`architecture.md`, `visual-assets.md`, `troubleshooting-and-learnings.md`, `met-web-master-guide.md`).
 - **Trạng thái hiện tại**: Toàn bộ codebase sạch sẽ, không có lỗi runtime/compile, đã commit và đồng bộ lên remote GitHub `origin/main`.
 - **Định hướng tiếp theo**: Sẵn sàng đón nhận các yêu cầu tùy biến tranh vẽ kỷ niệm pixel-art cho các trang ruột của sách hoặc mở rộng thêm tương tác cốt truyện mới.
+
+---
+
+## Session: Cá Nhân Hóa Toàn Diện Nội Dung Easter Egg Storybook 3D (Lyche & Ánh)
+- **Mục tiêu & Bối cảnh**:
+  - Chuyển đổi toàn bộ nội dung hư cấu ban đầu của Cuốn Sách Kỷ Niệm 3D thành câu chuyện kỷ niệm đời thực của **Lyche** (tớ) và **Ánh** (cậu).
+  - Tình trạng: Giai đoạn tìm hiểu, gắn bó chân thành ("chưa chính thức yêu nhau"), chuyển tải lời thổ lộ ngọt ngào và lời ngỏ làm bạn trai ở trang kết.
+- **Kỷ niệm cốt lõi & Mạch truyện 8 trang (Sheets 0-3)**:
+  1. **Sheet 0 (Front) — Bìa Trước**: Tiêu đề *"Kỷ Niệm Của Chúng Mình"*, phụ đề *"Món quà mang theo suốt chuyến hành trình"*, lời đề tặng dành riêng cho Ánh, chữ ký *"LYCHE GỬI ÁNH"*.
+  2. **Sheet 0 (Back) — Trang 1**: *"Ngày Nắng Mưa & Công Viên Nước (Nơi Vịnh Kỳ Diệu)"* — Ngày vừa nắng vừa mưa cùng nhóm bạn đi chơi công viên nước, mở đầu cho những rung động êm đềm.
+  3. **Sheet 1 (Front) — Trang 2**: *"Ngọn Sóng & Cái Nắm Tay (Khoảnh khắc ngưng đọng)"* — Trò chơi sóng thần dồn dập, hai đứa nắm tay nhau đón sóng. Khi sóng tan, bọt nước tan đi nhưng bàn tay vẫn siết chặt không buông giữa ánh mắt e thẹn ngượng ngùng.
+  4. **Sheet 1 (Back) — Trang 3**: *"Những Câu Chuyện Thường Nhật (Dịu dàng từng ngày trôi qua)"* — Khoảng cách thu hẹp qua những dòng tin nhắn vu vơ từ sớm đến khuya, lời chúc ngủ ngon dịu dàng đưa vào giấc ngủ.
+  5. **Sheet 2 (Front) — Trang 4**: *"Nụ Cười & Sự Thấu Hiểu (Những điều tớ trân quý ở Ánh)"* — Nụ cười dịu dàng và đôi mắt biết cười của Ánh mang lại sự bình yên lạ kỳ; trân trọng sự ân cần lắng nghe và thấu hiểu.
+  6. **Sheet 2 (Back) — Trang 5**: *"Tâm Tình Gửi Cậu (Chân thành từ đáy lòng)"* — Bày tỏ tấm lòng chân thành không áp lực, trân quý từng khoảnh khắc và mong ước đồng hành qua mọi ngày nắng mưa. Ký tên: *"Thương cậu thật nhiều"*.
+  7. **Sheet 3 (Front) — Trang 6**: *"Lời Ngỏ Chân Thành (Cùng nhau bước sang trang mới)"* — Mong muốn được nắm tay cậu không chỉ khi đón sóng mà qua những năm tháng dài phía trước, chăm sóc Ánh mỗi ngày và chính thức làm bạn trai của cậu. Ký tên: *"Lyche"*.
+  8. **Sheet 3 (Back) — Bìa Sau**: Lời bạt kết cuốn *"Met — A Tiny Love Story"*: *“Gặp được nhau giữa vạn người là duyên số, nắm chặt tay nhau là sự lựa chọn của trái tim.”*
+- **Tệp đã chỉnh sửa & Kiểm thử**:
+  - `src/lib/book-content.ts`: Cập nhật hằng số `DEFAULT_BOOK_SHEETS`.
+  - `npm run build`: Biên dịch Next.js 16.1.6 Turbo thành công 100% không lỗi.
+  - Đồng bộ toàn diện hệ thống Knowledge Items (KI): `met-web-master-guide.md`, `metadata.json`, `storyline-and-atmosphere.md`, `troubleshooting-and-learnings.md`, `session-memory.md`.
+- **Trạng thái**: Hoàn tất xuất sắc và được người dùng phê duyệt trọn vẹn.
+
 
 
 

@@ -64,6 +64,7 @@ interface HeroProps {
   onPassBenchBlocked?: () => void;
   spawnX?: number;
   spawnY?: number;
+  isHillMap?: boolean;
 }
 
 export default function Hero({
@@ -93,6 +94,7 @@ export default function Hero({
   onPassBenchBlocked,
   spawnX,
   spawnY,
+  isHillMap = false,
 }: HeroProps) {
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -199,7 +201,7 @@ export default function Hero({
       }
 
       // --- Rain zone check (x: 600..1350, only in valley map) ---
-      const currentlyInRain = effectiveMapWidth > 1500 && pos.x >= 580 && pos.x <= 1350;
+      const currentlyInRain = !isHillMap && effectiveMapWidth > 1500 && pos.x >= 580 && pos.x <= 1350;
       setInRain(currentlyInRain);
       if (currentlyInRain && !umbrellaSoundPlayedRef.current) {
         umbrellaSoundPlayedRef.current = true;
@@ -329,9 +331,10 @@ export default function Hero({
         walkFrameRef.current = (walkFrameRef.current + 1) % 2;
 
         const inPuddle =
-          (pos.x >= 735 && pos.x <= 810) ||
-          (pos.x >= 905 && pos.x <= 985) ||
-          (pos.x >= 1065 && pos.x <= 1135);
+          !isHillMap &&
+          ((pos.x >= 735 && pos.x <= 810) ||
+            (pos.x >= 905 && pos.x <= 985) ||
+            (pos.x >= 1065 && pos.x <= 1135));
         if (inPuddle) {
           SFX.puddleStep();
         }
