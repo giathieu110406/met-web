@@ -138,3 +138,8 @@ Bật switch Mobile mode dưới header Dev Tools (F2/~) để ghi đè nhận d
 
 ### Ô chữ mobile gọn (2026-09-28)
 ThoughtBubble và phụ đề FPV/ghép thư dùng CSS theo data-mobile=true: font nội dung 14px, line-height 1.35, padding 7×10px, không giữ chiều cao trống. Đoạn dài cuộn trong vùng 76px, không cắt nội dung. Hướng dẫn ngữ cảnh 13px. Ẩn nút phụ trong ô vì đã có nút hành động chung bên phải. Desktop thường giữ kiểu cũ, Mobile mode trong Dev Tools áp dụng cùng kiểu mobile.
+
+### Mobile browser fixes (2026-09-28)
+Fullscreen gọi ngay trong gesture, có navigationUI=hide và WebKit fallback; tab không hỗ trợ thì hướng dẫn cài Home Screen. manifest.ts khai báo standalone/landscape, appleWebApp metadata cho iOS. Không cưỡng bức API khi trình duyệt từ chối.
+Book sử dụng scale đồng đều theo vùng visualViewport + safe-area, pointer swipe/tap tự đổi trang để không sai tọa độ PageFlip sau scale; giữ nút mũi tên và keyboard.
+Web Audio unlock từ gesture thật và phục hồi suspended/interrupted; playback audio session khi được hỗ trợ. BGM scheduler tránh xếp lại backlog khi tab quay lại.

@@ -402,3 +402,8 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
 - Playwright CDP touch ghi nhận pointerdown vào `nextjs-portal` thay vì nút sang phải: huy hiệu Next.js đè vị trí dưới trái.
 - Đặt `devIndicators: false` trong next.config.ts; kiểm tra đa chạm thực sự di chuyển + nhảy đã qua. Khi debug input cần kiểm tra hit target, không chỉ việc nút có xuất hiện trong DOM.
 - Không dùng active=false rồi true để tạm dừng Hero: effect hiện có reset spawn khi active bật lại. Prop paused riêng dừng loop/input mà giữ tiến trình.
+
+### 2026-09-28 — iPhone long-press, book clipping, silent audio
+- Ảnh menu iOS cho thấy nguồn là CSS background web-bg.jpg dưới controls: chặn callout trên toàn vùng game và bỏ riêng nền này trên mobile, không chỉ contextmenu trên nút.
+- max-height trên outer book không scale PageFlip fixed 880×580. Dùng fit wrapper và transform scale đồng nhất, không chỉ ép kích thước vỏ. Dùng pointer tọa độ viewport cho swipe vì PageFlip nội bộ giả định pixel chưa scale.
+- AudioContext Safari có thể interrupted, không chỉ suspended; thử resume từ touchend/pointerdown thật, optional navigator.audioSession playback và kiểm tra audio samples khác 0. Chromium giả lập UA không xác minh được chính sách audio hoặc menu native của iOS thật.

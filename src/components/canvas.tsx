@@ -43,20 +43,34 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
 
   useEffect(() => { onBlockedChange?.(blocked); }, [blocked, onBlockedChange]);
   useEffect(() => {
-    const update = () => setFullscreen(Boolean(document.fullscreenElement));
+    const update = () => setFullscreen(Boolean(document.fullscreenElement
+      || (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement));
     document.addEventListener('fullscreenchange', update);
-    return () => document.removeEventListener('fullscreenchange', update);
+    document.addEventListener('webkitfullscreenchange', update);
+    return () => {
+      document.removeEventListener('fullscreenchange', update);
+      document.removeEventListener('webkitfullscreenchange', update);
+    };
   }, []);
 
   async function enterFullscreen() {
-    resumeAudio();
-    setEntered(true);
     setNotice('');
     try {
-      // Include body portals such as the ending book in fullscreen.
-      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      // Invoke directly in the click gesture, before awaiting anything else.
+      const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
+      const standalone = window.matchMedia('(display-mode: standalone)').matches
+        || (navigator as Navigator & { standalone?: boolean }).standalone;
+      const request = !fullscreen && !standalone
+        ? root.requestFullscreen ? root.requestFullscreen({ navigationUI: 'hide' })
+          : root.webkitRequestFullscreen ? root.webkitRequestFullscreen()
+          : Promise.reject(new Error('Fullscreen unavailable'))
+        : Promise.resolve();
+      resumeAudio();
+      await request;
     } catch {
-      setNotice('Trình duyệt chưa hỗ trợ toàn màn hình. Bạn vẫn có thể chơi khi xoay ngang; ẩn thanh địa chỉ để có thêm không gian.');
+      setNotice('Để chơi không có thanh địa chỉ: mở menu Chia sẻ → Thêm vào Màn hình chính → mở Met từ biểu tượng mới. Trình duyệt này chưa cho phép ép toàn màn hình trong tab. Chạm để tiếp tục chơi trong tab.');
+    } finally {
+      setEntered(true);
     }
     try {
       const orientation = screen.orientation as ScreenOrientation & { lock?: (mode: string) => Promise<void> };
@@ -67,7 +81,9 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
   }
 
   return (
-    <div ref={stageRef} className="game-stage" data-mobile={viewport.mobile}>
+    <div ref={stageRef} className="game-stage" data-mobile={viewport.mobile}
+      onContextMenu={(event) => { if (viewport.mobile) event.preventDefault(); }}
+      onDragStart={(event) => { if (viewport.mobile) event.preventDefault(); }}>
       <div className="game-frame" inert={blocked} style={{ width: CANVAS_WIDTH * viewport.scale, height: CANVAS_HEIGHT * viewport.scale }}>
         <div className="game-canvas relative overflow-hidden border-2 border-solid border-[#2e2f31] rounded-lg shadow-2xl"
           style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT, transform: `scale(${viewport.scale})`, transformOrigin: 'top left' }}>
@@ -76,7 +92,13 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
       </div>
       {viewport.mobile && !blocked && <>
         <button className="mobile-fullscreen" aria-label={fullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'}
-          onClick={(event) => { event.stopPropagation(); if (fullscreen) void document.exitFullscreen(); else void enterFullscreen(); }}>
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!fullscreen) { void enterFullscreen(); return; }
+            const doc = document as Document & { webkitExitFullscreen?: () => Promise<void> | void };
+            if (doc.exitFullscreen) void doc.exitFullscreen().catch(() => {});
+            else void doc.webkitExitFullscreen?.();
+          }}>
           <span aria-hidden="true">⛶</span><span>{fullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}</span>
         </button>
         {controls}

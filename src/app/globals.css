@@ -13,6 +13,16 @@
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 .game-frame { flex: none; }
+.game-stage[data-mobile='true'], .game-stage[data-mobile='true'] *, .book-overlay, .book-overlay * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.game-stage[data-mobile='true'] img, .book-overlay img { -webkit-user-drag: none; }
+.mobile-controls button, .mobile-fullscreen, .mobile-enter { touch-action: none; }
+.mobile-controls button > * { pointer-events: none; }
+/* Avoid WebKit's background-image callout behind the control overlay. */
+body:has(.game-stage[data-mobile='true']) > div { background-image: none !important; }
 @media (orientation: landscape) {
   .game-stage[data-mobile='true'] .game-frame { transform: translateX(-46px); }
 }

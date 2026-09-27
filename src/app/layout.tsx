@@ -41,6 +41,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
+  appleWebApp: { capable: true, title: 'Met', statusBarStyle: 'black-translucent' },
   title: 'Met — A Tiny Love Story',
   description: 'A cozy 2D pixel-art love story game',
   icons: {

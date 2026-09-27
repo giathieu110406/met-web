@@ -1,6 +1,7 @@
 // Sound manager using Web Audio API — no external audio files needed for SFX & BGM
 
 let audioCtx: AudioContext | null = null;
+let audioPrimed = false;
 
 function getAudioContext(): AudioContext {
   if (!audioCtx) {
@@ -13,10 +14,23 @@ function getAudioContext(): AudioContext {
  * Resume audio context (must be called after user gesture)
  */
 export function resumeAudio(): void {
-  const ctx = getAudioContext();
-  if (ctx.state === 'suspended') {
-    ctx.resume();
-  }
+  try {
+    // iOS playback sessions may play even when the hardware silent switch is on.
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session && session.type !== 'playback') session.type = 'playback';
+  } catch { /* AudioSession is optional. */ }
+  try {
+    const ctx = getAudioContext();
+    // Safari can report "interrupted" after switching apps or locking the phone.
+    if (ctx.state !== 'running' && ctx.state !== 'closed') void ctx.resume().catch(() => {});
+    if (!audioPrimed) {
+      const source = ctx.createBufferSource();
+      source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      source.connect(ctx.destination);
+      source.start();
+      source.onended = () => { source.disconnect(); audioPrimed = ctx.state === 'running'; };
+    }
+  } catch { /* Retry on the next real gesture if audio is temporarily unavailable. */ }
 }
 
 /**
@@ -563,9 +577,7 @@ class BGMController {
     if (this.isRunning) return;
     this.initNodes();
     const ctx = getAudioContext();
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
+    resumeAudio();
 
     this.isRunning = true;
     this.nextStepTime = ctx.currentTime + 0.1;
@@ -578,6 +590,8 @@ class BGMController {
     if (!this.isRunning) return;
     const ctx = getAudioContext();
     const maxSteps = this.currentMap === 'hill' ? 128 : 64;
+    if (ctx.state !== 'running') return;
+    if (this.nextStepTime < ctx.currentTime - 0.2) this.nextStepTime = ctx.currentTime;
 
     while (this.nextStepTime < ctx.currentTime + 0.12) {
       this.playStep(this.currentStep, this.nextStepTime);

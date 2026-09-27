@@ -40,6 +40,17 @@ const FPV_SPOTS: FPVSpot[] = [
 ];
 
 export default function Game() {
+  useEffect(() => {
+    const unlock = (event: Event) => { if (event.isTrusted) resumeAudio(); };
+    window.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    window.addEventListener('touchend', unlock, { capture: true, passive: true });
+    window.addEventListener('keydown', unlock, true);
+    return () => {
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('touchend', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+    };
+  }, []);
   const [gameState, setGameState] = useState<GameState>('title');
   const [mobilePaused, setMobilePaused] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);

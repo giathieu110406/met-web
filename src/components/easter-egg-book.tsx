@@ -21,6 +21,9 @@ export default function EasterEggBook({
 }: EasterEggBookProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [bookScale, setBookScale] = useState(1);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
 
   const bookContainerRef = useRef<HTMLDivElement>(null);
   const templatesRef = useRef<HTMLDivElement>(null);
@@ -29,6 +32,24 @@ export default function EasterEggBook({
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!isMounted || !overlay) return;
+    const fit = () => {
+      const style = getComputedStyle(overlay);
+      const width = Math.min(overlay.clientWidth, window.visualViewport?.width ?? innerWidth)
+        - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 104;
+      const height = Math.min(overlay.clientHeight, window.visualViewport?.height ?? innerHeight)
+        - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 64;
+      setBookScale(Math.max(0.1, Math.min(1, width / (PAGE_WIDTH * 2), height / PAGE_HEIGHT)));
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(overlay);
+    window.visualViewport?.addEventListener('resize', fit);
+    fit();
+    return () => { observer.disconnect(); window.visualViewport?.removeEventListener('resize', fit); };
+  }, [isMounted]);
 
   // Sequential single pages list:
   // [Sheet0.front (Cover), Sheet0.back (p1), Sheet1.front (p2), … Sheet3.back (Back Cover)]
@@ -84,7 +105,8 @@ export default function EasterEggBook({
         startPage: currentPageIndex,
         autoSize: false,
         showPageCorners: true,
-        useMouseEvents: true,
+        // Handle input in viewport coordinates below; PageFlip assumes unscaled pixels.
+        useMouseEvents: false,
         swipeDistance: 15,
         clickEventForward: true,
         disableFlipByClick: false,
@@ -703,7 +725,9 @@ export default function EasterEggBook({
 
   const bookDOM = (
 
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center select-none bg-black/85 backdrop-blur-md p-3 sm:p-6">
+    <div ref={overlayRef} className="book-overlay fixed inset-0 z-[99999] flex items-center justify-center select-none bg-black/85 backdrop-blur-md"
+      onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()}
+      style={{ height: '100dvh', padding: 'max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))' }}>
       {/* Close Button */}
       <div className="absolute top-3 right-3 z-60 select-none">
         <button
@@ -711,7 +735,7 @@ export default function EasterEggBook({
             SFX.click();
             onClose();
           }}
-          className="w-7 h-7 flex items-center justify-center rounded-xs transition-transform hover:scale-105 cursor-pointer shadow-md"
+          className="w-11 h-11 flex items-center justify-center rounded-xs transition-transform hover:scale-105 cursor-pointer shadow-md"
           style={{
             backgroundColor: 'rgba(38, 12, 18, 0.92)',
             border: '1px solid #f472b6',
@@ -759,18 +783,34 @@ export default function EasterEggBook({
       </div>
 
       {/* Book Outer Physical Casing */}
+      <div className="book-fit relative shrink-0" style={{ width: PAGE_WIDTH * 2 * bookScale, height: PAGE_HEIGHT * bookScale, touchAction: 'none' }}
+        onPointerDown={(event) => {
+          if (event.button !== 0 || !event.isPrimary) return;
+          event.preventDefault();
+          swipeStart.current = { x: event.clientX, y: event.clientY };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerCancel={() => { swipeStart.current = null; }}
+        onLostPointerCapture={() => { swipeStart.current = null; }}
+        onPointerUp={(event) => {
+          const start = swipeStart.current;
+          swipeStart.current = null;
+          if (!start) return;
+          const dx = event.clientX - start.x;
+          const dy = event.clientY - start.y;
+          if (Math.abs(dy) > Math.max(24, Math.abs(dx))) return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const next = Math.abs(dx) > 24 ? dx < 0 : isFrontCover || (!isBackCover && event.clientX > bounds.left + bounds.width / 2);
+          if (next && !isBackCover) pageFlipInstanceRef.current?.flipNext();
+          else if (!next && !isFrontCover) pageFlipInstanceRef.current?.flipPrev();
+        }}>
       <div
-        className="relative flex items-center justify-center select-none transition-transform duration-500 ease-in-out"
+        className="book-casing absolute top-0 left-0 flex items-center justify-center select-none transition-transform duration-500 ease-in-out"
         style={{
           width: `${PAGE_WIDTH * 2}px`,
           height: `${PAGE_HEIGHT}px`,
-          maxWidth: '96vw',
-          maxHeight: '94vh',
-          transform: isFrontCover
-            ? `translateX(-${PAGE_WIDTH / 2}px)`
-            : isBackCover
-            ? `translateX(${PAGE_WIDTH / 2}px)`
-            : 'translateX(0px)',
+          transformOrigin: 'top left',
+          transform: `scale(${bookScale}) translateX(${isFrontCover ? -PAGE_WIDTH / 2 : isBackCover ? PAGE_WIDTH / 2 : 0}px)`,
           willChange: 'transform',
         }}
       >
@@ -881,6 +921,7 @@ export default function EasterEggBook({
       </div>
 
       {/* Floating Navigation Arrow Buttons */}
+      </div>
       {!isFrontCover && (
         <button
           onClick={() => {
@@ -929,10 +970,10 @@ export default function EasterEggBook({
           }}
         >
           {isFrontCover
-            ? '[ Click bìa sách hoặc nhấn phím → để mở sách ]'
+            ? '[ Chạm bìa hoặc vuốt sang trái để mở sách ]'
             : isBackCover
-            ? '[ Nhấn phím ← để xem lại · Esc để đóng ]'
-            : `[ Trang ${currentPageIndex} / ${allPages.length - 2} · Dùng phím ← / → để lật ]`}
+            ? '[ Vuốt sang phải để xem lại · ✕ để đóng ]'
+            : `[ Trang ${currentPageIndex} / ${allPages.length - 2} · Vuốt hoặc dùng ← / → để lật ]`}
         </p>
       </div>
     </div>
