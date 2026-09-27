@@ -39,6 +39,7 @@ import heroSitSwing from '../../public/assets/character/hero-sit-swing.png';
 
 interface HeroProps {
   active: boolean;
+  paused?: boolean;
   cameraX: number;
   onPositionUpdate: (x: number, y: number) => void;
   onMeetCompanion: () => void;
@@ -69,6 +70,7 @@ interface HeroProps {
 
 export default function Hero({
   active,
+  paused = false,
   cameraX,
   onPositionUpdate,
   onMeetCompanion,
@@ -118,7 +120,7 @@ export default function Hero({
   const walkFrameRef = useRef(0);
   const walkTimerRef = useRef(0);
 
-  const { isAnyPressed, resetKeys } = useKeyboard(active);
+  const { isAnyPressed, resetKeys } = useKeyboard(active && !paused);
 
   // Reposition if spawn coordinates change (e.g. transitioning to Hill Map)
   useEffect(() => {
@@ -400,7 +402,7 @@ export default function Hero({
     ],
   );
 
-  useGameLoop(gameLoop, active);
+  useGameLoop(gameLoop, active && !paused);
 
   // Reset when becoming active
   useEffect(() => {
@@ -444,6 +446,7 @@ export default function Hero({
   return (
     <div
       ref={heroRef}
+      data-player="hero"
       className={`absolute z-20 select-none pointer-events-none ${
         showHitbox ? 'ring-2 ring-rose-500 ring-offset-2 bg-rose-500/20' : ''
       }`}

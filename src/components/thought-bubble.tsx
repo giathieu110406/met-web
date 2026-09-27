@@ -146,7 +146,7 @@ export default function ThoughtBubble({ currentStory, onDismiss }: ThoughtBubble
 
   return (
     <div
-      className={`absolute top-2 left-0 right-0 mx-auto z-40 max-w-[620px] w-[97%] select-none transition-all duration-300 ${
+      className={`game-thought absolute top-2 left-0 right-0 mx-auto z-40 max-w-[620px] w-[97%] select-none transition-all duration-300 ${
         isClosing ? 'opacity-0 -translate-y-2 scale-98 pointer-events-none' : 'opacity-100'
       }`}
       style={{
@@ -210,7 +210,7 @@ export default function ThoughtBubble({ currentStory, onDismiss }: ThoughtBubble
 
         {/* Monologue Text with Typewriter */}
         <p
-          className="leading-relaxed min-h-[48px] text-justify"
+          className="game-thought-text leading-relaxed min-h-[48px] text-justify"
           style={{
             color: '#f8fafc',
             fontFamily: "'VT323', monospace",

@@ -39,6 +39,8 @@ interface AdminPanelProps {
   setGameState: (state: GameState) => void;
   showHitbox: boolean;
   setShowHitbox: (val: boolean) => void;
+  mobilePreview: boolean;
+  setMobilePreview: (val: boolean) => void;
   onReset: () => void;
   collectedCount: number;
   totalCollectibles: number;
@@ -55,6 +57,8 @@ export default function AdminPanel({
   setGameState,
   showHitbox,
   setShowHitbox,
+  mobilePreview,
+  setMobilePreview,
   onReset,
   collectedCount,
   totalCollectibles,
@@ -158,6 +162,7 @@ export default function AdminPanel({
   return (
     <div
       ref={panelRef}
+      onClick={(event) => event.stopPropagation()}
       style={{ ...posStyle, zIndex: 999, width: 288 }}
       className="max-h-[88vh] overflow-y-auto bg-slate-900/97 text-slate-100 border border-amber-500/40 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col font-sans text-xs select-none"
     >
@@ -187,6 +192,17 @@ export default function AdminPanel({
       </div>
 
       {/* ── Tab Bar ── */}
+      <div className="border-b border-slate-700/60 px-3 py-2.5">
+        <label className="flex items-center justify-between gap-3 cursor-pointer">
+          <span className="font-semibold text-slate-200">Mobile mode</span>
+          <input type="checkbox" role="switch" checked={mobilePreview}
+            onChange={(event) => setMobilePreview(event.target.checked)}
+            className="h-4 w-4 accent-amber-400" />
+        </label>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+          Giả lập giao diện mobile trên desktop. Đóng bảng bằng F2 để thử nút; đổi kích thước cửa sổ để thử dọc/ngang. Tắt để trở về nhận diện thiết bị tự động.
+        </p>
+      </div>
       <div className="flex border-b border-slate-700/60 shrink-0">
         {(['teleport', 'state'] as const).map((tab) => (
           <button

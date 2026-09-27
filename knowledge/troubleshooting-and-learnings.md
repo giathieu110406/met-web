@@ -397,3 +397,8 @@ Tài liệu này tổng hợp toàn bộ các lỗi kỹ thuật quan trọng đ
   - Bổ sung thêm nhạc cụ mới (như tiếng sáo trúc Shakuhachi hoặc guitar mộc acoustic) mà không lo bị rè âm hay sụt giảm FPS.
   - Tích hợp thêm các bộ preset âm thanh môi trường (như tiếng chim hót buổi sáng, tiếng ve kêu mùa hè hoặc chuông gió mùa thu).
 - Khung thoại FPV với chuẩn `min-h-[86px]` và `max-w-[600px]` cung cấp khuôn mẫu lý tưởng cho mọi câu thoại tự sự dài trong các bản mở rộng tương lai.
+
+## 2026-09-28 — Nút cảm ứng không nhận thao tác trong dev
+- Playwright CDP touch ghi nhận pointerdown vào `nextjs-portal` thay vì nút sang phải: huy hiệu Next.js đè vị trí dưới trái.
+- Đặt `devIndicators: false` trong next.config.ts; kiểm tra đa chạm thực sự di chuyển + nhảy đã qua. Khi debug input cần kiểm tra hit target, không chỉ việc nút có xuất hiện trong DOM.
+- Không dùng active=false rồi true để tạm dừng Hero: effect hiện có reset spawn khi active bật lại. Prop paused riêng dừng loop/input mà giữ tiến trình.

@@ -427,6 +427,43 @@ export default function FirstPersonView({
     handleAdvance();
   }, [handleAdvance]);
 
+  let actionLabel: string | null = null;
+  if (scene === 'cat') {
+    if (!isForestCat) {
+      actionLabel = (lineIndex >= 1 || catPetProgress >= 100) ? null : 'Vuốt ve mèo';
+    } else {
+      actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Dỗ dành mèo';
+    }
+  } else if (scene === 'forest-cat-chase') {
+    actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Dỗ dành mèo';
+  } else if (scene === 'lamp-reach') {
+    actionLabel = (reachHops >= 3 || lineIndex >= 1) ? null : 'Nhảy với thư';
+  } else if (scene === 'boat-retrieve') {
+    actionLabel = (boatLifted || lineIndex >= 1) ? null : 'Vớt thuyền';
+  } else if (scene === 'lamp') {
+    actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Sưởi ấm';
+  } else if (scene === 'rain') {
+    actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Lắng nghe';
+  } else if (scene === 'bridge') {
+    actionLabel = (hasWished || lineIndex >= 1) ? null : 'Ngắm sao & Ước';
+  } else if (scene === 'cherry-entrance') {
+    actionLabel = null;
+  } else if (scene === 'cherry-summit') {
+    actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Trao hoa & thư';
+  }
+
+
+  // One mobile action follows the same interaction availability as the scene UI.
+  useEffect(() => {
+    const primary = () => {
+      if (isFadingOut) return;
+      if (actionLabel) handleInteraction();
+      else triggerAdvanceOneShot();
+    };
+    window.addEventListener('game-primary-action', primary);
+    return () => window.removeEventListener('game-primary-action', primary);
+  }, [actionLabel, handleInteraction, triggerAdvanceOneShot, isFadingOut]);
+
   // Keyboard navigation & interaction shortcuts ([E] for action, [➔], [Enter], or [Space] to advance)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -958,34 +995,9 @@ export default function FirstPersonView({
       {/* 16-BIT RETRO PIXEL ART DIALOGUE BOX (Compact, Low-Profile, High-Legibility) */}
       {/* ========================================================================= */}
       {(() => {
-        let actionLabel: string | null = null;
-        if (scene === 'cat') {
-          if (!isForestCat) {
-            actionLabel = (lineIndex >= 1 || catPetProgress >= 100) ? null : 'Vuốt ve mèo';
-          } else {
-            actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Dỗ dành mèo';
-          }
-        } else if (scene === 'forest-cat-chase') {
-          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Dỗ dành mèo';
-        } else if (scene === 'lamp-reach') {
-          actionLabel = (reachHops >= 3 || lineIndex >= 1) ? null : 'Nhảy với thư';
-        } else if (scene === 'boat-retrieve') {
-          actionLabel = (boatLifted || lineIndex >= 1) ? null : 'Vớt thuyền';
-        } else if (scene === 'lamp') {
-          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Sưởi ấm';
-        } else if (scene === 'rain') {
-          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Lắng nghe';
-        } else if (scene === 'bridge') {
-          actionLabel = (hasWished || lineIndex >= 1) ? null : 'Ngắm sao & Ước';
-        } else if (scene === 'cherry-entrance') {
-          actionLabel = null;
-        } else if (scene === 'cherry-summit') {
-          actionLabel = (hasActionInteracted || lineIndex >= 1) ? null : 'Trao hoa & thư';
-        }
-
         return (
           <div
-            className="absolute bottom-2 left-0 right-0 mx-auto w-[96%] max-w-[600px] z-40 select-none pointer-events-auto"
+            className="game-subtitle absolute bottom-2 left-0 right-0 mx-auto w-[96%] max-w-[600px] z-40 select-none pointer-events-auto"
           >
             <div
               className="relative px-3.5 py-2.5 shadow-2xl backdrop-blur-md min-h-[86px] h-auto flex items-start justify-between gap-3 box-border"
@@ -1036,7 +1048,7 @@ export default function FirstPersonView({
               </div>
 
               {/* Action buttons: anchored at top-right, never jumping vertically */}
-              <div className="shrink-0 flex items-center gap-1.5 pt-0.5 select-none">
+              <div className="game-subtitle-actions shrink-0 flex items-center gap-1.5 pt-0.5 select-none">
                 {/* Action key indicator: Pixel badge [E] */}
                 {actionLabel && (
                   <button

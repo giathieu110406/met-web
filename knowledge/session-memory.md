@@ -642,3 +642,30 @@ Tài liệu này lưu trữ lịch sử phát triển, các yêu cầu của ng�
 
 
 
+
+## Session 2026-09-28: Mobile landscape, fullscreen và điều khiển cảm ứng
+- Yêu cầu: tối ưu game web trên mobile, thêm bước từ dọc sang ngang/fullscreen và các nút di chuyển/tương tác.
+- Thay đổi: `src/components/canvas.tsx`, thêm `src/components/mobile-controls.tsx`, kết nối trong `game.tsx`; thêm `paused` riêng và định danh nhân vật trong `hero.tsx`; CSS responsive trong `src/app/globals.css`; viewport-fit trong `src/app/layout.tsx`; layout gốc dùng min-h-dvh; `next.config.ts` tắt devIndicators vì huy hiệu che nút sang phải.
+- Quyết định: giữ hệ tọa độ game 600×400, scale theo viewport/safe-area, dành hai mép cho nút; tái sử dụng input bàn phím qua sự kiện keydown/keyup, pointer capture hỗ trợ đa chạm. Fullscreen documentElement bao gồm portal sách; có fallback xoay thủ công khi trình duyệt không hỗ trợ. Xoay dọc dừng Hero mà không reset vị trí.
+- Kiểm tra: `npx tsc --noEmit`, ESLint cho Canvas/MobileControls và `git diff --check` đều qua. Thêm `scripts/check-mobile.js`; kiểm tra tự động Chromium đã qua portrait gate, fallback API, vào/thoát fullscreen thật, vừa di chuyển vừa nhảy hai ngón, hủy chạm, giữ vị trí qua xoay, tương tác hòm thư và tiếp hội thoại về game, kích thước touch target >=44px, không che cảnh/không tràn ngang ở 4 kích thước landscape, desktop 600×400. Ảnh trong `.playwright-cli/mobile-*.png`.
+- Giới hạn: dùng trình duyệt giả lập cảm ứng, chưa thử trên iPhone/Android thật; không khẳng định mọi trình duyệt cho phép ép toàn màn hình/khóa xoay. Timer hội thoại/cinematic không đóng băng khi xoay dọc.
+- Trạng thái: dev server localhost:3000; chưa commit/push/deploy. `.npm-cache/` là dữ liệu cài dependencies có từ trước thay đổi mobile.
+
+## Session 2026-09-28: tinh chỉnh bộ điều khiển mobile theo phản hồi
+- Chỉ bật giao diện cho điện thoại/iPad (UA + iPadOS touch detection), loại desktop kể cả Windows có touch.
+- Gộp Tương tác và Tiếp bằng nút ngữ cảnh chung; FirstPersonView dùng chính actionLabel để chọn hành động hoặc tiếp, giữ nguyên bàn phím.
+- Trái/phải cùng hàng ở góc dưới trái, được đè lên canvas; bỏ vùng chừa trái và giữ vùng chừa phải.
+- Sửa Canvas, MobileControls, Game, FirstPersonView, globals.css và scripts/check-mobile.js.
+- TypeScript và kiểm tra trình duyệt đã qua: mobile đa chạm, bốn viewport ngang, fullscreen/fallback, hòm thư và nút tiếp, nhận diện iPadOS và không hiện mobile UI trên Windows touch. Ảnh cập nhật trong .playwright-cli. Chưa thử phần cứng thật; chưa commit/push.
+
+## Session 2026-09-28: Mobile mode trong Dev Tools
+- Thêm switch Mobile mode dưới header Dev Tools, có ở cả tab Teleport và State; dùng F2/~ để mở bảng, bật switch, đóng bảng để thao tác game.
+- Game giữ mobilePreview theo phiên component và chuyển cho Canvas; bật sẽ ưu tiên giao diện mobile, tắt trở về nhận diện thiết bị tự động, không reset tiến trình. Reload trở về mặc định tự nhận diện.
+- Preview vẫn có bước vào trải nghiệm và gate dọc/ngang; đổi kích thước cửa sổ để kiểm tra. CSS touch-target dựa data-mobile để preview desktop có cùng kiểu với mobile thật. Ngăn click trong Dev Tools kích hoạt màn hình title phía dưới.
+- Sửa admin-panel.tsx, game.tsx, canvas.tsx, globals.css và bổ sung kiểm tra switch/portrait/khôi phục desktop/giữ vị trí trong scripts/check-mobile.js. TypeScript đã qua.
+
+## Session 2026-09-28: thu gọn ô chữ trong mobile mode
+- Thêm class định danh cho ThoughtBubble, phụ đề FPV, ghép thư và hướng dẫn tương tác; CSS chỉ áp dụng game-stage[data-mobile=true], gồm preview Dev Tools.
+- Nội dung 14px, line-height 1.35, bỏ min-height 48/66/86px, padding 7px 10px; header ký ức 12px; nền nhẹ hơn (85%). Hướng dẫn ngữ cảnh 13px và padding 4px 9px.
+- Ẩn nút phụ/hướng dẫn phím trùng với bộ điều khiển; nút Tương tác / Tiếp vẫn điều khiển suy nghĩ, FPV, hoàn tất ghép thư. Đoạn dài max-height 76px, cuộn dọc để giữ đầy đủ nội dung.
+- Đã qua tsc, git diff --check và scripts/check-mobile.js, có assertion ô phụ đề mobile <100px ở 844×390 và nút trong ô đã ẩn. Đã xem screenshot mobile-mailbox.png: cảnh hiện rõ, phụ đề một dải gọn dưới chân cảnh. Chưa kiểm tra điện thoại thật.

@@ -118,3 +118,23 @@ Tại $x = 1050$, một cơn lốc xoáy thổi rách bức thiệp viết tay t
   - Sheet 3: Trang 6 ("To Be Continued...") & Bìa sau ("Met — A Tiny Love Story").
 - **Mỹ thuật**: Giấy ngà cổ điển (`Aged Parchment`), 4 góc cành đào SVG, khung trích dẫn tình yêu bo góc đính hạt kim cương `◇`, gáy sách đính đinh tán mạ vàng và dải ruy băng nhung đỏ mềm mại.
 
+
+## 8. Điều khiển mobile và khung hình ngang (2026-09-28)
+- Thiết bị có `(any-pointer: coarse)` được hiển thị bước Vào trải nghiệm và hướng dẫn xoay ngang. Cần chạm để yêu cầu Fullscreen API; thử khóa landscape khi trình duyệt cho phép. API bị từ chối/không có thì vẫn chơi ngang với thông báo hướng dẫn.
+- `Canvas` đo vùng khả dụng bằng ResizeObserver, dùng kích thước viewport động và safe-area; scale đồng đều khung 600×400. Hai bên dành chỗ cho nút cảm ứng, không đè cảnh; desktop giữ tối đa 600×400.
+- `MobileControls` phát keydown/keyup vào luồng điều khiển hiện có: trái/phải, ArrowUp (nhảy), S (ngồi/đứng), E (tương tác), Enter (tiếp). Pointer capture hỗ trợ giữ nút và nhiều ngón tay; nhả khi pointercancel, mất capture, blur, đổi cảnh hoặc unmount.
+- Xoay dọc khóa khung game bằng inert và tạm dừng Hero bằng prop paused riêng, tránh kích hoạt logic reset vị trí của prop active. Các timer hội thoại/cinematic vẫn theo cơ chế cũ.
+- Fullscreen áp dụng documentElement để portal cuốn sách ở document.body vẫn hiển thị. Nút âm thanh/toàn màn hình nằm ngoài khung scale. Không cài dependency mới.
+- Kiểm tra tự động: `playwright-cli -s=met-mobile run-code --filename=scripts/check-mobile.js` sau khi mở session và chạy dev server. Đã qua Chromium mobile emulation 390×844, 844×390, 667×375, 568×320, 1024×768 và desktop 1440×900; chưa kiểm tra phần cứng iOS/Android thật.
+
+### Điều chỉnh 2026-09-28: chỉ mobile, nút hành động chung
+- Nhận diện Android/iPhone/iPad/iPod bằng user agent; iPadOS dùng Macintosh/MacIntel + maxTouchPoints > 1. Không còn dùng any-pointer: coarse để bật giao diện, nên desktop Windows có cảm ứng không bị nhận thành mobile.
+- Trái/phải nằm ngang ở góc dưới trái, được phủ lên game. Chỉ dành vùng bên phải cho nút hành động; tăng diện tích canvas tương ứng.
+- Gộp E/Enter thành Tương tác / Tiếp: Game ưu tiên tiếp suy nghĩ/ghép thư; FPV nhận game-primary-action và dùng actionLabel hiện hữu để chọn tương tác hay tiếp. Các cảnh cần vuốt mèo/nhảy lấy thư nhiều lần vẫn xử lý đủ hành động trước khi tiếp.
+- Đã qua kiểm tra Chromium giả lập Android, iPadOS desktop UA và Windows có cảm ứng; một nút hành động duy nhất, hai nút di chuyển cùng hàng, đa chạm, xoay và hội thoại hòm thư. Chưa thử thiết bị thật.
+
+### Dev Tools: Mobile mode
+Bật switch Mobile mode dưới header Dev Tools (F2/~) để ghi đè nhận diện và xem giao diện mobile trên desktop. Đóng bảng bằng F2 để thử nút; resize cửa sổ để thử gate dọc/ngang. Tắt switch sẽ trở về nhận diện tự động, không reset Hero. Thiết lập không lưu qua reload. Preview chỉ giả lập UI, không thay thế kiểm tra API fullscreen/khóa xoay trên phần cứng thật.
+
+### Ô chữ mobile gọn (2026-09-28)
+ThoughtBubble và phụ đề FPV/ghép thư dùng CSS theo data-mobile=true: font nội dung 14px, line-height 1.35, padding 7×10px, không giữ chiều cao trống. Đoạn dài cuộn trong vùng 76px, không cắt nội dung. Hướng dẫn ngữ cảnh 13px. Ẩn nút phụ trong ô vì đã có nút hành động chung bên phải. Desktop thường giữ kiểu cũ, Mobile mode trong Dev Tools áp dụng cùng kiểu mobile.

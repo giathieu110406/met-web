@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Canvas from '@/components/canvas';
+import MobileControls from '@/components/mobile-controls';
 import TitleScreen from '@/components/title-screen';
 import IntroText from '@/components/intro-text';
 import Hero from '@/components/hero';
@@ -40,6 +41,8 @@ const FPV_SPOTS: FPVSpot[] = [
 
 export default function Game() {
   const [gameState, setGameState] = useState<GameState>('title');
+  const [mobilePaused, setMobilePaused] = useState(false);
+  const [mobilePreview, setMobilePreview] = useState(false);
   // Fade-to-black overlay for seamless intro → gameplay transition
   // 'none' = hidden, 'in' = fading to black, 'hold' = fully black, 'out' = fading to clear
   const [fadeOverlay, setFadeOverlay] = useState<'none' | 'in' | 'hold' | 'out'>('none');
@@ -418,7 +421,7 @@ export default function Game() {
   // Keyboard shortcuts for FPV [E], Bench Sit [S/Down], Swing [E], Fragments [E]
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState !== 'playing' || fpvScene || isCraftingLetter) return;
+      if (mobilePaused || gameState !== 'playing' || fpvScene || isCraftingLetter) return;
 
       const key = e.key.toLowerCase();
 
@@ -507,6 +510,7 @@ export default function Game() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     nearbyFPVSpot,
+    mobilePaused,
     gameState,
     fpvScene,
     isCraftingLetter,
@@ -626,6 +630,8 @@ export default function Game() {
         setGameState={setGameState}
         showHitbox={showHitbox}
         setShowHitbox={setShowHitbox}
+        mobilePreview={mobilePreview}
+        setMobilePreview={setMobilePreview}
         onReset={handleReset}
         collectedCount={collectedIds.size}
         totalCollectibles={LEVEL.collectibles.length}
@@ -635,7 +641,22 @@ export default function Game() {
         onUnlockAll={handleUnlockAll}
       />
 
-      <Canvas>
+      <Canvas mobilePreview={mobilePreview} onBlockedChange={setMobilePaused} controls={
+        (gameState === 'playing' || gameState === 'dialogue') && !isAdminOpen && <MobileControls
+          movement={gameState === 'playing' && !fpvScene && !isCraftingLetter && !isMapFading && !isAutoRunningToHill && !isAutoWalkingBack}
+          sitting={isSitting} onMute={handleToggleMute} muted={isMuted}
+          onPrimary={() => {
+            if (fpvScene || gameState === 'dialogue') {
+              window.dispatchEvent(new Event('game-primary-action'));
+              return;
+            }
+            const key = currentStory || isCraftingLetter ? 'Enter' : 'e';
+            const code = key === 'Enter' ? 'Enter' : 'KeyE';
+            window.dispatchEvent(new KeyboardEvent('keydown', { key, code }));
+            window.dispatchEvent(new KeyboardEvent('keyup', { key, code }));
+          }}
+        />
+      }>
         {/* Title Screen */}
         {gameState === 'title' && (
           <TitleScreen onStart={() => setGameState('intro')} />
@@ -768,6 +789,7 @@ export default function Game() {
             <Hero
               key={`${currentMap}-${teleportKey}`}
               active={gameState === 'playing'}
+              paused={mobilePaused}
               cameraX={cameraX}
               onPositionUpdate={handlePositionUpdate}
               onMeetCompanion={handleMeetCompanion}
@@ -837,7 +859,7 @@ export default function Game() {
               nearbyFPVSpot
             ) && (
               <div
-                className="absolute bottom-3 left-0 right-0 mx-auto w-fit max-w-[560px] z-30 pointer-events-auto select-none px-3"
+                className="game-context-hint absolute bottom-3 left-0 right-0 mx-auto w-fit max-w-[560px] z-30 pointer-events-auto select-none px-3"
                 style={{
                   animation: 'subtitle-appear 0.25s ease-out',
                 }}

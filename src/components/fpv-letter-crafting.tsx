@@ -552,7 +552,7 @@ export default function FpvLetterCrafting({ onComplete }: FpvLetterCraftingProps
       <div className="h-4 bg-black w-full flex-shrink-0 z-30" />
 
       {/* Bottom Subtitle / Instruction Dialog */}
-      <div className="absolute bottom-2.5 left-0 right-0 mx-auto w-[94%] max-w-[560px] z-40">
+      <div className="game-subtitle game-crafting-subtitle absolute bottom-2.5 left-0 right-0 mx-auto w-[94%] max-w-[560px] z-40">
         <div
           className="relative rounded-xl px-4 py-2 shadow-2xl backdrop-blur-md transition-all flex items-center justify-between gap-3"
           style={{

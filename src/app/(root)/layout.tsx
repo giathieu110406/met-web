@@ -6,7 +6,7 @@ export default function MainLayout({
 }) {
   return (
     <div
-      className="relative flex min-h-screen w-full items-center justify-center antialiased bg-cover bg-center bg-no-repeat overflow-hidden select-none"
+      className="relative flex min-h-dvh w-full items-center justify-center antialiased bg-cover bg-center bg-no-repeat overflow-hidden select-none"
       style={{
         backgroundImage: "url('/web-bg.jpg')",
         backgroundColor: '#161426',

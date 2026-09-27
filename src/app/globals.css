@@ -1,4 +1,136 @@
 @import 'tailwindcss';
+
+/* Fit the original game coordinates without stretching pixel art. */
+.game-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100svh;
+  height: 100dvh;
+  overflow: hidden;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.game-frame { flex: none; }
+@media (orientation: landscape) {
+  .game-stage[data-mobile='true'] .game-frame { transform: translateX(-46px); }
+}
+.game-stage[data-mobile='true'] {
+  background: radial-gradient(ellipse at center, #27213b, #100e1d);
+  overscroll-behavior: none;
+}
+.mobile-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 25%, #302740, #131021 75%);
+  color: #fce7f3;
+  text-align: center;
+  font-family: var(--font-be-vietnam), sans-serif;
+}
+.mobile-gate-card { width: min(100%, 400px); margin: auto; }
+.mobile-brand { display: block; color: #f9a8d4; font: 32px var(--font-press-start), monospace; }
+.rotate-phone { margin: 30px auto 22px; color: #f9a8d4; }
+.mobile-gate h1 { font-size: 22px; font-weight: 600; line-height: 1.5; margin-bottom: 14px; }
+.mobile-gate p { font-size: 14px; line-height: 1.8; color: #c4bdd4; }
+.mobile-enter { margin: 24px 0; padding: 15px 24px; min-height: 48px; border-radius: 12px; background: #f9a8d4; color: #29152b; font-weight: 600; cursor: pointer; }
+.mobile-enter span { margin-left: 16px; }
+.mobile-gate small { display: block; margin-top: 18px; color: #a79bb8; font-size: 12px; }
+.mobile-gate .mobile-rotate-hint { margin-top: 24px; color: #f9a8d4; }
+.mobile-controls { position: absolute; inset: 0; pointer-events: none; z-index: 60; font-family: var(--font-be-vietnam), sans-serif; }
+.mobile-movement, .mobile-actions { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
+.mobile-movement { left: max(16px, env(safe-area-inset-left)); flex-direction: row; gap: 12px; }
+.mobile-actions { right: max(10px, env(safe-area-inset-right)); }
+.mobile-control {
+  width: 72px;
+  min-height: 52px;
+  border: 1px solid #e5c2db40;
+  border-radius: 14px;
+  background: #433449a6;
+  color: #fce7f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  box-shadow: 0 3px 0 #0004;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+.mobile-control > span { font: 24px/1 sans-serif; }
+.mobile-control small { font-size: 10px; line-height: 1.6; }
+.mobile-primary { min-height: 60px; }
+.mobile-control:active { background: #f9a8d455; transform: translateY(2px); }
+.mobile-control:focus-visible, .mobile-enter:focus-visible { outline: 2px solid #f9a8d4; outline-offset: 3px; }
+.mobile-fullscreen, .mobile-sound {
+  position: absolute; top: max(8px, env(safe-area-inset-top));
+  width: 76px; min-height: 44px; border-radius: 10px; padding: 5px;
+  color: #e3cedf; background: #221b30; border: 1px solid #ffffff20;
+  font: 10px/1.5 var(--font-be-vietnam), sans-serif; pointer-events: auto; z-index: 70; touch-action: manipulation;
+}
+.mobile-fullscreen { right: max(8px, env(safe-area-inset-right)); display: flex; flex-direction: column; align-items: center; height: 52px; font-size: 9px; white-space: nowrap; }
+.mobile-fullscreen > span:first-child { font-size: 20px; }
+.mobile-sound { left: max(8px, env(safe-area-inset-left)); }
+.mobile-notice { position: absolute; z-index: 80; top: 12px; left: 100px; right: 100px; padding: 12px; border-radius: 12px; background: #211a32f2; color: #fce7f3; font-size: 12px; }
+.game-stage[data-mobile='true'] .game-canvas { touch-action: manipulation; }
+.game-stage[data-mobile='true'] .game-canvas button { min-height: 44px; }
+/* Compact story overlays, including the desktop Mobile mode preview. */
+.game-stage[data-mobile='true'] .game-thought { top: 5px; width: 96%; }
+.game-stage[data-mobile='true'] .game-thought > div {
+  padding: 7px 10px;
+  border-radius: 10px;
+  background-color: rgba(10, 15, 29, 0.85) !important;
+}
+.game-stage[data-mobile='true'] .game-thought > div > div:first-child {
+  margin-bottom: 4px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.game-stage[data-mobile='true'] .game-thought > div > div:first-child span { font-size: 12px !important; }
+.game-stage[data-mobile='true'] .game-thought button { display: none; }
+.game-stage[data-mobile='true'] .game-thought-text,
+.game-stage[data-mobile='true'] .game-subtitle p {
+  min-height: 0;
+  max-height: 76px;
+  overflow-y: auto;
+  touch-action: pan-y;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  text-align: left;
+}
+.game-stage[data-mobile='true'] .game-subtitle { bottom: 5px; }
+.game-stage[data-mobile='true'] .game-subtitle > div {
+  min-height: 0;
+  padding: 7px 10px;
+  gap: 6px;
+  background-color: rgba(9, 7, 18, 0.85) !important;
+  border-width: 1px !important;
+}
+.game-stage[data-mobile='true'] .game-subtitle > div > div:first-child { min-height: 0; }
+/* The unscaled combined action button already handles advance/interactions. */
+.game-stage[data-mobile='true'] .game-subtitle-actions,
+.game-stage[data-mobile='true'] .game-crafting-subtitle button { display: none; }
+.game-stage[data-mobile='true'] .game-context-hint > div { padding: 4px 9px; font-size: 13px !important; }
+.game-stage[data-mobile='true'] .game-context-hint button { min-height: 28px; }
+.game-stage[data-mobile='true'] .game-context-hint kbd { display: none; }
+@media (orientation: landscape) and (max-height: 480px) {
+  .mobile-gate { padding: 14px; }
+  .mobile-gate-card { width: min(100%, 520px); }
+  .mobile-brand { font-size: 22px; }
+  .rotate-phone { display: none; }
+  .mobile-gate h1 { font-size: 18px; margin-top: 12px; margin-bottom: 6px; }
+  .mobile-enter { margin: 12px 0 0; }
+  .mobile-gate small { margin-top: 10px; }
+}
  
 .book-serif {
   font-family: var(--font-lora), 'Georgia', serif;

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Press_Start_2P, VT323, Lora, Be_Vietnam_Pro } from 'next/font/google';
 import './globals.css';
 
@@ -46,6 +46,13 @@ export const metadata: Metadata = {
   icons: {
     icon: '/assets/others/rose-item.png',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#161426',
 };
 
 export default function RootLayout({
