@@ -54,7 +54,7 @@ export default function FlowerLoginWrapper() {
       {/* 3. Cozy Pixel Art Login Modal (Thay thế vị trí ô game ban đầu) */}
       {flowState !== 'unlocked' && (
         <div
-          className={`relative z-10 flex min-h-screen w-full items-center justify-center p-4 transition-all duration-700 ${
+          className={`relative z-10 flex min-h-screen w-full items-center justify-center p-2 sm:p-4 landscape:p-1.5 transition-all duration-700 ${
             flowState === 'blooming'
               ? 'pointer-events-none scale-95 opacity-0'
               : 'scale-100 opacity-100'

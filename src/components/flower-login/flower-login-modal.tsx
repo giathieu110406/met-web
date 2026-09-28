@@ -101,7 +101,7 @@ export default function FlowerLoginModal({
 
   return (
     <div
-      className={`relative z-20 flex w-full max-w-[760px] flex-col overflow-visible rounded-[28px] border-[5px] border-[#533320] bg-[#22162b]/95 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_0_2px_#ffb3d9] backdrop-blur-md transition-transform duration-300 sm:flex-row sm:p-7 ${
+      className={`relative z-20 flex w-full max-w-[760px] flex-col overflow-visible rounded-2xl border-[3px] border-[#533320] bg-[#22162b]/95 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_0_2px_#ffb3d9] backdrop-blur-md transition-transform duration-300 landscape:max-w-[690px] landscape:flex-row landscape:rounded-[20px] landscape:border-[3.5px] landscape:p-2.5 sm:max-w-[760px] sm:flex-row sm:rounded-[28px] sm:border-[5px] sm:p-7 ${
         isShaking ? 'animate-[shake_0.5s_ease-in-out]' : ''
       }`}
       style={{
@@ -109,22 +109,22 @@ export default function FlowerLoginModal({
       }}
     >
       {/* Decorative Pixel Cherry Blossom Vines */}
-      <div className="pointer-events-none absolute -left-3 -top-3 z-30 select-none text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+      <div className="pointer-events-none absolute -left-2 -top-2 z-30 select-none text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] landscape:-left-2 landscape:-top-2 landscape:text-lg sm:-left-3 sm:-top-3 sm:text-2xl">
         🌸
       </div>
-      <div className="pointer-events-none absolute -right-3 -top-3 z-30 select-none text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+      <div className="pointer-events-none absolute -right-2 -top-2 z-30 select-none text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] landscape:-right-2 landscape:-top-2 landscape:text-lg sm:-right-3 sm:-top-3 sm:text-2xl">
         🌸
       </div>
-      <div className="pointer-events-none absolute -bottom-3 -left-3 z-30 select-none text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+      <div className="pointer-events-none absolute -bottom-2 -left-2 z-30 select-none text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] landscape:-bottom-2 landscape:-left-2 landscape:text-lg sm:-bottom-3 sm:-left-3 sm:text-2xl">
         🌸
       </div>
-      <div className="pointer-events-none absolute -bottom-3 -right-3 z-30 select-none text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+      <div className="pointer-events-none absolute -bottom-2 -right-2 z-30 select-none text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] landscape:-bottom-2 landscape:-right-2 landscape:text-lg sm:-bottom-3 sm:-right-3 sm:text-2xl">
         🌸
       </div>
 
       {/* Cột trái: Khung tranh Pixel Art cô gái bên hoa anh đào */}
-      <div className="relative flex flex-none items-center justify-center sm:w-[320px]">
-        <div className="relative h-[340px] w-full max-w-[280px] overflow-hidden rounded-[18px] border-[4px] border-[#6b4226] bg-[#1a1122] shadow-[0_6px_20px_rgba(0,0,0,0.6)] sm:h-[400px] sm:max-w-[310px]">
+      <div className="relative flex flex-none items-center justify-center landscape:w-[200px] sm:w-[320px]">
+        <div className="relative aspect-[280/360] h-[240px] max-h-[75vh] w-auto overflow-hidden rounded-[14px] border-[3px] border-[#6b4226] bg-[#1a1122] shadow-[0_6px_20px_rgba(0,0,0,0.6)] landscape:h-[min(265px,78dvh)] landscape:max-w-[200px] landscape:rounded-[12px] sm:h-[400px] sm:max-w-[310px] sm:rounded-[18px] sm:border-[4px]">
           <Image
             src="/assets/lockscreen/pixel-portrait-clean.png"
             alt="Pixel Art Sakura Maiden"
@@ -138,27 +138,27 @@ export default function FlowerLoginModal({
       </div>
 
       {/* Cột phải: Bảng số Passcode phong cách Pixel Cozy */}
-      <div className="relative flex flex-1 flex-col items-center justify-center px-2 pt-6 sm:px-6 sm:pt-0">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-2 pt-3 landscape:px-3 landscape:pt-0 sm:px-6 sm:pt-0">
         {/* Glowing Pixel Heart at top */}
-        <div className="mb-2 flex items-center justify-center">
-          <div className="animate-pulse text-3xl drop-shadow-[0_0_12px_#ff4081]">
+        <div className="mb-1 flex items-center justify-center landscape:mb-0.5 sm:mb-2">
+          <div className="animate-pulse text-2xl drop-shadow-[0_0_12px_#ff4081] landscape:text-lg sm:text-3xl">
             💖
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="mb-3 font-mono text-[13px] font-bold tracking-[0.25em] text-[#fbcfe8] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+        <h2 className="mb-1.5 font-mono text-[11px] font-bold tracking-[0.2em] text-[#fbcfe8] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] landscape:mb-1 landscape:text-[10px] sm:mb-3 sm:text-[13px] sm:tracking-[0.25em]">
           ENTER PASSCODE
         </h2>
 
         {/* 4 Chấm Indicator Pixel Style */}
-        <div className="mb-6 flex items-center justify-center gap-3.5">
+        <div className="mb-3 flex items-center justify-center gap-2 landscape:mb-1.5 landscape:gap-2 sm:mb-6 sm:gap-3.5">
           {[0, 1, 2, 3].map((idx) => {
             const isFilled = pin.length > idx;
             return (
               <div
                 key={idx}
-                className={`h-4 w-4 rounded-full transition-all duration-200 ${
+                className={`h-3 w-3 rounded-full transition-all duration-200 landscape:h-2.5 landscape:w-2.5 sm:h-4 sm:w-4 ${
                   isFilled
                     ? 'scale-115 border-2 border-[#f472b6] bg-[#f43f5e] shadow-[0_0_10px_#f43f5e]'
                     : 'border-2 border-[#a78bfa]/40 bg-[#160e22]'
@@ -169,11 +169,16 @@ export default function FlowerLoginModal({
         </div>
 
         {/* Bàn phím số Pixel Retro 3x4 */}
-        <div className="relative grid w-full max-w-[270px] grid-cols-3 gap-x-6 gap-y-4">
+        <div className="relative grid w-full max-w-[270px] grid-cols-3 gap-x-4 gap-y-2 landscape:max-w-[210px] landscape:gap-x-2.5 landscape:gap-y-1 sm:max-w-[270px] sm:gap-x-6 sm:gap-y-4">
           {keypad.map((row, rIdx) =>
             row.map((btn, cIdx) => {
               if (btn === '') {
-                return <div key={`${rIdx}-${cIdx}`} className="h-12 w-16" />;
+                return (
+                  <div
+                    key={`${rIdx}-${cIdx}`}
+                    className="h-10 w-14 landscape:h-8 landscape:w-11 sm:h-12 sm:w-16"
+                  />
+                );
               }
 
               if (btn === 'delete') {
@@ -183,9 +188,9 @@ export default function FlowerLoginModal({
                     type="button"
                     onClick={handleBackspace}
                     title="Xóa ký tự"
-                    className="flex h-12 w-16 items-center justify-center rounded-[12px] border-2 border-[#b07d62] bg-[#fbcfe8] text-[#4a2e18] shadow-[0_4px_0_#9c6644] transition-all hover:bg-[#fed7aa] active:translate-y-1 active:shadow-none"
+                    className="flex h-10 w-14 items-center justify-center rounded-[10px] border-2 border-[#b07d62] bg-[#fbcfe8] text-[#4a2e18] shadow-[0_3px_0_#9c6644] transition-all hover:bg-[#fed7aa] active:translate-y-0.5 active:shadow-none landscape:h-8 landscape:w-11 landscape:rounded-[8px] landscape:shadow-[0_2px_0_#9c6644] sm:h-12 sm:w-16 sm:rounded-[12px] sm:shadow-[0_4px_0_#9c6644]"
                   >
-                    <span className="font-mono text-base font-bold">⌫</span>
+                    <span className="font-mono text-sm font-bold landscape:text-xs sm:text-base">⌫</span>
                   </button>
                 );
               }
@@ -198,7 +203,7 @@ export default function FlowerLoginModal({
                   }}
                   type="button"
                   onClick={(e) => handleInput(btn, e.currentTarget)}
-                  className="flex h-12 w-16 items-center justify-center rounded-[12px] border-2 border-[#b07d62] bg-[#fbcfe8] text-[22px] font-bold text-[#4a2e18] shadow-[0_4px_0_#9c6644] transition-all hover:bg-[#fed7aa] hover:shadow-[0_4px_0_#9c6644,0_0_8px_#ffb3d9] active:translate-y-1 active:shadow-none"
+                  className="flex h-10 w-14 items-center justify-center rounded-[10px] border-2 border-[#b07d62] bg-[#fbcfe8] text-lg font-bold text-[#4a2e18] shadow-[0_3px_0_#9c6644] transition-all hover:bg-[#fed7aa] hover:shadow-[0_3px_0_#9c6644,0_0_8px_#ffb3d9] active:translate-y-0.5 active:shadow-none landscape:h-8 landscape:w-11 landscape:rounded-[8px] landscape:text-base landscape:shadow-[0_2px_0_#9c6644] sm:h-12 sm:w-16 sm:rounded-[12px] sm:text-[22px] sm:shadow-[0_4px_0_#9c6644]"
                   style={{
                     fontFamily: 'var(--font-vt323), monospace',
                   }}
