@@ -39,7 +39,14 @@ const FPV_SPOTS: FPVSpot[] = [
   { id: 'bridge', label: 'Ngắm trăng & đom đóm', minX: 1580, maxX: 1700 },
 ];
 
-export default function Game() {
+export type { GameState };
+
+export interface GameProps {
+  initialScene?: GameState;
+  onRelock?: () => void;
+}
+
+export default function Game({ initialScene, onRelock }: GameProps = {}) {
   useEffect(() => {
     const unlock = (event: Event) => { if (event.isTrusted) resumeAudio(); };
     window.addEventListener('pointerdown', unlock, { capture: true, passive: true });
@@ -51,7 +58,7 @@ export default function Game() {
       window.removeEventListener('keydown', unlock, true);
     };
   }, []);
-  const [gameState, setGameState] = useState<GameState>('title');
+  const [gameState, setGameState] = useState<GameState>(initialScene || 'title');
   const [mobilePaused, setMobilePaused] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);
   // Fade-to-black overlay for seamless intro → gameplay transition
@@ -650,6 +657,7 @@ export default function Game() {
         heroX={heroX}
         onTeleport={handleTeleport}
         onUnlockAll={handleUnlockAll}
+        onRelock={onRelock}
       />
 
       <Canvas mobilePreview={mobilePreview} onBlockedChange={setMobilePaused} controls={

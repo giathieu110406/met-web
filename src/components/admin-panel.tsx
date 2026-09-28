@@ -32,43 +32,62 @@ const WAYPOINTS: TeleportTarget[] = [
   { label: 'Đỉnh đồi',       x: 2100, map: 'hill',   icon: '🌸' },
 ];
 
-interface AdminPanelProps {
+export interface AdminPanelProps {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  gameState: GameState;
-  setGameState: (state: GameState) => void;
-  showHitbox: boolean;
-  setShowHitbox: (val: boolean) => void;
+  gameState?: GameState;
+  setGameState?: (state: GameState) => void;
+  showHitbox?: boolean;
+  setShowHitbox?: (val: boolean) => void;
   mobilePreview: boolean;
   setMobilePreview: (val: boolean) => void;
-  onReset: () => void;
-  collectedCount: number;
-  totalCollectibles: number;
-  currentMap: MapId;
-  heroX: number;
-  onTeleport: (x: number, map: MapId) => void;
-  onUnlockAll: () => void;
+  onReset?: () => void;
+  collectedCount?: number;
+  totalCollectibles?: number;
+  currentMap?: MapId;
+  heroX?: number;
+  onTeleport?: (x: number, map: MapId) => void;
+  onUnlockAll?: () => void;
+  // Lockscreen integration
+  isLockScreen?: boolean;
+  onBypassLock?: (targetState?: GameState) => void;
+  onTriggerBloom?: () => void;
+  onRelock?: () => void;
 }
 
 export default function AdminPanel({
   isOpen,
   setIsOpen,
-  gameState,
-  setGameState,
-  showHitbox,
-  setShowHitbox,
+  gameState = 'title',
+  setGameState = () => {},
+  showHitbox = false,
+  setShowHitbox = () => {},
   mobilePreview,
   setMobilePreview,
-  onReset,
-  collectedCount,
-  totalCollectibles,
-  currentMap,
-  heroX,
-  onTeleport,
-  onUnlockAll,
+  onReset = () => {},
+  collectedCount = 0,
+  totalCollectibles = 0,
+  currentMap = 'valley',
+  heroX = 0,
+  onTeleport = () => {},
+  onUnlockAll = () => {},
+  isLockScreen = false,
+  onBypassLock,
+  onTriggerBloom,
+  onRelock,
 }: AdminPanelProps) {
   const [customX, setCustomX] = useState(heroX);
-  const [activeTab, setActiveTab] = useState<'state' | 'teleport'>('teleport');
+  const [activeTab, setActiveTab] = useState<'lockscreen' | 'state' | 'teleport'>(
+    isLockScreen ? 'lockscreen' : 'teleport'
+  );
+
+  useEffect(() => {
+    if (isLockScreen) {
+      setActiveTab('lockscreen');
+    } else {
+      setActiveTab('teleport');
+    }
+  }, [isLockScreen]);
 
   // Draggable state — start at top-right
   const panelRef = useRef<HTMLDivElement>(null);
@@ -204,7 +223,10 @@ export default function AdminPanel({
         </p>
       </div>
       <div className="flex border-b border-slate-700/60 shrink-0">
-        {(['teleport', 'state'] as const).map((tab) => (
+        {(isLockScreen
+          ? (['lockscreen'] as const)
+          : (['teleport', 'state'] as const)
+        ).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -214,12 +236,70 @@ export default function AdminPanel({
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            {tab === 'teleport' ? '🗺️ Teleport' : '⚙️ State'}
+            {tab === 'lockscreen' ? '🔒 Lockscreen' : tab === 'teleport' ? '🗺️ Teleport' : '⚙️ State'}
           </button>
         ))}
       </div>
 
       <div className="p-3 flex flex-col gap-2.5">
+
+        {/* ── TAB: LOCKSCREEN ── */}
+        {activeTab === 'lockscreen' && (
+          <>
+            {/* Status */}
+            <div className="flex items-center justify-between bg-slate-800/70 px-2.5 py-1.5 rounded-lg border border-slate-700/50">
+              <span className="text-slate-400 text-[10px]">Trạng thái</span>
+              <span className="text-[10px] text-amber-300 font-bold bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                🔒 Đang khóa mật khẩu
+              </span>
+            </div>
+
+            {/* Passcode helper */}
+            <div className="flex items-center justify-between bg-slate-800/70 px-2.5 py-1.5 rounded-lg border border-slate-700/50">
+              <span className="text-slate-400 text-[10px]">Mật khẩu đúng</span>
+              <span className="font-mono text-pink-300 font-bold text-[12px] tracking-wider">
+                1406
+              </span>
+            </div>
+
+            {/* Quick Unlock Action */}
+            <button
+              onClick={() => onBypassLock?.()}
+              className="w-full py-2 px-2.5 rounded-lg font-bold text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 border border-emerald-500/60 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 shadow-sm"
+              title="Vào game trực tiếp bỏ qua mật khẩu"
+            >
+              <span>🔓</span>
+              <span>Bỏ qua mật khẩu → Vào Game</span>
+            </button>
+
+            {/* Test Bloom */}
+            <button
+              onClick={() => onTriggerBloom?.()}
+              className="w-full py-2 px-2.5 rounded-lg font-bold text-[11px] cursor-pointer transition flex items-center justify-center gap-1.5 border border-pink-500/60 bg-pink-500/15 hover:bg-pink-500/25 text-pink-300 shadow-sm"
+              title="Kích hoạt hiệu ứng hoa nở từ trong ra ngoài"
+            >
+              <span>🌸</span>
+              <span>Thử hiệu ứng hoa nở (Bloom)</span>
+            </button>
+
+            {/* Jump straight to Scene */}
+            <div className="flex flex-col gap-1.5 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
+              <label className="font-medium text-slate-300 text-[10px]">Nhảy thẳng vào Scene:</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(['title', 'intro', 'playing', 'ending'] as GameState[]).map((scene) => (
+                  <button
+                    key={scene}
+                    onClick={() => onBypassLock?.(scene)}
+                    className="py-1 px-2 rounded-lg text-[9px] font-medium border cursor-pointer transition bg-slate-700/50 text-slate-300 border-slate-600/50 hover:bg-slate-700 hover:text-white flex items-center gap-1"
+                  >
+                    <span>{scene === 'title' ? '🎬' : scene === 'intro' ? '📖' : scene === 'playing' ? '🎮' : '💕'}</span>
+                    <span className="capitalize">{scene}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* ── TAB: TELEPORT ── */}
         {activeTab === 'teleport' && (
@@ -398,6 +478,17 @@ export default function AdminPanel({
             >
               <span>🔄</span> Reset Game
             </button>
+
+            {/* Relock Lockscreen */}
+            {onRelock && (
+              <button
+                onClick={onRelock}
+                className="w-full py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-rose-900/30 text-rose-300 font-semibold border border-rose-500/40 cursor-pointer transition flex items-center justify-center gap-1 text-[10px]"
+                title="Khóa lại màn hình mật khẩu hoa"
+              >
+                <span>🔒</span> Khóa lại màn hình mật khẩu
+              </button>
+            )}
           </>
         )}
       </div>

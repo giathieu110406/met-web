@@ -1,4 +1,5 @@
 import React from "react";
+
 export default function MainLayout({
   children,
 }: {
@@ -14,12 +15,12 @@ export default function MainLayout({
     >
       {/* Gentle vignette and soft atmospheric overlay */}
       <div
-        className="absolute inset-0 bg-slate-950/25 pointer-events-none"
+        className="pointer-events-none absolute inset-0 bg-slate-950/25"
         style={{
           boxShadow: 'inset 0 0 100px rgba(10, 8, 20, 0.6)',
         }}
       />
-      <div className="relative z-10 drop-shadow-[0_15px_35px_rgba(0,0,0,0.7)]">
+      <div className="relative z-10 flex min-h-dvh w-full items-center justify-center">
         {children}
       </div>
     </div>

@@ -1,5 +1,5 @@
-import Game from '@/components/game';
+import FlowerLoginWrapper from '@/components/flower-login';
 
 export default function Home() {
-  return <Game />;
+  return <FlowerLoginWrapper />;
 }
