@@ -5,14 +5,20 @@ import Image from 'next/image';
 import { flowerEngine } from './particle-engine';
 import { playKeyTapSound, playErrorSound } from './sound';
 
+export type LoginDestination = 'story' | 'survival';
+
 interface FlowerLoginModalProps {
-  onSuccess: (origin: { x: number; y: number }) => void;
+  onSuccess: (origin: { x: number; y: number }, destination: LoginDestination) => void;
   correctPin?: string;
+  survivalPin?: string;
+  disabled?: boolean;
 }
 
 export default function FlowerLoginModal({
   onSuccess,
   correctPin = '1406',
+  survivalPin = '1104',
+  disabled = false,
 }: FlowerLoginModalProps) {
   const [pin, setPin] = useState<string>('');
   const [isShaking, setIsShaking] = useState<boolean>(false);
@@ -20,7 +26,7 @@ export default function FlowerLoginModal({
 
   const handleInput = useCallback(
     (digit: string, buttonElement?: HTMLElement | null) => {
-      if (pin.length >= 4 || isShaking) return;
+      if (disabled || pin.length >= 4 || isShaking) return;
 
       const nextPin = pin + digit;
       setPin(nextPin);
@@ -39,9 +45,10 @@ export default function FlowerLoginModal({
 
       if (nextPin.length === 4) {
         // REQUIREMENT: Ở ô mật khẩu cuối cùng thì KHÔNG xuất hiện hoa rơi nữa!
-        if (nextPin === correctPin) {
+        const destination = nextPin === correctPin ? 'story' : nextPin === survivalPin ? 'survival' : null;
+        if (destination) {
           // Trigger the grand bloom from the final button coordinates
-          onSuccess({ x: originX, y: originY });
+          onSuccess({ x: originX, y: originY }, destination);
         } else {
           // Wrong PIN -> Shake
           playErrorSound();
@@ -57,13 +64,13 @@ export default function FlowerLoginModal({
         flowerEngine.spawnGravityFallingFlowers(originX, originY, 3);
       }
     },
-    [pin, isShaking, correctPin, onSuccess]
+    [pin, isShaking, correctPin, survivalPin, disabled, onSuccess]
   );
 
   const handleBackspace = useCallback(() => {
-    if (isShaking) return;
+    if (disabled || isShaking) return;
     setPin((prev) => prev.slice(0, -1));
-  }, [isShaking]);
+  }, [disabled, isShaking]);
 
   // Physical keyboard support
   useEffect(() => {
@@ -186,6 +193,7 @@ export default function FlowerLoginModal({
                   <button
                     key={`${rIdx}-${cIdx}`}
                     type="button"
+                    disabled={disabled}
                     onClick={handleBackspace}
                     title="Xóa ký tự"
                     className="flex h-10 w-14 items-center justify-center rounded-[10px] border-2 border-[#b07d62] bg-[#fbcfe8] text-[#4a2e18] shadow-[0_3px_0_#9c6644] transition-all hover:bg-[#fed7aa] active:translate-y-0.5 active:shadow-none landscape:h-8 landscape:w-11 landscape:rounded-[8px] landscape:shadow-[0_2px_0_#9c6644] sm:h-12 sm:w-16 sm:rounded-[12px] sm:shadow-[0_4px_0_#9c6644]"
@@ -202,6 +210,7 @@ export default function FlowerLoginModal({
                     buttonRefs.current[btn] = el;
                   }}
                   type="button"
+                  disabled={disabled}
                   onClick={(e) => handleInput(btn, e.currentTarget)}
                   className="flex h-10 w-14 items-center justify-center rounded-[10px] border-2 border-[#b07d62] bg-[#fbcfe8] text-lg font-bold text-[#4a2e18] shadow-[0_3px_0_#9c6644] transition-all hover:bg-[#fed7aa] hover:shadow-[0_3px_0_#9c6644,0_0_8px_#ffb3d9] active:translate-y-0.5 active:shadow-none landscape:h-8 landscape:w-11 landscape:rounded-[8px] landscape:text-base landscape:shadow-[0_2px_0_#9c6644] sm:h-12 sm:w-16 sm:rounded-[12px] sm:text-[22px] sm:shadow-[0_4px_0_#9c6644]"
                   style={{

@@ -1,22 +1,30 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import FlowerLoginModal from './flower-login-modal';
+import FlowerLoginModal, { LoginDestination } from './flower-login-modal';
 import FlowerCanvas from './flower-canvas';
 import { flowerEngine } from './particle-engine';
 import { playSuccessBloomSound } from './sound';
 import Game, { GameState } from '@/components/game';
 import AdminPanel from '@/components/admin-panel';
+import dynamic from 'next/dynamic';
+
+const SurvivalGame = dynamic(() => import('@/components/survival-game'), { ssr: false,
+  loading: () => <p role="status" className="p-8 text-center text-pink-100">Đang mở khu vườn…</p> });
 
 type FlowState = 'locked' | 'blooming' | 'unlocked';
 
 export default function FlowerLoginWrapper() {
   const [flowState, setFlowState] = useState<FlowState>('locked');
+  const [mode, setMode] = useState<LoginDestination>('story');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);
   const [initialScene, setInitialScene] = useState<GameState | undefined>(undefined);
 
-  const handleSuccess = useCallback((origin: { x: number; y: number }) => {
+  const handleSuccess = useCallback((origin: { x: number; y: number }, destination: LoginDestination = 'story') => {
+    setMode(destination);
+    setInitialScene(undefined);
+    setIsAdminOpen(false);
     setFlowState('blooming');
 
     // 1. Play romantic chimes & harp
@@ -26,6 +34,13 @@ export default function FlowerLoginWrapper() {
     flowerEngine.triggerTrueRadialBloom(origin.x, origin.y, () => {
       setFlowState('unlocked');
     });
+  }, []);
+
+  const relock = useCallback(() => {
+    setFlowState('locked');
+    setMode('story');
+    setInitialScene(undefined);
+    setIsAdminOpen(false);
   }, []);
 
   return (
@@ -42,7 +57,8 @@ export default function FlowerLoginWrapper() {
           setMobilePreview={setMobilePreview}
           isLockScreen={true}
           onBypassLock={(targetScene) => {
-            if (targetScene) setInitialScene(targetScene);
+            setMode('story');
+            setInitialScene(targetScene);
             setFlowState('unlocked');
           }}
           onTriggerBloom={() => {
@@ -60,17 +76,17 @@ export default function FlowerLoginWrapper() {
               : 'scale-100 opacity-100'
           }`}
         >
-          <FlowerLoginModal onSuccess={handleSuccess} correctPin="1406" />
+          <FlowerLoginModal onSuccess={handleSuccess} correctPin="1406" survivalPin="1104" disabled={flowState !== 'locked'} />
         </div>
       )}
 
       {/* 4. The Original Game (Hiện ra sau khi toàn bộ hoa biến mất) */}
       {flowState === 'unlocked' && (
         <div className="relative z-10 flex min-h-screen w-full items-center justify-center animate-in fade-in duration-700">
-          <Game
+          {mode === 'survival' ? <SurvivalGame onExit={relock} /> : <Game
             initialScene={initialScene}
-            onRelock={() => setFlowState('locked')}
-          />
+            onRelock={relock}
+          />}
         </div>
       )}
     </div>

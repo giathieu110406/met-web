@@ -1,13 +1,16 @@
 'use client';
 
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { CSSProperties, ReactNode, useEffect, useRef, useState } from 'react';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/level-data';
 import { resumeAudio } from '@/lib/sound';
 
-export default function Canvas({ children, controls, onBlockedChange, mobilePreview = false }: {
+export default function Canvas({ children, controls, onBlockedChange, mobilePreview = false, mobileTitle, mobileHelp, controlGutter = 92 }: {
   children: ReactNode;
   controls?: ReactNode;
   mobilePreview?: boolean;
+  mobileTitle?: string;
+  mobileHelp?: string;
+  controlGutter?: number;
   onBlockedChange?: (blocked: boolean) => void;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -29,7 +32,7 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
       const width = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
       const height = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
       setViewport({ mobile, portrait, scale: Math.max(0.1, Math.min(mobile ? Infinity : 1,
-        (width - (mobile && !portrait ? 92 : 0)) / CANVAS_WIDTH, height / CANVAS_HEIGHT)) });
+        (width - (mobile && !portrait ? controlGutter : 0)) / CANVAS_WIDTH, height / CANVAS_HEIGHT)) });
     };
     const observer = new ResizeObserver(measure);
     observer.observe(stage);
@@ -39,7 +42,7 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
       observer.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [mobilePreview]);
+  }, [mobilePreview, controlGutter]);
 
   useEffect(() => { onBlockedChange?.(blocked); }, [blocked, onBlockedChange]);
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
   }
 
   return (
-    <div ref={stageRef} className="game-stage" data-mobile={viewport.mobile}
+    <div ref={stageRef} className="game-stage" data-mobile={viewport.mobile} style={{ '--game-scale': viewport.scale } as CSSProperties}
       onContextMenu={(event) => { if (viewport.mobile) event.preventDefault(); }}
       onDragStart={(event) => { if (viewport.mobile) event.preventDefault(); }}>
       <div className="game-frame" inert={blocked} style={{ width: CANVAS_WIDTH * viewport.scale, height: CANVAS_HEIGHT * viewport.scale }}>
@@ -112,8 +115,8 @@ export default function Canvas({ children, controls, onBlockedChange, mobilePrev
             <rect x="23" y="7" width="42" height="58" rx="8" stroke="currentColor" strokeWidth="2" transform="rotate(-25 44 36)" />
             <path d="M37 53h9M72 19a29 29 0 0 1 5 30m0 0 5-6m-5 6-6-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <h1 id="mobile-gate-title">{viewport.portrait ? 'Xoay ngang để bắt đầu' : 'Một câu chuyện nhỏ, dành cho bạn'}</h1>
-          <p>{viewport.portrait ? 'Xoay điện thoại sang ngang để nhìn trọn khung cảnh và điều khiển bằng hai tay.' : 'Chạm để mở trải nghiệm toàn màn hình. Giữ nút trái / phải để đi, chạm Nhảy và Tương tác để khám phá.'}</p>
+          <h1 id="mobile-gate-title">{viewport.portrait ? 'Xoay ngang để bắt đầu' : (mobileTitle || 'Một câu chuyện nhỏ, dành cho bạn')}</h1>
+          <p>{viewport.portrait ? 'Xoay điện thoại sang ngang để nhìn trọn khung cảnh và điều khiển bằng hai tay.' : (mobileHelp || 'Chạm để mở trải nghiệm toàn màn hình. Giữ nút trái / phải để đi, chạm Nhảy và Tương tác để khám phá.')}</p>
           {!entered && <button className="mobile-enter" onClick={() => void enterFullscreen()}>Vào trải nghiệm <span aria-hidden="true">→</span></button>}
           {entered && viewport.portrait && <p className="mobile-rotate-hint">Hãy tắt khóa xoay trên điện thoại, rồi xoay ngang.</p>}
           {notice && <p role="status">{notice}</p>}

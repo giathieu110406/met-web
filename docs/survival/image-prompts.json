@@ -1,0 +1,26 @@
+{
+  "tool": "Built-in image_gen",
+  "prompts": [
+    [
+      "garden",
+      "Use case stylized-concept. Game background only, 3:2. Side-scrolling 16-bit pixel art moonlit garden in navy and violet with cherry branches at edges, distant lake, small stone lanterns and moon, light rain. Flat horizontal stone walkway top surface EXACTLY at 80 percent of image height. Clear quiet open play space across the entire width above walkway. Minimal foreground below ground. No characters, no flower objective, no enemies, no text, no HUD. Cozy romantic Met game. Crisp chunky pixel clusters."
+    ],
+    [
+      "leaf",
+      "Use case stylized-concept. Single tiny 16-bit pixel-art enemy sprite on transparent background. Cute dark green leaf goblin with two short legs, pink glowing eyes, facing LEFT, side view, full body, clear outline. Compact game sprite, chunky pixel clusters, no text, no ground, no shadow background. Generous transparent margins."
+    ],
+    [
+      "firefly",
+      "Use case stylized-concept. Single tiny 16-bit pixel-art purple shadow firefly enemy sprite on transparent background. Two glowing lavender wings, round dark body and pink eyes facing LEFT, cute magical creature, side view, chunky pixel clusters, full body. No text, no ground. Generous transparent margins."
+    ],
+    [
+      "thorn",
+      "Use case stylized-concept. Single 16-bit pixel-art enemy sprite on transparent background. Stocky walking bramble creature with dark teal thorny vines forming round body, two legs, pink rose buds and luminous pink eyes, facing LEFT, side view full body. Cute fantasy, chunky pixel clusters, clear silhouette, no text, no ground. Generous transparent margins."
+    ],
+    [
+      "boss",
+      "Use case stylized-concept. Single 16-bit pixel-art boss sprite on transparent background. Bù Nhìn Mưa: large friendly-spooky scarecrow with crooked purple hat, glowing pink eyes, tattered violet cloak, wooden branch arms, thorn crown and pink flower accent. Facing LEFT side view full body, readable broad silhouette, chunky pixel clusters. No ground no text. Generous transparent margins."
+    ]
+  ],
+  "hero": "Identity-preserving reference hero-umbrella-idle.png; right-facing umbrella horizontal attack and dash poses; simple chunky pixel clusters, transparent background."
+}

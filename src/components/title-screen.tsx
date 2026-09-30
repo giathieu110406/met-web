@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { resumeAudio, SFX } from '@/lib/sound';
 
 interface TitleScreenProps {
@@ -28,6 +28,8 @@ import { preloadGameAssets } from '@/lib/preload-assets';
 export default function TitleScreen({ onStart }: TitleScreenProps) {
   const [showPrompt, setShowPrompt] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const startTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (startTimer.current) clearTimeout(startTimer.current); }, []);
 
   useEffect(() => {
     // Warm up all game assets in browser cache in background
@@ -37,16 +39,16 @@ export default function TitleScreen({ onStart }: TitleScreenProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleStart = () => {
-    if (fadeOut) return;
+  const handleStart = useCallback(() => {
+    if (startTimer.current) return;
     resumeAudio();
     SFX.click();
     setFadeOut(true);
 
-    setTimeout(() => {
+    startTimer.current = setTimeout(() => {
       onStart();
     }, 600);
-  };
+  }, [onStart]);
 
   useEffect(() => {
     if (fadeOut) return;
@@ -56,11 +58,14 @@ export default function TitleScreen({ onStart }: TitleScreenProps) {
       if (e.key === '`' || e.key === '~' || e.key === 'F2') return;
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.repeat) return;
+      if (['Tab', 'Shift', 'Escape'].includes(e.key)) return;
+      if (e.target instanceof HTMLElement && e.target.closest('button,input,textarea,select,[role="dialog"]')) return;
 
       handleStart();
     };
 
-    const handleClick = () => {
+    const handleClick = (e: MouseEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest('button,input,textarea,select,[role="dialog"]')) return;
       handleStart();
     };
 
@@ -70,7 +75,7 @@ export default function TitleScreen({ onStart }: TitleScreenProps) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('click', handleClick);
     };
-  }, [fadeOut]);
+  }, [fadeOut, handleStart]);
 
   return (
     <div
